@@ -1,0 +1,85 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Entreprises en attente{% endblock %}
+
+{% block content %}
+
+{% if entreprises|length == 0 %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-check-circle" style="font-size: 80px; color: var(--success); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucune demande en attente
+        </h3>
+        <p style="color: var(--gray-600);">Toutes les demandes ont été traitées. Bravo ! 🎉</p>
+    </div>
+{% else %}
+    <div style="display: grid; gap: var(--space-6);">
+        {% for entreprise in entreprises %}
+            <div class="card">
+                <div class="card-body" style="padding: var(--space-6);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                        <div>
+                            <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                                {{ entreprise.nom }}
+                            </h3>
+                            <div style="display: flex; gap: var(--space-4); flex-wrap: wrap;">
+                                <span style="color: var(--gray-600); font-size: var(--text-sm);">
+                                    <i class="bi bi-calendar"></i> {{ entreprise.dateCreation|date('d/m/Y à H:i') }}
+                                </span>
+                                <span style="color: var(--gray-600); font-size: var(--text-sm);">
+                                    <i class="bi bi-briefcase"></i> {{ entreprise.secteur }}
+                                </span>
+                                <span style="color: var(--gray-600); font-size: var(--text-sm);">
+                                    <i class="bi bi-people"></i> {{ entreprise.nombreEmployes }} employés
+                                </span>
+                            </div>
+                        </div>
+                        <span class="badge badge-warning">EN ATTENTE</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6); margin-bottom: var(--space-6);">
+                        <div>
+                            <h4 style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gray-700); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: 0.05em;">
+                                Informations légales
+                            </h4>
+                            <div style="color: var(--gray-600); font-size: var(--text-sm); line-height: 1.8;">
+                                <div><strong>IFU :</strong> {{ entreprise.ifu }}</div>
+                                <div><strong>RCCM :</strong> {{ entreprise.rccm }}</div>
+                                <div><strong>Email :</strong> {{ entreprise.email }}</div>
+                                <div><strong>Téléphone :</strong> {{ entreprise.telephone }}</div>
+                                {% if entreprise.adresse %}
+                                    <div><strong>Adresse :</strong> {{ entreprise.adresse }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 style="font-size: var(--text-sm); font-weight: var(--font-semibold); color: var(--gray-700); margin-bottom: var(--space-2); text-transform: uppercase; letter-spacing: 0.05em;">
+                                RSSI Désigné
+                            </h4>
+                            <div style="color: var(--gray-600); font-size: var(--text-sm); line-height: 1.8;">
+                                <div><strong>Nom :</strong> RSSI Info (à lier)</div>
+                                <div><strong>Email :</strong> {{ entreprise.email }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                        <form method="post" action="{{ path('admin_entreprise_valider', {id: entreprise.id}) }}" style="flex: 1;">
+                            <button type="submit" class="btn btn-primary" style="width: 100%;" onclick="return confirm('Valider cette entreprise et envoyer l\'email d\'activation au RSSI ?')">
+                                <i class="bi bi-check-circle"></i> Valider et activer
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_entreprise_rejeter', {id: entreprise.id}) }}">
+                            <button type="submit" class="btn btn-outline" style="border-color: var(--danger); color: var(--danger);" onclick="return confirm('Êtes-vous sûr de vouloir rejeter cette demande ?')">
+                                <i class="bi bi-x-circle"></i> Rejeter
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}

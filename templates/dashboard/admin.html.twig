@@ -1,0 +1,158 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Admin - SAT Platform{% endblock %}
+
+{% block body %}
+<div style="display: flex; min-height: 100vh;">
+    
+    {# Sidebar #}
+    <aside style="width: 280px; background: var(--gray-900); color: white; padding: var(--space-6); display: flex; flex-direction: column;">
+        
+        <div style="margin-bottom: var(--space-8);">
+            <h1 style="font-size: var(--text-2xl); font-weight: var(--font-black); color: white;">
+                SAT Platform
+            </h1>
+            <span class="badge" style="background: var(--danger); color: white; margin-top: var(--space-2);">ADMIN</span>
+        </div>
+
+        <nav style="flex: 1;">
+            <a href="#" style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); color: white; margin-bottom: var(--space-2); background: rgba(255,255,255,0.1);">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="#" style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); color: rgba(255,255,255,0.7); margin-bottom: var(--space-2);">
+                <i class="bi bi-building"></i>
+                <span>Entreprises</span>
+            </a>
+
+            <a href="#" style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); color: rgba(255,255,255,0.7); margin-bottom: var(--space-2);">
+                <i class="bi bi-book"></i>
+                <span>Modules formation</span>
+            </a>
+
+            <a href="#" style="display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3); border-radius: var(--radius-lg); color: rgba(255,255,255,0.7); margin-bottom: var(--space-2);">
+                <i class="bi bi-envelope"></i>
+                <span>Gabarits phishing</span>
+            </a>
+        </nav>
+
+        {# Profil utilisateur #}
+        <div style="padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">
+
+            {% if app.user %}
+
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold);">
+
+                    {{ app.user.prenom|default('A')|slice(0,1) }}{{ app.user.nom|default('D')|slice(0,1) }}
+
+                </div>
+
+                <div>
+                    <div style="font-weight: var(--font-semibold); font-size: var(--text-sm);">
+                        {{ app.user.prenom }} {{ app.user.nom }}
+                    </div>
+
+                    <div style="font-size: var(--text-xs); color: rgba(255,255,255,0.6);">
+                        {{ app.user.email }}
+                    </div>
+                </div>
+
+            </div>
+
+            {% endif %}
+
+            <a href="{{ path('app_logout') }}" class="btn btn-ghost" style="width: 100%; color: rgba(255,255,255,0.8); justify-content: flex-start;">
+                <i class="bi bi-box-arrow-right"></i>
+                Déconnexion
+            </a>
+
+        </div>
+
+    </aside>
+
+    {# Main Content #}
+    <main style="flex: 1; background: var(--gray-50); padding: var(--space-8);">
+        
+        <div style="margin-bottom: var(--space-8);">
+            <h2 style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                Dashboard Administrateur
+            </h2>
+
+            <p style="color: var(--gray-600);">
+                Bienvenue, {{ app.user.prenom|default('Admin') }} !
+            </p>
+        </div>
+
+        {# Stats Cards #}
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+
+            <div class="card card-gradient">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                    <div>
+                        <div style="font-size: var(--text-sm); opacity: 0.9; margin-bottom: var(--space-2);">Entreprises actives</div>
+                        <div style="font-size: var(--text-4xl); font-weight: var(--font-bold);">12</div>
+                    </div>
+                    <i class="bi bi-building" style="font-size: var(--text-3xl); opacity: 0.5;"></i>
+                </div>
+                <div style="font-size: var(--text-sm); opacity: 0.8;">
+                    <i class="bi bi-arrow-up"></i> +3 ce mois
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 4px solid var(--success);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                    <div>
+                        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Employés formés</div>
+                        <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--success);">523</div>
+                    </div>
+                    <i class="bi bi-people" style="font-size: var(--text-3xl); color: var(--success); opacity: 0.3;"></i>
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    Sur 600 au total
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 4px solid var(--warning);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                    <div>
+                        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">En attente</div>
+                        <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--warning);">5</div>
+                    </div>
+                    <i class="bi bi-clock" style="font-size: var(--text-3xl); color: var(--warning); opacity: 0.3;"></i>
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    Demandes à valider
+                </div>
+            </div>
+
+            <div class="card" style="border-left: 4px solid var(--info);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                    <div>
+                        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Modules actifs</div>
+                        <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--info);">8</div>
+                    </div>
+                    <i class="bi bi-book" style="font-size: var(--text-3xl); color: var(--info); opacity: 0.3;"></i>
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    3 catégories
+                </div>
+            </div>
+
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🎉 Fonctionnalités complètes bientôt disponibles</h3>
+            </div>
+            <div class="card-body">
+                <p>Le dashboard complet sera développé dans les prochaines phases.</p>
+            </div>
+        </div>
+
+    </main>
+
+</div>
+{% endblock %}

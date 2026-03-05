@@ -1,0 +1,371 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Dashboard Administrateur{% endblock %}
+
+{% block content %}
+
+{# Stats Cards #}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+    
+    {# Entreprises actives #}
+    <div class="card card-gradient" style="position: relative; overflow: hidden;">
+        <div style="position: absolute; top: -20px; right: -20px; width: 100px; height: 100px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+        <div style="position: relative; z-index: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                <div>
+                    <div style="font-size: var(--text-sm); opacity: 0.9; margin-bottom: var(--space-2);">Entreprises actives</div>
+                    <div style="font-size: var(--text-4xl); font-weight: var(--font-bold);">{{ stats.entreprisesActives }}</div>
+                </div>
+                <i class="bi bi-building" style="font-size: var(--text-3xl); opacity: 0.5;"></i>
+            </div>
+            <div style="font-size: var(--text-sm); opacity: 0.8;">
+                <i class="bi bi-graph-up-arrow"></i> Sur {{ stats.totalEntreprises }} au total
+            </div>
+        </div>
+    </div>
+
+    {# Employés formés #}
+    <div class="card" style="border-left: 4px solid var(--success);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+            <div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Employés inscrits</div>
+                <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--success);">{{ stats.totalEmployes }}</div>
+            </div>
+            <i class="bi bi-people" style="font-size: var(--text-3xl); color: var(--success); opacity: 0.3;"></i>
+        </div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600);">
+            {{ stats.totalRSSI }} RSSI
+        </div>
+    </div>
+
+    {# En attente validation #}
+    <div class="card" style="border-left: 4px solid var(--warning);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+            <div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">En attente</div>
+                <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--warning);">{{ stats.entreprisesEnAttente }}</div>
+            </div>
+            <i class="bi bi-clock-history" style="font-size: var(--text-3xl); color: var(--warning); opacity: 0.3;"></i>
+        </div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600);">
+            Demandes à valider
+        </div>
+    </div>
+
+    {# Modules formation #}
+    <div class="card" style="border-left: 4px solid var(--info);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+            <div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Modules actifs</div>
+                <div style="font-size: var(--text-4xl); font-weight: var(--font-bold); color: var(--info);">{{ stats.modulesPublies }}</div>
+            </div>
+            <i class="bi bi-book" style="font-size: var(--text-3xl); color: var(--info); opacity: 0.3;"></i>
+        </div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600);">
+            Sur {{ stats.totalModules }} créés
+        </div>
+    </div>
+
+</div>
+
+{# Graphiques #}
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8);">
+    
+    {# Évolution entreprises #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📈 Évolution des entreprises</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartEvolution" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+    {# Répartition par secteur #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🏢 Secteurs d'activité</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartSecteurs" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+
+</div>
+
+{# Graphique statut entreprises + Campagnes #}
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8);">
+    
+    {# Statut entreprises #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">📊 Statut des entreprises</h3>
+        </div>
+        <div class="card-body">
+            <canvas id="chartStatut" style="max-height: 250px;"></canvas>
+        </div>
+    </div>
+
+    {# Campagnes phishing #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🎣 Campagnes phishing</h3>
+        </div>
+        <div class="card-body" style="display: flex; align-items: center; justify-content: center; min-height: 250px;">
+            <div style="text-align: center;">
+                <div style="font-size: var(--text-6xl); font-weight: var(--font-bold); background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ stats.totalCampagnesPhishing }}
+                </div>
+                <div style="color: var(--gray-600); margin-top: var(--space-2);">Campagnes lancées</div>
+                <div style="margin-top: var(--space-4);">
+                    <span class="badge badge-success" style="font-size: var(--text-base); padding: var(--space-2) var(--space-4);">
+                        {{ stats.campagnesEnCours }} en cours
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# Dernières entreprises #}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">🆕 Dernières entreprises inscrites</h3>
+    </div>
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--gray-50); border-bottom: 2px solid var(--gray-200);">
+                <tr>
+                    <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Entreprise</th>
+                    <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Secteur</th>
+                    <th style="padding: var(--space-3) var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Employés</th>
+                    <th style="padding: var(--space-3) var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Date inscription</th>
+                    <th style="padding: var(--space-3) var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Statut</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entreprise in dernieresEntreprises %}
+                <tr style="border-bottom: 1px solid var(--gray-200);">
+                    <td style="padding: var(--space-3) var(--space-4);">
+                        <div style="font-weight: var(--font-semibold); color: var(--gray-900);">{{ entreprise.nom }}</div>
+                        <div style="font-size: var(--text-sm); color: var(--gray-500);">{{ entreprise.ifu }}</div>
+                    </td>
+                    <td style="padding: var(--space-3) var(--space-4); color: var(--gray-600);">{{ entreprise.secteur }}</td>
+                    <td style="padding: var(--space-3) var(--space-4); text-align: center; color: var(--gray-600);">{{ entreprise.nombreEmployes }}</td>
+                    <td style="padding: var(--space-3) var(--space-4); color: var(--gray-600); font-size: var(--text-sm);">
+                        {{ entreprise.dateCreation|date('d/m/Y à H:i') }}
+                    </td>
+                    <td style="padding: var(--space-3) var(--space-4); text-align: center;">
+                        {% if entreprise.statut == 'ACTIF' %}
+                            <span class="badge badge-success">Actif</span>
+                        {% elseif entreprise.statut == 'EN_ATTENTE' %}
+                            <span class="badge badge-warning">En attente</span>
+                        {% else %}
+                            <span class="badge">{{ entreprise.statut }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+
+{# Chart.js #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+// Couleurs du thème
+const colors = {
+    primary: '#6366F1',
+    secondary: '#EC4899',
+    success: '#10B981',
+    warning: '#F59E0B',
+    danger: '#EF4444',
+    info: '#3B82F6',
+};
+
+// ========================================
+// GRAPHIQUE 1 : Évolution entreprises (Ligne)
+// ========================================
+const ctxEvolution = document.getElementById('chartEvolution').getContext('2d');
+new Chart(ctxEvolution, {
+    type: 'line',
+    data: {
+        labels: {{ evolutionEntreprises|map(e => e.mois)|json_encode|raw }},
+        datasets: [{
+            label: 'Nombre d\'entreprises',
+            data: {{ evolutionEntreprises|map(e => e.total)|json_encode|raw }},
+            borderColor: colors.primary,
+            backgroundColor: colors.primary + '20',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: colors.primary,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                borderColor: colors.primary,
+                borderWidth: 1,
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0,
+                    color: '#64748B'
+                },
+                grid: {
+                    color: '#E2E8F0'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#64748B'
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+
+// ========================================
+// GRAPHIQUE 2 : Secteurs (Doughnut)
+// ========================================
+const ctxSecteurs = document.getElementById('chartSecteurs').getContext('2d');
+new Chart(ctxSecteurs, {
+    type: 'doughnut',
+    data: {
+        labels: {{ entreprisesParSecteur|map(e => e.secteur)|json_encode|raw }},
+        datasets: [{
+            data: {{ entreprisesParSecteur|map(e => e.total)|json_encode|raw }},
+            backgroundColor: [
+                colors.primary,
+                colors.secondary,
+                colors.success,
+                colors.warning,
+                colors.info,
+                colors.danger,
+                '#8B5CF6',
+                '#F97316',
+            ],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 15,
+                    font: {
+                        size: 12
+                    },
+                    color: '#475569'
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+            }
+        },
+        cutout: '65%',
+    }
+});
+
+// ========================================
+// GRAPHIQUE 3 : Statut entreprises (Bar)
+// ========================================
+const ctxStatut = document.getElementById('chartStatut').getContext('2d');
+new Chart(ctxStatut, {
+    type: 'bar',
+    data: {
+        labels: ['Actives', 'En attente', 'Suspendues'],
+        datasets: [{
+            label: 'Entreprises',
+            data: [
+                {{ stats.entreprisesActives }},
+                {{ stats.entreprisesEnAttente }},
+                {{ stats.entreprisesSuspendues }}
+            ],
+            backgroundColor: [
+                colors.success + '80',
+                colors.warning + '80',
+                colors.danger + '80',
+            ],
+            borderColor: [
+                colors.success,
+                colors.warning,
+                colors.danger,
+            ],
+            borderWidth: 2,
+            borderRadius: 8,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                padding: 12,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    precision: 0,
+                    color: '#64748B'
+                },
+                grid: {
+                    color: '#E2E8F0'
+                }
+            },
+            x: {
+                ticks: {
+                    color: '#64748B'
+                },
+                grid: {
+                    display: false
+                }
+            }
+        }
+    }
+});
+</script>
+
+{% endblock %}

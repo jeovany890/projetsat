@@ -1,0 +1,157 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription Entreprise - SAT Platform{% endblock %}
+
+{% block body %}
+{# 1. Flexbox sur le parent pour centrer horizontalement et verticalement #}
+<div style="min-height: 100vh; background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%); padding: var(--space-8) 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+    
+    <div class="container-md" style="width: 100%; padding: 0 var(--space-4);">
+        
+        {# 2. Header centré #}
+        <div style="text-align: center; margin-bottom: var(--space-10);">
+            <h1 style="font-size: var(--text-5xl); font-weight: var(--font-black); background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: var(--space-4); line-height: 1.2;">
+                Inscrivez votre entreprise
+            </h1>
+            <p style="font-size: var(--text-xl); color: var(--gray-600); max-width: 700px; margin: 0 auto;">
+                Rejoignez les entreprises béninoises qui forment leurs équipes à la cybersécurité
+            </p>
+        </div>
+
+        {# 3. Formulaire avec max-width et centrage automatique #}
+        <div class="card" style="max-width: 900px; margin: 0 auto; box-shadow: var(--shadow-xl); border: none; border-radius: var(--radius-2xl);">
+            <div class="card-body" style="padding: var(--space-10);">
+                
+                {# Affichage des messages flash (Erreurs) #}
+                {% for message in app.flashes('error') %}
+                    <div class="alert alert-danger" style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-3);">
+                        <i class="bi bi-x-circle-fill"></i>
+                        <div class="alert-content">{{ message }}</div>
+                    </div>
+                {% endfor %}
+
+                <form method="post">
+                    
+                    {# Section 1 : Informations Entreprise #}
+                    <div style="margin-bottom: var(--space-10);">
+                        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-3);">
+                            <span style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); color: white; border-radius: var(--radius-full); font-size: var(--text-lg);">1</span>
+                            Informations de l'entreprise
+                        </h3>
+                        <p style="color: var(--gray-600); margin-bottom: var(--space-6); margin-left: 52px;">
+                            Renseignez les informations légales de votre entreprise
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+                            <div class="form-group">
+                                <label class="form-label" for="entreprise_nom"><i class="bi bi-building"></i> Nom de l'entreprise *</label>
+                                <input type="text" class="form-control" id="entreprise_nom" name="entreprise_nom" required placeholder="TechSolutions SARL">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="ifu"><i class="bi bi-card-text"></i> IFU *</label>
+                                <input type="text" class="form-control" id="ifu" name="ifu" required placeholder="3202301234567" maxlength="13">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="rccm"><i class="bi bi-file-earmark-text"></i> RCCM *</label>
+                                <input type="text" class="form-control" id="rccm" name="rccm" required placeholder="RB/COT/23/A/123">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="secteur"><i class="bi bi-briefcase"></i> Secteur d'activité *</label>
+                                <select class="form-control" id="secteur" name="secteur" required>
+                                    <option value="">Sélectionnez...</option>
+                                    <option value="Technologie">Technologie</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Industrie">Industrie</option>
+                                    <option value="Services">Services</option>
+                                    <option value="Santé">Santé</option>
+                                    <option value="Éducation">Éducation</option>
+                                    <option value="Autre">Autre</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="nombre_employes"><i class="bi bi-people"></i> Nombre d'employés *</label>
+                                <input type="number" class="form-control" id="nombre_employes" name="nombre_employes" required min="1" placeholder="25">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="telephone_entreprise"><i class="bi bi-telephone"></i> Téléphone *</label>
+                                <input type="tel" class="form-control" id="telephone_entreprise" name="telephone_entreprise" required placeholder="+229 01 XX XX XX XX">
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: var(--space-6);">
+                            <label class="form-label" for="email_entreprise"><i class="bi bi-envelope"></i> Email entreprise *</label>
+                            <input type="email" class="form-control" id="email_entreprise" name="email_entreprise" required placeholder="contact@entreprise.bj">
+                        </div>
+
+                        <div class="form-group" style="margin-top: var(--space-6);">
+                            <label class="form-label" for="adresse"><i class="bi bi-geo-alt"></i> Adresse</label>
+                            <textarea class="form-control" id="adresse" name="adresse" rows="2" placeholder="Cotonou, Quartier..."></textarea>
+                        </div>
+                    </div>
+
+                    {# Section 2 : Responsable Sécurité (RSSI) #}
+                    <div style="margin-bottom: var(--space-10);">
+                        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2); display: flex; align-items: center; gap: var(--space-3);">
+                            <span style="display: flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); color: white; border-radius: var(--radius-full); font-size: var(--text-lg);">2</span>
+                            Responsable Sécurité (RSSI)
+                        </h3>
+                        <p style="color: var(--gray-600); margin-bottom: var(--space-6); margin-left: 52px;">
+                            Cette personne gérera les formations et campagnes de sécurité
+                        </p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-6);">
+                            <div class="form-group">
+                                <label class="form-label" for="prenom_rssi"><i class="bi bi-person"></i> Prénom *</label>
+                                <input type="text" class="form-control" id="prenom_rssi" name="prenom_rssi" required placeholder="Jean">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="nom_rssi"><i class="bi bi-person"></i> Nom *</label>
+                                <input type="text" class="form-control" id="nom_rssi" name="nom_rssi" required placeholder="KPOSSA">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="email_rssi"><i class="bi bi-envelope"></i> Email professionnel *</label>
+                                <input type="email" class="form-control" id="email_rssi" name="email_rssi" required placeholder="jean.kpossa@entreprise.bj">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="telephone_rssi"><i class="bi bi-telephone"></i> Téléphone</label>
+                                <input type="tel" class="form-control" id="telephone_rssi" name="telephone_rssi" placeholder="+229 XX XX XX XX">
+                            </div>
+                        </div>
+                    </div>
+
+                    {# Info box #}
+                    <div style="background: var(--info-light); border-left: 4px solid var(--info); padding: var(--space-4); border-radius: var(--radius-lg); margin-bottom: var(--space-8);">
+                        <div style="display: flex; gap: var(--space-3);">
+                            <i class="bi bi-info-circle-fill" style="color: var(--info); font-size: var(--text-xl);"></i>
+                            <div>
+                                <strong style="color: var(--info-dark);">Validation de votre demande</strong>
+                                <p style="color: var(--info-dark); margin-top: var(--space-1); font-size: var(--text-sm);">
+                                    Votre demande sera examinée par notre équipe sous 48h.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100" style="padding: var(--space-4); font-weight: var(--font-bold);">
+                        <i class="bi bi-check-circle"></i> Soumettre la demande d'inscription
+                    </button>
+
+                    <div style="text-align: center; margin-top: var(--space-6); color: var(--gray-600);">
+                        Vous avez déjà un compte ? 
+                        <a href="{{ path('app_login') }}" style="color: var(--primary-600); font-weight: var(--font-semibold); text-decoration: none;">Se connecter</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

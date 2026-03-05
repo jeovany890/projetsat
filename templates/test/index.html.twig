@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Design System Test{% endblock %}
+
+{% block body %}
+<div class="container" style="padding: var(--space-12) 0;">
+    
+    {# Hero Section #}
+    <div class="text-center" style="margin-bottom: var(--space-16);">
+        <h1 style="background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+            SAT Platform Design System
+        </h1>
+        <p style="font-size: var(--text-xl); color: var(--gray-600); max-width: 600px; margin: 0 auto;">
+            Design premium inspiré de Material Design 3 et iOS Human Interface Guidelines
+        </p>
+    </div>
+
+    {# Boutons #}
+    <div class="card" style="margin-bottom: var(--space-8);">
+        <div class="card-header">
+            <h3 class="card-title">Boutons</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-4" style="flex-wrap: wrap;">
+                <button class="btn btn-primary">
+                    <i class="bi bi-check-circle"></i> Primary
+                </button>
+                <button class="btn btn-secondary">Secondary</button>
+                <button class="btn btn-outline">Outline</button>
+                <button class="btn btn-ghost">Ghost</button>
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+                <button class="btn btn-primary btn-loading">Loading</button>
+            </div>
+        </div>
+    </div>
+
+    {# Formulaires #}
+    <div class="card" style="margin-bottom: var(--space-8);">
+        <div class="card-header">
+            <h3 class="card-title">Formulaires</h3>
+        </div>
+        <div class="card-body">
+            <div style="max-width: 500px;">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <div class="input-group">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="email" class="form-control" placeholder="exemple@email.com">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" class="form-control" placeholder="••••••••">
+                </div>
+                <button class="btn btn-primary btn-block">Se connecter</button>
+            </div>
+        </div>
+    </div>
+
+    {# Alertes #}
+    <div class="card" style="margin-bottom: var(--space-8);">
+        <div class="card-header">
+            <h3 class="card-title">Alertes</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-success">
+                <i class="bi bi-check-circle-fill alert-icon"></i>
+                <div class="alert-content">
+                    <div class="alert-title">Succès !</div>
+                    Votre compte a été créé avec succès.
+                </div>
+            </div>
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle-fill alert-icon"></i>
+                <div class="alert-content">
+                    <div class="alert-title">Erreur</div>
+                    Une erreur s'est produite lors de la connexion.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Badges #}
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Badges</h3>
+        </div>
+        <div class="card-body">
+            <div class="d-flex gap-4" style="flex-wrap: wrap;">
+                <span class="badge badge-primary">Primary</span>
+                <span class="badge badge-success">Success</span>
+                <span class="badge badge-warning">Warning</span>
+                <span class="badge badge-danger">Danger</span>
+                <span class="badge badge-info">Info</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

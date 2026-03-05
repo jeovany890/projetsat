@@ -1,0 +1,107 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Toutes les entreprises{% endblock %}
+
+{% block content %}
+
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body" style="padding: var(--space-6);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); margin-bottom: var(--space-2);">
+                    {{ entreprises|length }} entreprises au total
+                </h3>
+                <p style="color: var(--gray-600); margin: 0;">Gérez toutes les entreprises inscrites sur la plateforme</p>
+            </div>
+            <div style="display: flex; gap: var(--space-3);">
+                <span class="badge badge-success">{{ entreprises|filter(e => e.statut == 'ACTIF')|length }} Actives</span>
+                <span class="badge badge-warning">{{ entreprises|filter(e => e.statut == 'EN_ATTENTE')|length }} En attente</span>
+                <span class="badge badge-danger">{{ entreprises|filter(e => e.statut == 'SUSPENDU')|length }} Suspendues</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--gray-100); border-bottom: 2px solid var(--gray-300);">
+                <tr>
+                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Entreprise</th>
+                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">IFU</th>
+                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Secteur</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Employés</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Statut</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entreprise in entreprises %}
+                <tr style="border-bottom: 1px solid var(--gray-200); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='white'">
+                    <td style="padding: var(--space-4);">
+                        <div>
+                            <div style="font-weight: var(--font-semibold); color: var(--gray-900); margin-bottom: var(--space-1);">
+                                {{ entreprise.nom }}
+                            </div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-500);">
+                                <i class="bi bi-envelope"></i> {{ entreprise.email }}
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: var(--space-4); color: var(--gray-600); font-family: var(--font-mono); font-size: var(--text-sm);">
+                        {{ entreprise.ifu }}
+                    </td>
+                    <td style="padding: var(--space-4); color: var(--gray-600);">
+                        {{ entreprise.secteur }}
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        <span style="display: inline-flex; align-items: center; gap: var(--space-1); background: var(--primary-100); color: var(--primary-700); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-weight: var(--font-semibold); font-size: var(--text-sm);">
+                            <i class="bi bi-people"></i>
+                            {{ entreprise.nombreEmployes }}
+                        </span>
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        {% if entreprise.statut == 'ACTIF' %}
+                            <span class="badge badge-success">Actif</span>
+                        {% elseif entreprise.statut == 'EN_ATTENTE' %}
+                            <span class="badge badge-warning">En attente</span>
+                        {% elseif entreprise.statut == 'SUSPENDU' %}
+                            <span class="badge badge-danger">Suspendu</span>
+                        {% else %}
+                            <span class="badge">{{ entreprise.statut }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        <div style="display: flex; gap: var(--space-2); justify-content: center;">
+                            <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn btn-sm btn-ghost" title="Voir détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            {% if entreprise.statut == 'ACTIF' %}
+                                <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--warning);" onclick="return confirm('Suspendre cette entreprise ?')" title="Suspendre">
+                                        <i class="bi bi-pause-circle"></i>
+                                    </button>
+                                </form>
+                            {% elseif entreprise.statut == 'SUSPENDU' %}
+                                <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--success);" onclick="return confirm('Réactiver cette entreprise ?')" title="Réactiver">
+                                        <i class="bi bi-play-circle"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="padding: var(--space-16); text-align: center; color: var(--gray-500);">
+                        Aucune entreprise inscrite
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

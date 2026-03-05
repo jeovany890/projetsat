@@ -1,0 +1,129 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div style="display: flex; min-height: 100vh;">
+    
+    {# Sidebar #}
+    <aside style="width: 280px; background: var(--gray-900); color: white; padding: var(--space-6); display: flex; flex-direction: column;">
+        
+        <div style="margin-bottom: var(--space-8);">
+            <a href="{{ path('admin_dashboard') }}" style="text-decoration: none; color: white;">
+                <h1 style="font-size: var(--text-2xl); font-weight: var(--font-black); color: white; margin-bottom: var(--space-2);">
+                    SAT Platform
+                </h1>
+            </a>
+            <span class="badge" style="background: var(--danger); color: white;">ADMIN</span>
+        </div>
+
+        <nav style="flex: 1;">
+            <a href="{{ path('admin_dashboard') }}" class="nav-link {% if app.request.attributes.get('_route') == 'admin_dashboard' %}active{% endif %}">
+                <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+            
+            <div style="margin-top: var(--space-6); margin-bottom: var(--space-3); font-size: var(--text-xs); text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: var(--font-semibold); letter-spacing: 0.05em;">
+                Entreprises
+            </div>
+            <a href="{{ path('admin_entreprises_en_attente') }}" class="nav-link {% if 'admin_entreprises_en_attente' in app.request.attributes.get('_route') %}active{% endif %}">
+                <i class="bi bi-clock-history"></i> En attente
+            </a>
+            <a href="{{ path('admin_entreprises_liste') }}" class="nav-link {% if 'admin_entreprises_liste' in app.request.attributes.get('_route') %}active{% endif %}">
+                <i class="bi bi-building"></i> Toutes les entreprises
+            </a>
+
+            <div style="margin-top: var(--space-6); margin-bottom: var(--space-3); font-size: var(--text-xs); text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: var(--font-semibold); letter-spacing: 0.05em;">
+                Contenus
+            </div>
+            <a href="#" class="nav-link">
+                <i class="bi bi-book"></i> Modules formation
+            </a>
+            <a href="#" class="nav-link">
+                <i class="bi bi-envelope-paper"></i> Gabarits phishing
+            </a>
+        </nav>
+
+        <div style="padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold);">
+              {{ (app.user.prenom|default(''))|slice(0,1) ~ (app.user.nom|default(''))|slice(0,1) }}
+                </div>
+                <div>
+                    <div style="font-weight: var(--font-semibold); font-size: var(--text-sm);">{{ app.user.nomComplet }}</div>
+                    <div style="font-size: var(--text-xs); color: rgba(255,255,255,0.6);">{{ app.user.email }}</div>
+                </div>
+            </div>
+            <a href="{{ path('app_logout') }}" class="btn btn-ghost" style="width: 100%; color: rgba(255,255,255,0.8); justify-content: flex-start;">
+                <i class="bi bi-box-arrow-right"></i> Déconnexion
+            </a>
+        </div>
+
+    </aside>
+
+    {# Main Content #}
+    <main style="flex: 1; background: var(--gray-50); overflow-y: auto;">
+        
+        {# Header #}
+        <header style="background: white; border-bottom: 1px solid var(--gray-200); padding: var(--space-6) var(--space-8);">
+            {% block header %}
+                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                    {% block page_title %}Page{% endblock %}
+                </h2>
+            {% endblock %}
+        </header>
+
+        {# Flash Messages #}
+        <div style="padding: var(--space-6) var(--space-8);">
+            {% for message in app.flashes('success') %}
+                <div class="alert alert-success" style="margin-bottom: var(--space-4);">
+                    <i class="bi bi-check-circle-fill alert-icon"></i>
+                    <div class="alert-content">{{ message }}</div>
+                </div>
+            {% endfor %}
+
+            {% for message in app.flashes('error') %}
+                <div class="alert alert-danger" style="margin-bottom: var(--space-4);">
+                    <i class="bi bi-x-circle-fill alert-icon"></i>
+                    <div class="alert-content">{{ message }}</div>
+                </div>
+            {% endfor %}
+
+            {% for message in app.flashes('warning') %}
+                <div class="alert alert-warning" style="margin-bottom: var(--space-4);">
+                    <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
+                    <div class="alert-content">{{ message }}</div>
+                </div>
+            {% endfor %}
+        </div>
+
+        {# Content #}
+        <div style="padding: 0 var(--space-8) var(--space-8);">
+            {% block content %}{% endblock %}
+        </div>
+
+    </main>
+
+</div>
+
+<style>
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    color: rgba(255,255,255,0.7);
+    margin-bottom: var(--space-2);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+.nav-link.active {
+    background: rgba(255,255,255,0.1);
+    color: white;
+}
+</style>
+{% endblock %}
