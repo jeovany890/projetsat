@@ -2,9 +2,10 @@
 
 namespace App\Entity;
 
+use App\Repository\EmployeRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: EmployeRepository::class)]
 class Employe extends Utilisateur
 {
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -18,13 +19,14 @@ class Employe extends Utilisateur
 
     #[ORM\Column(type: 'float', options: ['default' => 50.00])]
     private float $scoreVigilance = 50.00;
-    
+
     #[ORM\ManyToOne(targetEntity: Departement::class, inversedBy: 'employes')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Departement $departement = null;
 
-    // Getters et Setters
-
+    // ========================================
+    // GETTERS & SETTERS — Informations de base
+    // ========================================
 
     public function getPoste(): ?string
     {
@@ -36,6 +38,10 @@ class Employe extends Utilisateur
         $this->poste = $poste;
         return $this;
     }
+
+    // ========================================
+    // POINTS & ÉTOILES
+    // ========================================
 
     public function getTotalPoints(): int
     {
@@ -80,6 +86,10 @@ class Employe extends Utilisateur
         return $this;
     }
 
+    // ========================================
+    // SCORE VIGILANCE
+    // ========================================
+
     public function getScoreVigilance(): float
     {
         return $this->scoreVigilance;
@@ -87,7 +97,6 @@ class Employe extends Utilisateur
 
     public function setScoreVigilance(float $scoreVigilance): static
     {
-        // Limiter entre 0 et 100
         $this->scoreVigilance = max(0, min(100, $scoreVigilance));
         return $this;
     }
@@ -109,14 +118,43 @@ class Employe extends Utilisateur
             default => 'À risque'
         };
     }
-    public function getDepartement(): ?Departement
-{
-    return $this->departement;
-}
 
-public function setDepartement(?Departement $departement): static
-{
-    $this->departement = $departement;
-    return $this;
-}
+    // ========================================
+    // RELATION DÉPARTEMENT
+    // ========================================
+
+    public function getDepartement(): ?Departement
+    {
+        return $this->departement;
+    }
+
+    public function setDepartement(?Departement $departement): static
+    {
+        $this->departement = $departement;
+        return $this;
+    }
+
+    // ========================================
+    // ✅ HELPER : Accès direct à l'entreprise
+    // via Département (évite la double navigation)
+    // ========================================
+
+    /**
+     * Retourne l'entreprise de l'employé via son département.
+     * Utilisation : $employe->getEntreprise() au lieu de
+     *               $employe->getDepartement()->getEntreprise()
+     */
+    public function getEntreprise(): ?Entreprise
+    {
+        return $this->departement?->getEntreprise();
+    }
+
+    /**
+     * Vérifie si l'employé appartient à une entreprise donnée.
+     * Utile dans les controllers RSSI pour filtrer ses employés.
+     */
+    public function appartientAEntreprise(Entreprise $entreprise): bool
+    {
+        return $this->getEntreprise()?->getId() === $entreprise->getId();
+    }
 }

@@ -1,0 +1,123 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Modifier le module{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 900px; margin: 0 auto;">
+    
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_modules_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux modules
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-10);">
+            
+            <div style="text-align: center; margin-bottom: var(--space-8);">
+                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                    Modifier le module
+                </h2>
+                <p style="color: var(--gray-600);">{{ module.titre }}</p>
+            </div>
+
+            <form method="post">
+                
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        📝 Informations générales
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="titre">Titre du module *</label>
+                        <input type="text" class="form-control" id="titre" name="titre" required value="{{ module.titre }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">Description *</label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required>{{ module.description }}</textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="categorie_id">Catégorie *</label>
+                            <select class="form-control" id="categorie_id" name="categorie_id" required>
+                                {% for categorie in categories %}
+                                    <option value="{{ categorie.id }}" {% if module.categorie.id == categorie.id %}selected{% endif %}>
+                                        {{ categorie.titre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="type_module">Type de module</label>
+                            <select class="form-control" id="type_module" name="type_module">
+                                <option value="theorique" {% if module.typeModule == 'theorique' %}selected{% endif %}>Théorique</option>
+                                <option value="pratique" {% if module.typeModule == 'pratique' %}selected{% endif %}>Pratique</option>
+                                <option value="mixte" {% if module.typeModule == 'mixte' %}selected{% endif %}>Mixte</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        ⚙️ Paramètres
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="difficulte">Difficulté</label>
+                            <select class="form-control" id="difficulte" name="difficulte">
+                                <option value="debutant" {% if module.difficulte == 'debutant' %}selected{% endif %}>Débutant</option>
+                                <option value="intermediaire" {% if module.difficulte == 'intermediaire' %}selected{% endif %}>Intermédiaire</option>
+                                <option value="avance" {% if module.difficulte == 'avance' %}selected{% endif %}>Avancé</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="duree_estimee">Durée estimée (minutes)</label>
+                            <input type="number" class="form-control" id="duree_estimee" name="duree_estimee" value="{{ module.dureeEstimee }}" min="5" max="300">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="points_reussite">Points à la réussite</label>
+                            <input type="number" class="form-control" id="points_reussite" name="points_reussite" value="{{ module.pointsReussite }}" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="etoiles_reussite">Étoiles à la réussite</label>
+                            <input type="number" class="form-control" id="etoiles_reussite" name="etoiles_reussite" value="{{ module.etoilesReussite }}" min="0" max="5">
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: var(--space-8);">
+                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
+                        <input type="checkbox" name="est_publie" {% if module.estPublie %}checked{% endif %} style="width: 20px; height: 20px;">
+                        <div>
+                            <div style="font-weight: var(--font-semibold); color: var(--gray-900);">Module publié</div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Le module est visible et disponible</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                    </button>
+                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

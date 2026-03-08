@@ -1,0 +1,127 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Modules de formation{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+    <div>
+        <p style="color: var(--gray-600); margin: 0;">{{ modules|length }} modules créés</p>
+    </div>
+    <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Créer un module
+    </a>
+</div>
+
+{# Stats rapides #}
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="card" style="border-left: 4px solid var(--success);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Modules publiés</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">
+                {{ modules|filter(m => m.estPublie)|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--warning);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Brouillons</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">
+                {{ modules|filter(m => not m.estPublie)|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--info);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Catégories</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--info);">
+                {{ categories|length }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Liste modules #}
+<div style="display: grid; gap: var(--space-6);">
+    {% for module in modules %}
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-6);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                <div style="flex: 1;">
+                    <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+                        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                            {{ module.titre }}
+                        </h3>
+                        {% if module.estPublie %}
+                            <span class="badge badge-success">Publié</span>
+                        {% else %}
+                            <span class="badge" style="background: var(--gray-400); color: white;">Brouillon</span>
+                        {% endif %}
+                    </div>
+                    <p style="color: var(--gray-600); margin-bottom: var(--space-4);">
+                        {{ module.description }}
+                    </p>
+                    <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; font-size: var(--text-sm); color: var(--gray-600);">
+                        <span>
+                            <i class="bi bi-folder"></i> {{ module.categorie.titre }}
+                        </span>
+                        <span>
+                            <i class="bi bi-signal"></i> {{ module.difficulte|capitalize }}
+                        </span>
+                        <span>
+                            <i class="bi bi-clock"></i> {{ module.dureeEstimee }} min
+                        </span>
+                        <span>
+                            <i class="bi bi-trophy"></i> {{ module.pointsReussite }} points
+                        </span>
+                        <span>
+                            <i class="bi bi-star-fill" style="color: var(--warning);"></i> {{ module.etoilesReussite }} étoiles
+                        </span>
+                        <span>
+                            <i class="bi bi-book"></i> {{ module.chapitres|length }} chapitres
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                <a href="{{ path('admin_module_details', {id: module.id}) }}" class="btn btn-ghost btn-sm">
+                    <i class="bi bi-eye"></i> Voir
+                </a>
+                <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm">
+    <i class="bi bi-journal-text"></i> Chapitres ({{ module.chapitres|length }})
+</a>
+                <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm">
+                    <i class="bi bi-pencil"></i> Modifier
+                </a>
+                <form method="post" action="{{ path('admin_module_toggle_publication', {id: module.id}) }}" style="display: inline;">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color: {{ module.estPublie ? 'var(--warning)' : 'var(--success)' }};">
+                        <i class="bi bi-{{ module.estPublie ? 'eye-slash' : 'check-circle' }}"></i>
+                        {{ module.estPublie ? 'Dépublier' : 'Publier' }}
+                    </button>
+                </form>
+                <form method="post" action="{{ path('admin_module_supprimer', {id: module.id}) }}" style="display: inline; margin-left: auto;">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="return confirm('Supprimer ce module ? Cette action est irréversible.')">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-book" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucun module créé
+        </h3>
+        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">Créez votre premier module de formation</p>
+        <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer un module
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

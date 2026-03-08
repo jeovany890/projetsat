@@ -3,142 +3,40 @@
 namespace App\Service;
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
 
 class EmailService
 {
-    // Les 4 comptes Gmail
-    private array $comptes = [
-        'legitime' => [
-            'email' => 'satplatform.noreply1@gmail.com',
-            'password' => '', // Tu vas remplir après
-        ],
-        'boa' => [
-            'email' => 'boa.benini.2026@gmail.com',
-            'password' => '',
-        ],
-        'sbee' => [
-            'email' => 'sbee.benin.2026@gmail.com',
-            'password' => '',
-        ],
-        'unicef' => [
-            'email' => 'unicef.inter.2026@gmail.com',
-            'password' => '',
-        ],
-    ];
-
-    public function __construct()
-    {
-        // Charger les mots de passe depuis variables d'environnement
-        $this->comptes['legitime']['password'] = $_ENV['GMAIL_PASSWORD_LEGITIME'] ?? '';
-        $this->comptes['boa']['password'] = $_ENV['GMAIL_PASSWORD_BOA'] ?? '';
-        $this->comptes['sbee']['password'] = $_ENV['GMAIL_PASSWORD_SBEE'] ?? '';
-        $this->comptes['unicef']['password'] = $_ENV['GMAIL_PASSWORD_UNICEF'] ?? '';
-    }
-
     /**
-     * Envoyer un email légitime (notifications SAT Platform)
+     * Envoyer un email standard (notifications, alertes, etc.)
      */
     public function envoyerEmailLeitime(
-        string $destinataire, 
-        string $sujet, 
-        string $contenuHtml
-    ): bool {
-        return $this->envoyerEmail(
-            $this->comptes['legitime']['email'],
-            $this->comptes['legitime']['password'],
-            'SAT Platform',
-            $destinataire,
-            $sujet,
-            $contenuHtml
-        );
-    }
-
-    /**
-     * Envoyer un email phishing BOA
-     */
-    public function envoyerPhishingBOA(
-        string $destinataire,
-        string $nomExpediteur,
-        string $sujet,
-        string $contenuHtml
-    ): bool {
-        return $this->envoyerEmail(
-            $this->comptes['boa']['email'],
-            $this->comptes['boa']['password'],
-            $nomExpediteur,
-            $destinataire,
-            $sujet,
-            $contenuHtml
-        );
-    }
-
-    /**
-     * Envoyer un email phishing SBEE
-     */
-    public function envoyerPhishingSBEE(
-        string $destinataire,
-        string $nomExpediteur,
-        string $sujet,
-        string $contenuHtml
-    ): bool {
-        return $this->envoyerEmail(
-            $this->comptes['sbee']['email'],
-            $this->comptes['sbee']['password'],
-            $nomExpediteur,
-            $destinataire,
-            $sujet,
-            $contenuHtml
-        );
-    }
-
-    /**
-     * Envoyer un email phishing UNICEF
-     */
-    public function envoyerPhishingUNICEF(
-        string $destinataire,
-        string $nomExpediteur,
-        string $sujet,
-        string $contenuHtml
-    ): bool {
-        return $this->envoyerEmail(
-            $this->comptes['unicef']['email'],
-            $this->comptes['unicef']['password'],
-            $nomExpediteur,
-            $destinataire,
-            $sujet,
-            $contenuHtml
-        );
-    }
-
-    /**
-     * Méthode générique pour envoyer un email
-     */
-    private function envoyerEmail(
-        string $emailExpediteur,
-        string $motDePasse,
-        string $nomExpediteur,
         string $destinataire,
         string $sujet,
-        string $contenuHtml
-    ): bool {
+        string $contenuHtml,
+        ?string $nomExpediteur = 'SAT Platform',
+        ?string $emailExpediteur = null
+    ): void {
         $mail = new PHPMailer(true);
 
         try {
-            // Configuration serveur SMTP
+            // Récupérer le DSN depuis les variables d'environnement
+            $dsn = $_ENV['MAILER_DSN'];
+            $dsnParts = parse_url($dsn);
+            parse_str($dsnParts['query'] ?? '', $params);
+
+            // Configuration SMTP
             $mail->isSMTP();
-            $mail->Host = 'smtp.gmail.com';
+            $mail->Host = $dsnParts['host'];
             $mail->SMTPAuth = true;
-            $mail->Username = $emailExpediteur;
-            $mail->Password = $motDePasse;
+            $mail->Username = $dsnParts['user'];
+            $mail->Password = $dsnParts['pass'];
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->Port = 587;
+            $mail->Port = $dsnParts['port'] ?? 587;
             $mail->CharSet = 'UTF-8';
 
             // Expéditeur
-            $mail->setFrom($emailExpediteur, $nomExpediteur);
-
-            // Destinataire
+            $fromEmail = $emailExpediteur ?? $dsnParts['user'];
+            $mail->setFrom($fromEmail, $nomExpediteur);
             $mail->addAddress($destinataire);
 
             // Contenu
@@ -146,14 +44,60 @@ class EmailService
             $mail->Subject = $sujet;
             $mail->Body = $contenuHtml;
 
-            // Envoyer
             $mail->send();
-            return true;
+        } catch (\Exception $e) {
+            throw new \Exception("Erreur d'envoi email : {$mail->ErrorInfo}");
+        }
+    }
 
-        } catch (Exception $e) {
-            // Log l'erreur
-            error_log("Erreur envoi email : " . $mail->ErrorInfo);
-            return false;
+    /**
+     * Envoyer un email de phishing (avec compte spécifique BOA/SBEE/UNICEF)
+     */
+    public function envoyerEmailPhishing(
+        string $destinataire,
+        string $sujet,
+        string $contenuHtml,
+        string $nomExpediteur,
+        string $emailExpediteur,
+        ?string $compteEmailDsn = null
+    ): void {
+        // Sélectionner le bon compte email selon le DSN
+        $dsn = match($compteEmailDsn) {
+            'MAILER_PHISHING_BOA' => $_ENV['MAILER_PHISHING_BOA'] ?? $_ENV['MAILER_DSN'],
+            'MAILER_PHISHING_SBEE' => $_ENV['MAILER_PHISHING_SBEE'] ?? $_ENV['MAILER_DSN'],
+            'MAILER_PHISHING_UNICEF' => $_ENV['MAILER_PHISHING_UNICEF'] ?? $_ENV['MAILER_DSN'],
+            default => $_ENV['MAILER_DSN']
+        };
+
+        $mail = new PHPMailer(true);
+
+        try {
+            // Parser le DSN
+            $dsnParts = parse_url($dsn);
+            parse_str($dsnParts['query'] ?? '', $params);
+
+            // Configuration SMTP
+            $mail->isSMTP();
+            $mail->Host = $dsnParts['host'];
+            $mail->SMTPAuth = true;
+            $mail->Username = $dsnParts['user'];
+            $mail->Password = $dsnParts['pass'];
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = $dsnParts['port'] ?? 587;
+            $mail->CharSet = 'UTF-8';
+
+            // Expéditeur personnalisé (celui du gabarit de phishing)
+            $mail->setFrom($emailExpediteur, $nomExpediteur);
+            $mail->addAddress($destinataire);
+
+            // Contenu
+            $mail->isHTML(true);
+            $mail->Subject = $sujet;
+            $mail->Body = $contenuHtml;
+
+            $mail->send();
+        } catch (\Exception $e) {
+            throw new \Exception("Erreur d'envoi email phishing : {$mail->ErrorInfo}");
         }
     }
 }

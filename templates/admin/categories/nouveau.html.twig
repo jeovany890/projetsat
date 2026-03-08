@@ -1,0 +1,61 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Créer une catégorie{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 700px; margin: 0 auto;">
+    
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_categories_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2);">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-10);">
+            
+            <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); text-align: center; margin-bottom: var(--space-8);">
+                Nouvelle catégorie
+            </h2>
+
+            <form method="post">
+                
+                <div class="form-group">
+                    <label class="form-label" for="titre">Titre *</label>
+                    <input type="text" class="form-control" id="titre" name="titre" required placeholder="Ex: Sécurité des emails" autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="4" placeholder="Décrivez cette catégorie..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="statut">Statut</label>
+                    <select class="form-control" id="statut" name="statut">
+                        <option value="ACTIF" selected>Actif</option>
+                        <option value="INACTIF">Inactif</option>
+                    </select>
+                    <small style="color: var(--gray-500); font-size: var(--text-xs); margin-top: var(--space-1); display: block;">
+                        Les catégories actives sont visibles lors de la création de modules
+                    </small>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4); margin-top: var(--space-8);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Créer la catégorie
+                    </button>
+                    <a href="{{ path('admin_categories_liste') }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

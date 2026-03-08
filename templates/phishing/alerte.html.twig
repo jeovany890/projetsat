@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠️ Alerte Phishing</title>
+    <link href="{{ asset('css/design-system.css') }}" rel="stylesheet">
+</head>
+<body style="background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--space-6);">
+
+<div style="max-width: 700px; width: 100%;">
+    
+    {# Animation de warning #}
+    <div style="text-align: center; margin-bottom: var(--space-8); animation: shake 0.5s;">
+        <div style="display: inline-block; width: 120px; height: 120px; background: white; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 40px rgba(0,0,0,0.3); animation: pulse 2s infinite;">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 60px; color: var(--danger);"></i>
+        </div>
+    </div>
+
+    <div class="card" style="background: white; padding: var(--space-10); text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+        
+        <h1 style="font-size: var(--text-4xl); font-weight: var(--font-black); color: var(--danger); margin-bottom: var(--space-4);">
+            ⚠️ ATTENTION !
+        </h1>
+        
+        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6);">
+            Vous avez cliqué sur un lien de PHISHING
+        </h2>
+
+        <div style="background: var(--danger-50); border-left: 4px solid var(--danger); padding: var(--space-6); margin-bottom: var(--space-8); text-align: left; border-radius: var(--radius-lg);">
+            <p style="margin: 0; color: var(--danger-900); font-size: var(--text-lg); font-weight: var(--font-semibold);">
+                🎯 Ceci était un TEST de sécurité
+            </p>
+            <p style="margin: var(--space-3) 0 0 0; color: var(--danger-800);">
+                Si cet email avait été envoyé par un vrai cybercriminel, vos données personnelles, vos identifiants ou les données de l'entreprise auraient pu être compromis.
+            </p>
+        </div>
+
+        <div style="background: var(--gray-50); padding: var(--space-6); border-radius: var(--radius-lg); margin-bottom: var(--space-8); text-align: left;">
+            <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-4);">
+                🔍 Indices que vous auriez dû repérer :
+            </h3>
+            <ul style="margin: 0; padding-left: var(--space-6); color: var(--gray-700); line-height: 1.8;">
+                {% for indice in gabarit.indicesPieges %}
+                    <li style="margin-bottom: var(--space-2);">{{ indice }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div style="background: var(--info-50); padding: var(--space-6); border-radius: var(--radius-lg); margin-bottom: var(--space-8); text-align: left;">
+            <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--info-900); margin-bottom: var(--space-4);">
+                💡 Que faire à l'avenir ?
+            </h3>
+            <ol style="margin: 0; padding-left: var(--space-6); color: var(--info-900); line-height: 1.8;">
+                <li style="margin-bottom: var(--space-2);"><strong>Vérifiez toujours l'expéditeur</strong> (adresse email complète)</li>
+                <li style="margin-bottom: var(--space-2);"><strong>Méfiez-vous de l'urgence</strong> créée artificiellement</li>
+                <li style="margin-bottom: var(--space-2);"><strong>Ne cliquez pas sur les liens</strong> dans les emails suspects</li>
+                <li style="margin-bottom: var(--space-2);"><strong>Survolez les liens</strong> pour voir la vraie URL</li>
+                <li style="margin-bottom: var(--space-2);"><strong>En cas de doute, signalez</strong> à votre RSSI</li>
+            </ol>
+        </div>
+
+        <div style="padding: var(--space-6); background: linear-gradient(135deg, var(--warning-100), var(--warning-50); border-radius: var(--radius-lg); margin-bottom: var(--space-8);">
+            <p style="margin: 0; color: var(--warning-900); font-weight: var(--font-semibold);">
+                📉 Votre score de vigilance a été réduit de 10 points
+            </p>
+            <p style="margin: var(--space-2) 0 0 0; color: var(--warning-800); font-size: var(--text-sm);">
+                Complétez les modules de formation pour améliorer vos compétences
+            </p>
+        </div>
+
+        <a href="{{ path('employe_dashboard') }}" class="btn btn-primary btn-lg" style="width: 100%;">
+            <i class="bi bi-arrow-left-circle"></i> Retour au tableau de bord
+        </a>
+
+    </div>
+
+</div>
+
+<style>
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+</style>
+
+</body>
+</html>

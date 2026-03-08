@@ -1,0 +1,87 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Catégories de formation{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+    <div>
+        <p style="color: var(--gray-600); margin: 0;">{{ categories|length }} catégories</p>
+    </div>
+    <a href="{{ path('admin_categorie_nouveau') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Créer une catégorie
+    </a>
+</div>
+
+{% if categories|length == 0 %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-folder" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucune catégorie
+        </h3>
+        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">Créez vos catégories de formation</p>
+        <a href="{{ path('admin_categorie_nouveau') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer ma première catégorie
+        </a>
+    </div>
+{% else %}
+    <div class="card">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead style="background: var(--gray-100); border-bottom: 2px solid var(--gray-300);">
+                <tr>
+                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700);">Titre</th>
+                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700);">Description</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700);">Modules</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700);">Statut</th>
+                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700);">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for categorie in categories %}
+                <tr style="border-bottom: 1px solid var(--gray-200);">
+                    <td style="padding: var(--space-4);">
+                        <div style="font-weight: var(--font-semibold); color: var(--gray-900);">
+                            {{ categorie.titre }}
+                        </div>
+                        <div style="font-size: var(--text-xs); color: var(--gray-500);">
+                            Créée le {{ categorie.dateCreation|date('d/m/Y') }}
+                        </div>
+                    </td>
+                    <td style="padding: var(--space-4); color: var(--gray-600);">
+                        {{ categorie.description|slice(0, 80) }}{% if categorie.description|length > 80 %}...{% endif %}
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        <span class="badge badge-info">{{ categorie.modules|length }}</span>
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        {% if categorie.statut == 'ACTIF' %}
+                            <span class="badge badge-success">Actif</span>
+                        {% else %}
+                            <span class="badge" style="background: var(--gray-400); color: white;">Inactif</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: var(--space-4); text-align: center;">
+                        <div style="display: flex; gap: var(--space-2); justify-content: center;">
+                            <a href="{{ path('admin_categorie_modifier', {id: categorie.id}) }}" class="btn btn-sm btn-ghost" title="Modifier">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form method="post" action="{{ path('admin_categorie_toggle_activation', {id: categorie.id}) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-ghost" style="color: {{ categorie.statut == 'ACTIF' ? 'var(--warning)' : 'var(--success)' }};" title="{{ categorie.statut == 'ACTIF' ? 'Désactiver' : 'Activer' }}">
+                                    <i class="bi bi-{{ categorie.statut == 'ACTIF' ? 'pause-circle' : 'play-circle' }}"></i>
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('admin_categorie_supprimer', {id: categorie.id}) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger);" onclick="return confirm('Supprimer cette catégorie ?')" title="Supprimer">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% endblock %}

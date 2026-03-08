@@ -1,0 +1,105 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Chapitres - {{ module.titre }}{% endblock %}
+
+{% block content %}
+
+<div style="margin-bottom: var(--space-6);">
+    <a href="{{ path('admin_modules_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2);">
+        <i class="bi bi-arrow-left"></i> Retour aux modules
+    </a>
+</div>
+
+<div class="card" style="margin-bottom: var(--space-6);">
+    <div class="card-body" style="padding: var(--space-6);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); margin-bottom: var(--space-2);">
+                    {{ module.titre }}
+                </h3>
+                <p style="color: var(--gray-600); margin: 0;">
+                    {{ module.description }}
+                </p>
+            </div>
+            <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter un chapitre
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if chapitres|length == 0 %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-journal-text" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucun chapitre
+        </h3>
+        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">Commencez par ajouter le premier chapitre de ce module</p>
+        <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter le premier chapitre
+        </a>
+    </div>
+{% else %}
+    <div style="display: grid; gap: var(--space-4);">
+        {% for chapitre in chapitres %}
+        <div class="card">
+            <div class="card-body" style="padding: var(--space-6);">
+                <div style="display: flex; gap: var(--space-4);">
+                    
+                    {# Numéro du chapitre #}
+                    <div style="flex-shrink: 0;">
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-weight: var(--font-bold); font-size: var(--text-xl);">
+                            {{ chapitre.ordre }}
+                        </div>
+                    </div>
+
+                    {# Contenu #}
+                    <div style="flex: 1;">
+                        <h4 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                            {{ chapitre.titre }}
+                        </h4>
+                        <div style="color: var(--gray-600); font-size: var(--text-sm); line-height: 1.6;">
+                            {{ chapitre.contenu|striptags|slice(0, 150) }}{% if chapitre.contenu|length > 150 %}...{% endif %}
+                        </div>
+                        
+                        {% if chapitre.urlVideo %}
+                        <div style="margin-top: var(--space-3);">
+                            <span class="badge badge-info">
+                                <i class="bi bi-play-circle"></i> Vidéo{% if chapitre.dureeVideo %} - {{ chapitre.dureeVideo }} min{% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {# Actions #}
+                    <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+                        <form method="post" action="{{ path('admin_chapitre_monter', {moduleId: module.id, id: chapitre.id}) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-ghost" {% if chapitre.ordre == 1 %}disabled style="opacity: 0.3;"{% endif %} title="Monter">
+                                <i class="bi bi-arrow-up"></i>
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_chapitre_descendre', {moduleId: module.id, id: chapitre.id}) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-ghost" {% if loop.last %}disabled style="opacity: 0.3;"{% endif %} title="Descendre">
+                                <i class="bi bi-arrow-down"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); margin-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                    <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-sm btn-ghost">
+                        <i class="bi bi-pencil"></i> Modifier
+                    </a>
+                    <form method="post" action="{{ path('admin_chapitre_supprimer', {moduleId: module.id, id: chapitre.id}) }}" style="display: inline; margin-left: auto;">
+                        <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger);" onclick="return confirm('Supprimer ce chapitre ?')">
+                            <i class="bi bi-trash"></i> Supprimer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aperçu - {{ gabarit.titre }}</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .email-preview {
+            background: white;
+            max-width: 800px;
+            margin: 0 auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .email-header div {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .email-header strong {
+            color: #495057;
+        }
+        .email-body {
+            padding: 20px;
+        }
+        .close-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #6366F1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .close-btn:hover {
+            background: #4F46E5;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="close-btn" onclick="window.close()">✕ Fermer</button>
+
+    <div class="header">
+        <h1 style="margin: 0 0 10px 0; font-size: 24px; color: #0F172A;">
+            📧 Aperçu du gabarit phishing
+        </h1>
+        <p style="margin: 0; color: #64748B;">
+            <strong>{{ gabarit.titre }}</strong> - {{ gabarit.categorie|capitalize }} - Difficulté: {{ gabarit.difficulte|capitalize }}
+        </p>
+    </div>
+
+    <div class="email-preview">
+        <div class="email-header">
+            <div><strong>De :</strong> {{ gabarit.nomExpediteur }} &lt;{{ gabarit.emailExpediteur }}&gt;</div>
+            <div><strong>Sujet :</strong> {{ gabarit.sujetEmail }}</div>
+        </div>
+        <div class="email-body">
+            {{ gabarit.contenuHtml|raw }}
+        </div>
+    </div>
+
+</body>
+</html>

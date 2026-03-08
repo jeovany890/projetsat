@@ -1,0 +1,144 @@
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 {% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Créer un module{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 900px; margin: 0 auto;">
+    
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_modules_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux modules
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-10);">
+            
+            <div style="text-align: center; margin-bottom: var(--space-8);">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); margin-bottom: var(--space-4);">
+                    <i class="bi bi-book" style="font-size: var(--text-4xl); color: white;"></i>
+                </div>
+                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                    Nouveau module de formation
+                </h2>
+                <p style="color: var(--gray-600);">Créez un module théorique ou pratique pour former vos employés</p>
+            </div>
+
+            <form method="post">
+                
+                {# Informations de base #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        📝 Informations générales
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="titre">
+                            <i class="bi bi-type"></i> Titre du module *
+                        </label>
+                        <input type="text" class="form-control" id="titre" name="titre" required placeholder="Ex: Introduction au phishing">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">
+                            <i class="bi bi-text-paragraph"></i> Description *
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Décrivez le contenu et les objectifs de ce module..."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="categorie_id">
+                                <i class="bi bi-folder"></i> Catégorie *
+                            </label>
+                            <select class="form-control" id="categorie_id" name="categorie_id" required>
+                                <option value="">Sélectionnez...</option>
+                                {% for categorie in categories %}
+                                    <option value="{{ categorie.id }}">{{ categorie.titre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="type_module">
+                                <i class="bi bi-clipboard-check"></i> Type de module
+                            </label>
+                            <select class="form-control" id="type_module" name="type_module">
+                                <option value="theorique">Théorique</option>
+                                <option value="pratique">Pratique</option>
+                                <option value="mixte">Mixte</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {# Paramètres #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        ⚙️ Paramètres
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="difficulte">
+                                <i class="bi bi-signal"></i> Difficulté
+                            </label>
+                            <select class="form-control" id="difficulte" name="difficulte">
+                                <option value="debutant">Débutant</option>
+                                <option value="intermediaire">Intermédiaire</option>
+                                <option value="avance">Avancé</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="duree_estimee">
+                                <i class="bi bi-clock"></i> Durée estimée (minutes)
+                            </label>
+                            <input type="number" class="form-control" id="duree_estimee" name="duree_estimee" value="30" min="5" max="300">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="points_reussite">
+                                <i class="bi bi-trophy"></i> Points à la réussite
+                            </label>
+                            <input type="number" class="form-control" id="points_reussite" name="points_reussite" value="100" min="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="etoiles_reussite">
+                                <i class="bi bi-star-fill"></i> Étoiles à la réussite
+                            </label>
+                            <input type="number" class="form-control" id="etoiles_reussite" name="etoiles_reussite" value="2" min="0" max="5">
+                        </div>
+                    </div>
+                </div>
+
+                {# Publication #}
+                <div style="margin-bottom: var(--space-8);">
+                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200); transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--primary-500)'" onmouseout="this.style.borderColor='var(--gray-200)'">
+                        <input type="checkbox" name="est_publie" style="width: 20px; height: 20px;">
+                        <div>
+                            <div style="font-weight: var(--font-semibold); color: var(--gray-900);">Publier immédiatement</div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Le module sera visible par les RSSI et disponible pour les campagnes</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Créer le module
+                    </button>
+                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

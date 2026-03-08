@@ -33,12 +33,16 @@
             <div style="margin-top: var(--space-6); margin-bottom: var(--space-3); font-size: var(--text-xs); text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: var(--font-semibold); letter-spacing: 0.05em;">
                 Contenus
             </div>
-            <a href="#" class="nav-link">
-                <i class="bi bi-book"></i> Modules formation
-            </a>
-            <a href="#" class="nav-link">
-                <i class="bi bi-envelope-paper"></i> Gabarits phishing
-            </a>
+            <a href="{{ path('admin_categories_liste') }}" class="nav-link {% if 'admin_categories' in app.request.attributes.get('_route') %}active{% endif %}">
+    <i class="bi bi-folder"></i> Catégories
+</a>
+            <a href="{{ path('admin_modules_liste') }}" class="nav-link {% if 'admin_modules' in app.request.attributes.get('_route') %}active{% endif %}">
+    <i class="bi bi-book"></i> Modules formation
+</a>
+         <a href="{{ path('admin_gabarits_liste') }}" class="nav-link {% if 'admin_gabarits' in app.request.attributes.get('_route') %}active{% endif %}">
+    <i class="bi bi-envelope-paper"></i> Systeme phishing
+</a>
+
         </nav>
 
         <div style="padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">

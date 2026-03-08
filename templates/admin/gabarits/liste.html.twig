@@ -1,0 +1,184 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Gabarits phishing{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+    <div>
+        <p style="color: var(--gray-600); margin: 0;">{{ gabarits|length }} gabarits créés</p>
+    </div>
+    <a href="{{ path('admin_gabarit_nouveau') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Créer un gabarit
+    </a>
+</div>
+
+{# Stats rapides #}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="card" style="border-left: 4px solid var(--success);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Gabarits actifs</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">
+                {{ gabarits|filter(g => g.estActif)|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--warning);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Banque</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">
+                {{ gabarits|filter(g => g.categorie == 'banque')|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--info);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Services</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--info);">
+                {{ gabarits|filter(g => g.categorie == 'service_public')|length }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card" style="border-left: 4px solid var(--danger);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Recrutement</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--danger);">
+                {{ gabarits|filter(g => g.categorie == 'recrutement')|length }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Liste gabarits #}
+<div style="display: grid; gap: var(--space-6);">
+    {% for gabarit in gabarits %}
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-6);">
+            <div style="display: flex; gap: var(--space-6);">
+                
+                {# Aperçu visuel #}
+                <div style="width: 200px; flex-shrink: 0;">
+                    <div style="border: 2px solid var(--gray-300); border-radius: var(--radius-lg); overflow: hidden; background: white; height: 250px; position: relative;">
+                        <iframe srcdoc="{{ gabarit.contenuHtml|e('html_attr') }}" style="width: 100%; height: 100%; border: none; pointer-events: none; transform: scale(0.5); transform-origin: 0 0; width: 200%; height: 200%;"></iframe>
+                        <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); padding: var(--space-3); text-align: center;">
+                            <a href="{{ path('admin_gabarit_apercu', {id: gabarit.id}) }}" target="_blank" class="btn btn-sm" style="background: white; color: var(--gray-900); font-size: var(--text-xs);">
+                                <i class="bi bi-eye"></i> Aperçu complet
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                {# Informations #}
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
+                                <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                                    {{ gabarit.titre }}
+                                </h3>
+                                {% if gabarit.estActif %}
+                                    <span class="badge badge-success">Actif</span>
+                                {% else %}
+                                    <span class="badge" style="background: var(--gray-400); color: white;">Inactif</span>
+                                {% endif %}
+                            </div>
+                            
+                            {% if gabarit.description %}
+                                <p style="color: var(--gray-600); margin-bottom: var(--space-4);">
+                                    {{ gabarit.description }}
+                                </p>
+                            {% endif %}
+
+                            <div style="background: var(--gray-50); padding: var(--space-4); border-radius: var(--radius-lg); margin-bottom: var(--space-4);">
+                                <div style="font-size: var(--text-sm); color: var(--gray-700); margin-bottom: var(--space-2);">
+                                    <strong>De :</strong> {{ gabarit.nomExpediteur }} &lt;{{ gabarit.emailExpediteur }}&gt;
+                                </div>
+                                <div style="font-size: var(--text-sm); color: var(--gray-700);">
+                                    <strong>Sujet :</strong> {{ gabarit.sujetEmail }}
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; font-size: var(--text-sm); color: var(--gray-600);">
+                                <span>
+                                    <i class="bi bi-folder"></i> 
+                                    {% if gabarit.categorie == 'banque' %}
+                                        Banque
+                                    {% elseif gabarit.categorie == 'service_public' %}
+                                        Service public
+                                    {% elseif gabarit.categorie == 'recrutement' %}
+                                        Recrutement
+                                    {% else %}
+                                        {{ gabarit.categorie|capitalize }}
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    <i class="bi bi-signal"></i> 
+                                    {% if gabarit.difficulte == 'facile' %}
+                                        Facile
+                                    {% elseif gabarit.difficulte == 'moyen' %}
+                                        Moyen
+                                    {% elseif gabarit.difficulte == 'difficile' %}
+                                        Difficile
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    <i class="bi bi-envelope"></i> 
+                                    {% if gabarit.compteEmailDsn == 'MAILER_PHISHING_BOA' %}
+                                        BOA Bénin
+                                    {% elseif gabarit.compteEmailDsn == 'MAILER_PHISHING_SBEE' %}
+                                        SBEE
+                                    {% elseif gabarit.compteEmailDsn == 'MAILER_PHISHING_UNICEF' %}
+                                        UNICEF
+                                    {% else %}
+                                        {{ gabarit.compteEmailDsn }}
+                                    {% endif %}
+                                </span>
+                                <span>
+                                    <i class="bi bi-graph-up"></i> {{ gabarit.nombreUtilisations }} utilisations
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
+                        <a href="{{ path('admin_gabarit_apercu', {id: gabarit.id}) }}" target="_blank" class="btn btn-ghost btn-sm">
+                            <i class="bi bi-eye"></i> Aperçu
+                        </a>
+                        <a href="{{ path('admin_gabarit_modifier', {id: gabarit.id}) }}" class="btn btn-ghost btn-sm">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <form method="post" action="{{ path('admin_gabarit_toggle_activation', {id: gabarit.id}) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="color: {{ gabarit.estActif ? 'var(--warning)' : 'var(--success)' }};">
+                                <i class="bi bi-{{ gabarit.estActif ? 'pause-circle' : 'play-circle' }}"></i>
+                                {{ gabarit.estActif ? 'Désactiver' : 'Activer' }}
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_gabarit_supprimer', {id: gabarit.id}) }}" style="display: inline; margin-left: auto;">
+                            <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="return confirm('Supprimer ce gabarit ? Cette action est irréversible.')">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-envelope-paper" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucun gabarit créé
+        </h3>
+        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">Créez votre premier gabarit de phishing</p>
+        <a href="{{ path('admin_gabarit_nouveau') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer un gabarit
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

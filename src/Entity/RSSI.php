@@ -2,9 +2,10 @@
 
 namespace App\Entity;
 
+use App\Repository\RSSIRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: RSSIRepository::class)]
 class RSSI extends Utilisateur
 {
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
@@ -13,7 +14,14 @@ class RSSI extends Utilisateur
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $jetonExpiration = null;
 
-    // Getters et Setters
+    // ✅ AJOUT : Lien direct vers l'entreprise du RSSI
+    #[ORM\ManyToOne(targetEntity: Entreprise::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Entreprise $entreprise = null;
+
+    // ========================================
+    // JETON ACTIVATION
+    // ========================================
 
     public function getJetonActivation(): ?string
     {
@@ -42,7 +50,6 @@ class RSSI extends Utilisateur
         if (!$this->jetonActivation || !$this->jetonExpiration) {
             return false;
         }
-
         return $this->jetonExpiration > new \DateTime();
     }
 
@@ -50,5 +57,20 @@ class RSSI extends Utilisateur
     {
         $this->jetonActivation = bin2hex(random_bytes(32));
         $this->jetonExpiration = (new \DateTime())->modify('+48 hours');
+    }
+
+    // ========================================
+    // RELATION ENTREPRISE
+    // ========================================
+
+    public function getEntreprise(): ?Entreprise
+    {
+        return $this->entreprise;
+    }
+
+    public function setEntreprise(?Entreprise $entreprise): static
+    {
+        $this->entreprise = $entreprise;
+        return $this;
     }
 }

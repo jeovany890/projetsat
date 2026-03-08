@@ -1,0 +1,62 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Modifier le chapitre{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 900px; margin: 0 auto;">
+    
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2);">
+            <i class="bi bi-arrow-left"></i> Retour
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-10);">
+            
+            <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); margin-bottom: var(--space-8);">
+                Modifier le chapitre
+            </h2>
+
+            <form method="post">
+                
+                <div class="form-group">
+                    <label class="form-label" for="titre">Titre du chapitre *</label>
+                    <input type="text" class="form-control" id="titre" name="titre" required value="{{ chapitre.titre }}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="contenu">Contenu du chapitre *</label>
+                    <textarea class="form-control" id="contenu" name="contenu" rows="15" required>{{ chapitre.contenu }}</textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6);">
+                    <div class="form-group">
+                        <label class="form-label" for="url_video">URL de la vidéo</label>
+                        <input type="url" class="form-control" id="url_video" name="url_video" value="{{ chapitre.urlVideo }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="duree_video">Durée (minutes)</label>
+                        <input type="number" class="form-control" id="duree_video" name="duree_video" value="{{ chapitre.dureeVideo }}" min="1">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4); margin-top: var(--space-8);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Enregistrer
+                    </button>
+                    <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
