@@ -1,0 +1,83 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Nouvel employé{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;">
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-person-plus-fill"></i> Ajouter un employé manuellement</div>
+        </div>
+        <div class="r-card-body">
+
+            {% if departements|length == 0 %}
+            <div style="background:#FEF9C3;padding:14px 16px;border-radius:10px;border:1px solid #FEF08A;margin-bottom:20px;font-size:13px;color:#854D0E;">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                Vous devez d'abord créer au moins un département.
+                <a href="{{ path('rssi_departements_nouveau') }}" style="color:#0891B2;font-weight:600;margin-left:4px;">Créer un département</a>
+            </div>
+            {% endif %}
+
+            <form method="post">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Prénom *</label>
+                        <input type="text" name="prenom" required placeholder="Jean"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Nom *</label>
+                        <input type="text" name="nom" required placeholder="Dupont"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Email *</label>
+                    <input type="email" name="email" required placeholder="jean.dupont@entreprise.com"
+                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Téléphone</label>
+                        <input type="text" name="telephone" placeholder="+229 XX XX XX XX"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Poste / Fonction</label>
+                        <input type="text" name="poste" placeholder="Comptable, Développeur..."
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Département *</label>
+                    <select name="departement" required
+                            style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        <option value="">-- Choisir un département --</option>
+                        {% for dept in departements %}
+                            <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="background:#F0F9FF;padding:12px 16px;border-radius:8px;border:1px solid #BAE6FD;margin-bottom:20px;font-size:13px;color:#0369A1;">
+                    <i class="bi bi-info-circle-fill"></i>
+                    Un mot de passe temporaire sera généré et envoyé par email à l'employé.
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="r-btn r-btn-primary" {% if departements|length == 0 %}disabled style="opacity:0.5;"{% endif %}>
+                        <i class="bi bi-person-plus"></i> Créer l'employé
+                    </button>
+                    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
+                    <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost" style="margin-left:auto;">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

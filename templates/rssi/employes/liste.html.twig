@@ -1,0 +1,171 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Employés{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost">
+        <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
+    </a>
+    <a href="{{ path('rssi_employes_nouveau') }}" class="r-btn r-btn-primary">
+        <i class="bi bi-plus-lg"></i> Nouvel employé
+    </a>
+{% endblock %}
+
+{% block content %}
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+    <div class="r-card" style="padding:16px;text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#0F172A;">{{ employes|length }}</div>
+        <div style="font-size:12px;color:#64748B;">Total employés</div>
+    </div>
+    <div class="r-card" style="padding:16px;text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#166534;">{{ employes|filter(e => e.estActif)|length }}</div>
+        <div style="font-size:12px;color:#64748B;">Actifs</div>
+    </div>
+    <div class="r-card" style="padding:16px;text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#B91C1C;">{{ employes|filter(e => not e.estActif)|length }}</div>
+        <div style="font-size:12px;color:#64748B;">Inactifs</div>
+    </div>
+    <div class="r-card" style="padding:16px;text-align:center;">
+        <div style="font-size:26px;font-weight:800;color:#0891B2;">
+            {% if employes|length > 0 %}
+                {% set total = 0 %}
+                {% for e in employes %}{% set total = total + e.scoreVigilance %}{% endfor %}
+                {{ (total / employes|length)|round(1) }}%
+            {% else %}0%{% endif %}
+        </div>
+        <div style="font-size:12px;color:#64748B;">Score moyen</div>
+    </div>
+</div>
+
+{% if employes|length == 0 %}
+<div class="r-card">
+    <div class="r-card-body">
+        <div class="r-empty">
+            <i class="bi bi-people"></i>
+            <p>Aucun employé. Commencez par créer des départements puis ajoutez vos employés.</p>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <a href="{{ path('rssi_employes_nouveau') }}" class="r-btn r-btn-primary"><i class="bi bi-plus-lg"></i> Ajouter manuellement</a>
+                <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost"><i class="bi bi-file-earmark-arrow-up"></i> Importer CSV</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<div class="r-card" style="margin-bottom:16px;padding:16px;">
+    <div style="display:flex;gap:12px;align-items:center;">
+        <input type="text" id="searchInput" placeholder="Rechercher un employé..."
+               style="flex:1;padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
+        <select id="filterDept" style="padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
+            <option value="">Tous les départements</option>
+            {% for dept in departements %}
+                <option value="{{ dept.nom }}">{{ dept.nom }}</option>
+            {% endfor %}
+        </select>
+        <select id="filterStatut" style="padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actifs</option>
+            <option value="inactif">Inactifs</option>
+        </select>
+    </div>
+</div>
+
+<div class="r-card">
+    <table class="r-table" id="tableEmployes">
+        <thead>
+            <tr>
+                <th>Employé</th>
+                <th>Département</th>
+                <th>Poste</th>
+                <th>Score vigilance</th>
+                <th>Étoiles / Points</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for e in employes %}
+        <tr data-nom="{{ (e.prenom ~ ' ' ~ e.nom)|lower }}"
+            data-dept="{{ e.departement ? e.departement.nom : '' }}"
+            data-statut="{{ e.estActif ? 'actif' : 'inactif' }}">
+            <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06B6D4,#0284C7);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;">
+                        {{ e.prenom|slice(0,1)|upper }}{{ e.nom|slice(0,1)|upper }}
+                    </div>
+                    <div>
+                        <div style="font-weight:600;color:#1E293B;">{{ e.prenom }} {{ e.nom }}</div>
+                        <div style="font-size:11px;color:#94A3B8;">{{ e.email }}</div>
+                    </div>
+                </div>
+            </td>
+            <td>{{ e.departement ? e.departement.nom : '—' }}</td>
+            <td>{{ e.poste ?? '—' }}</td>
+            <td>
+                {% if e.totalPoints == 0 %}
+                    <span style="font-size:12px;color:#CBD5E1;font-style:italic;">Pas encore de quiz</span>
+                {% else %}
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="width:70px;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                            <div style="height:100%;width:{{ e.scoreVigilance }}%;background:{% if e.scoreVigilance >= 60 %}#34D399{% elseif e.scoreVigilance >= 40 %}#FBBF24{% else %}#F87171{% endif %};border-radius:99px;"></div>
+                        </div>
+                        <span style="font-size:12px;font-weight:700;color:#475569;">{{ e.scoreVigilance }}%</span>
+                    </div>
+                    <div style="font-size:10px;color:#94A3B8;margin-top:2px;">{{ e.niveauVigilance }}</div>
+                {% endif %}
+            </td>
+            <td>
+                <span style="color:#F59E0B;font-weight:600;">★ {{ e.totalEtoiles }}</span>
+                <span style="color:#94A3B8;font-size:11px;margin-left:4px;">{{ e.totalPoints }} pts</span>
+            </td>
+            <td>
+                {% if e.estActif %}
+                    <span class="r-badge r-badge-green">Actif</span>
+                {% else %}
+                    <span class="r-badge r-badge-red">Inactif</span>
+                {% endif %}
+            </td>
+            <td>
+                <div style="display:flex;gap:5px;">
+                    <a href="{{ path('rssi_employes_detail', {id: e.id}) }}" class="r-btn r-btn-ghost" style="padding:6px 10px;" title="Voir">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ path('rssi_employes_modifier', {id: e.id}) }}" class="r-btn r-btn-ghost" style="padding:6px 10px;" title="Modifier">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form method="post" action="{{ path('rssi_employes_activer', {id: e.id}) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('activer_' ~ e.id) }}">
+                        <button type="submit" class="r-btn {% if e.estActif %}r-btn-danger{% else %}r-btn-ghost{% endif %}" style="padding:6px 10px;"
+                                title="{{ e.estActif ? 'Désactiver' : 'Activer' }}">
+                            <i class="bi bi-{% if e.estActif %}pause-circle{% else %}play-circle{% endif %}"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script>
+function filtrer() {
+    const s = document.getElementById('searchInput').value.toLowerCase();
+    const d = document.getElementById('filterDept').value;
+    const t = document.getElementById('filterStatut').value;
+    document.querySelectorAll('#tableEmployes tbody tr').forEach(row => {
+        row.style.display = (
+            row.dataset.nom.includes(s) &&
+            (!d || row.dataset.dept === d) &&
+            (!t || row.dataset.statut === t)
+        ) ? '' : 'none';
+    });
+}
+document.getElementById('searchInput').addEventListener('input', filtrer);
+document.getElementById('filterDept').addEventListener('change', filtrer);
+document.getElementById('filterStatut').addEventListener('change', filtrer);
+</script>
+
+{% endif %}
+{% endblock %}

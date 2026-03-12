@@ -1,0 +1,45 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Nouveau département{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;">
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-diagram-3-fill"></i> Créer un département</div>
+        </div>
+        <div class="r-card-body">
+            <form method="post">
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Nom du département <span style="color:#EF4444;">*</span>
+                    </label>
+                    <input type="text" name="nom" required
+                           placeholder="Ex: Comptabilité, Informatique, RH..."
+                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;outline:none;"
+                           onfocus="this.style.borderColor='#06B6D4'" onblur="this.style.borderColor='#D1D5DB'">
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Description <span style="color:#94A3B8;font-weight:400;">(optionnel)</span>
+                    </label>
+                    <textarea name="description" rows="3"
+                              placeholder="Rôle et missions du département..."
+                              style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;resize:vertical;box-sizing:border-box;outline:none;"
+                              onfocus="this.style.borderColor='#06B6D4'" onblur="this.style.borderColor='#D1D5DB'"></textarea>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="r-btn r-btn-primary">
+                        <i class="bi bi-check-lg"></i> Créer le département
+                    </button>
+                    <a href="{{ path('rssi_departements_liste') }}" class="r-btn r-btn-ghost">
+                        Annuler
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

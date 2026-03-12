@@ -15,12 +15,21 @@ class CampagnePhishing
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
     private ?int $id = null;
-
+  
     #[ORM\Column(type: 'string', length: 255)]
     private ?string $titre = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+private bool $autorisationConfirmee = false;
+
+#[ORM\Column(type: 'datetime', nullable: true)]
+private ?\DateTimeInterface $dateAutorisation = null;
+
+#[ORM\Column(type: 'string', length: 255, nullable: true)]
+private ?string $nomAutorisateur = null;
+
 
     #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PLANIFIEE'])]
     private string $statut = 'PLANIFIEE';
@@ -75,6 +84,49 @@ class CampagnePhishing
     public function getId(): ?int { return $this->id; }
     public function getTitre(): ?string { return $this->titre; }
     public function setTitre(string $titre): static { $this->titre = $titre; return $this; }
+
+
+public function isAutorisationConfirmee(): bool
+{
+    return $this->autorisationConfirmee;
+}
+
+public function setAutorisationConfirmee(bool $autorisationConfirmee): static
+{
+    $this->autorisationConfirmee = $autorisationConfirmee;
+    return $this;
+}
+
+public function getDateAutorisation(): ?\DateTimeInterface
+{
+    return $this->dateAutorisation;
+}
+
+public function setDateAutorisation(?\DateTimeInterface $date): static
+{
+    $this->dateAutorisation = $date;
+    return $this;
+}
+
+public function getNomAutorisateur(): ?string
+{
+    return $this->nomAutorisateur;
+}
+
+public function setNomAutorisateur(?string $nom): static
+{
+    $this->nomAutorisateur = $nom;
+    return $this;
+}
+
+// Méthode utilitaire
+public function confirmerAutorisation(string $nomAutorisateur): static
+{
+    $this->autorisationConfirmee = true;
+    $this->dateAutorisation      = new \DateTime();
+    $this->nomAutorisateur       = $nomAutorisateur;
+    return $this;
+}
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(?string $description): static { $this->description = $description; return $this; }
     public function getStatut(): string { return $this->statut; }

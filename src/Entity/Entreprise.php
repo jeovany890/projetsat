@@ -21,7 +21,11 @@ class Entreprise
 
     #[ORM\Column(type: 'string', length: 13, unique: true)]
     private ?string $ifu = null;
+#[ORM\Column(type: 'boolean', options: ['default' => false])]
+private bool $charteAcceptee = false;
 
+   #[ORM\Column(type: 'datetime', nullable: true)]
+ private ?\DateTimeInterface $dateAcceptationCharte = null;
     #[ORM\Column(type: 'string', length: 50)]
     private ?string $rccm = null;
 
@@ -100,6 +104,35 @@ class Entreprise
         $this->rccm = $rccm;
         return $this;
     }
+    public function isCharteAcceptee(): bool
+{
+    return $this->charteAcceptee;
+}
+
+public function setCharteAcceptee(bool $charteAcceptee): static
+{
+    $this->charteAcceptee = $charteAcceptee;
+    return $this;
+}
+
+public function getDateAcceptationCharte(): ?\DateTimeInterface
+{
+    return $this->dateAcceptationCharte;
+}
+
+public function setDateAcceptationCharte(?\DateTimeInterface $date): static
+{
+    $this->dateAcceptationCharte = $date;
+    return $this;
+}
+
+// Méthode utilitaire
+public function accepterCharte(): static
+{
+    $this->charteAcceptee = true;
+    $this->dateAcceptationCharte = new \DateTime();
+    return $this;
+}
 
     public function getSecteur(): ?string
     {

@@ -4,91 +4,92 @@ namespace App\Service;
 
 use App\Entity\CampagnePhishing;
 use App\Entity\EnvoiPhishing;
-use App\Entity\Employe;
+use App\Entity\ResultatPhishing;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * Service d'envoi phishing — utilisé par CampagnePhishingController::lancer()
+ * et potentiellement par une commande CLI de retry.
+ */
 class PhishingService
 {
     public function __construct(
         private EmailService $emailService,
         private EntityManagerInterface $em,
-        private UrlGeneratorInterface $urlGenerator,
-        private string $baseUrl
+        private UrlGeneratorInterface $urlGenerator
     ) {}
 
-    public function envoyerEmailPhishing(CampagnePhishing $campagne, Employe $employe): EnvoiPhishing
+    /**
+     * Envoie un email phishing pour un EnvoiPhishing donné.
+     * Suppose que envoi->getResultat() existe et contient le token.
+     */
+    public function envoyerPourEnvoi(EnvoiPhishing $envoi): bool
     {
-        // Créer l'envoi avec un token unique
-        $envoi = new EnvoiPhishing();
-        $envoi->setCampagne($campagne);
-        $envoi->setEmploye($employe);
-        $envoi->setToken(bin2hex(random_bytes(32)));
-        $envoi->setDateEnvoi(new \DateTime());
-
-        $this->em->persist($envoi);
-        $this->em->flush();
-
-        // Générer les liens de tracking
-        $lienClic = $this->baseUrl . $this->urlGenerator->generate(
-            'phishing_track_click',
-            ['token' => $envoi->getToken()]
-        );
-
-        $lienPixel = $this->baseUrl . $this->urlGenerator->generate(
-            'phishing_track_email',
-            ['token' => $envoi->getToken()]
-        );
-
-        // Personnaliser le contenu HTML
-        $gabarit = $campagne->getGabarit();
-        $contenuHtml = $gabarit->getContenuHtml();
-
-        // Remplacer {LIEN_PIEGE}
-        $contenuHtml = str_replace('{LIEN_PIEGE}', $lienClic, $contenuHtml);
-
-        // Ajouter le pixel de tracking
-        $pixelTracking = "<img src=\"{$lienPixel}\" alt=\"\" width=\"1\" height=\"1\" style=\"display:none;\">";
-        $contenuHtml .= $pixelTracking;
-
-        // Personnaliser avec les données employé
-        $contenuHtml = $this->personnaliserContenu($contenuHtml, $employe);
-
-        // Envoyer l'email
-        try {
-            $this->emailService->envoyerEmailPhishing(
-                $employe->getEmail(),
-                $gabarit->getSujetEmail(),
-                $contenuHtml,
-                $gabarit->getNomExpediteur(),
-                $gabarit->getEmailExpediteur(),
-                $gabarit->getCompteEmailDsn()
-            );
-
-            $envoi->setEstEnvoye(true);
-        } catch (\Exception $e) {
-            $envoi->setEstEnvoye(false);
-            $envoi->setMessageErreur($e->getMessage());
+        $resultat = $envoi->getResultat();
+        if (!$resultat) {
+            throw new \LogicException("EnvoiPhishing ID {$envoi->getId()} n'a pas de ResultatPhishing associé.");
         }
 
-        $this->em->flush();
+        $token    = $resultat->getJetonTrackingUnique();
+        $campagne = $envoi->getCampagne();
+        $gabarit  = $campagne->getGabarit();
+        $employe  = $envoi->getEmploye();
 
-        return $envoi;
+        $urlPixel = $this->urlGenerator->generate('phishing_track_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+        $urlClic  = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $contenu = $this->personnaliserContenu(
+            $gabarit->getContenuHtml(),
+            $employe,
+            $urlClic,
+            $token
+        );
+        // ── TRACKING MULTI-MÉTHODES ──
+        $pixelImg     = "<img src=\"{$urlPixel}\" width=\"1\" height=\"1\""
+            . " style=\"display:none;border:0;position:absolute;\" alt=\"\">";
+        $pixelCss     = "<div style=\"background-image:url('{$urlPixel}');"
+            . "width:1px;height:1px;position:absolute;opacity:0;overflow:hidden;font-size:0;\"></div>";
+        $pixelPreload = "<link rel=\"preload\" as=\"image\" href=\"{$urlPixel}\">";
+
+        if (stripos($contenu, '</head>') !== false) {
+            $contenu = str_ireplace('</head>', $pixelPreload . '</head>', $contenu);
+        } else {
+            $contenu = $pixelPreload . $contenu;
+        }
+        $contenu .= $pixelImg . $pixelCss;
+
+        $this->emailService->envoyerEmailPhishing(
+            destinataire:    $envoi->getEmailDestinataire(),
+            sujet:           $gabarit->getSujetEmail(),
+            contenuHtml:     $contenu,
+            nomExpediteur:   $gabarit->getNomExpediteur(),
+            emailExpediteur: $gabarit->getEmailExpediteur(),
+            compteEmailDsn:  $gabarit->getCompteEmailDsn()
+        );
+
+        $envoi->marquerCommeEnvoye();
+        $resultat->setEmailEnvoye(true)->setDateEnvoi(new \DateTime());
+        $campagne->incrementerEmailsEnvoyes();
+
+        return true;
     }
 
-    private function personnaliserContenu(string $contenu, Employe $employe): string
-    {
-        $variables = [
-            '{PRENOM}' => $employe->getPrenom(),
-            '{NOM}' => $employe->getNom(),
-            '{NOM_COMPLET}' => $employe->getNomComplet(),
-            '{EMAIL}' => $employe->getEmail(),
-            '{POSTE}' => $employe->getPoste() ?? 'Employé',
-        ];
-
+    private function personnaliserContenu(
+        string $contenu,
+        \App\Entity\Employe $employe,
+        string $urlClic,
+        string $token
+    ): string {
         return str_replace(
-            array_keys($variables),
-            array_values($variables),
+            ['{LIEN_PIEGE}', '{{LIEN_PIEGE}}', '{TOKEN}', '{{TOKEN}}',
+             '{PRENOM}', '{NOM}', '{NOM_COMPLET}', '{EMAIL}', '{POSTE}'],
+            [$urlClic, $urlClic, $token, $token,
+             $employe->getPrenom(),
+             $employe->getNom(),
+             $employe->getPrenom() . ' ' . $employe->getNom(),
+             $employe->getEmail(),
+             $employe->getPoste() ?? 'Employé'],
             $contenu
         );
     }

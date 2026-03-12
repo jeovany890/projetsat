@@ -1,0 +1,129 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}{{ employe.prenom }} {{ employe.nom }}{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_employes_modifier', {id: employe.id}) }}" class="r-btn r-btn-ghost">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    <form method="post" action="{{ path('rssi_employes_activer', {id: employe.id}) }}" style="display:inline;">
+        <input type="hidden" name="_token" value="{{ csrf_token('activer_' ~ employe.id) }}">
+        <button type="submit" class="r-btn {% if employe.estActif %}r-btn-danger{% else %}r-btn-primary{% endif %}">
+            <i class="bi bi-{% if employe.estActif %}pause-circle{% else %}play-circle{% endif %}"></i>
+            {{ employe.estActif ? 'Désactiver' : 'Activer' }}
+        </button>
+    </form>
+    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
+
+{% block content %}
+<div style="display:grid;grid-template-columns:300px 1fr;gap:20px;">
+
+    {# Carte profil #}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="r-card" style="padding:28px;text-align:center;">
+            <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#06B6D4,#0284C7);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:white;margin:0 auto 16px;">
+                {{ employe.prenom|slice(0,1)|upper }}{{ employe.nom|slice(0,1)|upper }}
+            </div>
+            <div style="font-size:18px;font-weight:700;color:#0F172A;">{{ employe.prenom }} {{ employe.nom }}</div>
+            <div style="font-size:13px;color:#64748B;margin-top:4px;">{{ employe.poste ?? 'Poste non défini' }}</div>
+            <div style="margin-top:12px;">
+                {% if employe.estActif %}
+                    <span class="r-badge r-badge-green">Actif</span>
+                {% else %}
+                    <span class="r-badge r-badge-red">Inactif</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="r-card" style="padding:20px;">
+            <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#94A3B8;margin-bottom:14px;">Informations</div>
+            <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <i class="bi bi-envelope" style="color:#06B6D4;width:16px;flex-shrink:0;"></i>
+                    <span style="color:#475569;word-break:break-all;">{{ employe.email }}</span>
+                </div>
+                {% if employe.telephone %}
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <i class="bi bi-telephone" style="color:#06B6D4;width:16px;flex-shrink:0;"></i>
+                    <span style="color:#475569;">{{ employe.telephone }}</span>
+                </div>
+                {% endif %}
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <i class="bi bi-diagram-3" style="color:#06B6D4;width:16px;flex-shrink:0;"></i>
+                    <span style="color:#475569;">{{ employe.departement ? employe.departement.nom : '—' }}</span>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <i class="bi bi-calendar3" style="color:#06B6D4;width:16px;flex-shrink:0;"></i>
+                    <span style="color:#475569;">Depuis le {{ employe.dateCreation|date('d/m/Y') }}</span>
+                </div>
+                {% if employe.dateDerniereConnexion %}
+                <div style="display:flex;gap:10px;align-items:center;">
+                    <i class="bi bi-clock" style="color:#06B6D4;width:16px;flex-shrink:0;"></i>
+                    <span style="color:#475569;">Dernière connexion : {{ employe.dateDerniereConnexion|date('d/m/Y H:i') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Stats et vigilance #}
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+            <div class="r-card" style="padding:20px;text-align:center;">
+                {% if employe.totalPoints == 0 %}
+                    <div style="font-size:28px;font-weight:800;color:#CBD5E1;line-height:1;">—</div>
+                    <div style="font-size:12px;color:#94A3B8;margin-top:4px;">Score vigilance</div>
+                    <div style="font-size:11px;color:#CBD5E1;margin-top:6px;">Pas encore de quiz</div>
+                {% else %}
+                    <div style="font-size:32px;font-weight:800;color:#0891B2;line-height:1;">{{ employe.scoreVigilance|round(1) }}%</div>
+                    <div style="font-size:12px;color:#64748B;margin-top:4px;">Score vigilance</div>
+                    <div style="font-size:11px;margin-top:6px;">
+                        <span class="r-badge {% if employe.scoreVigilance >= 80 %}r-badge-green{% elseif employe.scoreVigilance >= 60 %}r-badge-blue{% elseif employe.scoreVigilance >= 40 %}r-badge-orange{% else %}r-badge-red{% endif %}">
+                            {{ employe.niveauVigilance }}
+                        </span>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="r-card" style="padding:20px;text-align:center;">
+                <div style="font-size:32px;font-weight:800;color:#F59E0B;line-height:1;">★ {{ employe.totalEtoiles }}</div>
+                <div style="font-size:12px;color:#64748B;margin-top:4px;">Étoiles obtenues</div>
+            </div>
+            <div class="r-card" style="padding:20px;text-align:center;">
+                <div style="font-size:32px;font-weight:800;color:#6366F1;line-height:1;">{{ employe.totalPoints }}</div>
+                <div style="font-size:12px;color:#64748B;margin-top:4px;">Points accumulés</div>
+            </div>
+        </div>
+
+        <div class="r-card" style="padding:20px;">
+            <div style="font-size:13px;font-weight:700;color:#1E293B;margin-bottom:16px;">Niveau de vigilance</div>
+            {% if employe.totalPoints == 0 %}
+                <div style="text-align:center;padding:20px 0;">
+                    <div style="font-size:32px;margin-bottom:8px;">🎯</div>
+                    <div style="font-size:13px;color:#94A3B8;">Aucun score encore — l'employé n'a pas encore passé de quiz.</div>
+                </div>
+            {% else %}
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                    <div style="flex:1;height:12px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                        <div style="height:100%;width:{{ employe.scoreVigilance }}%;
+                            background:{% if employe.scoreVigilance >= 80 %}linear-gradient(90deg,#34D399,#10B981){% elseif employe.scoreVigilance >= 60 %}linear-gradient(90deg,#06B6D4,#0284C7){% elseif employe.scoreVigilance >= 40 %}linear-gradient(90deg,#FBBF24,#F59E0B){% else %}linear-gradient(90deg,#F87171,#EF4444){% endif %};
+                            border-radius:99px;transition:width 0.8s ease;"></div>
+                    </div>
+                    <span style="font-size:15px;font-weight:800;color:#0F172A;min-width:44px;">{{ employe.scoreVigilance|round(1) }}%</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:#94A3B8;">
+                    <span>À risque (0%)</span>
+                    <span>Débutant (20%)</span>
+                    <span>Prudent (40%)</span>
+                    <span>Vigilant (60%)</span>
+                    <span>Expert (80%+)</span>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,492 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Charte d'utilisation — SAT Platform{% endblock %}
+
+{% block body %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', 'Helvetica Neue', sans-serif;
+    background: #F8FAFC;
+    color: #1E293B;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+  }
+
+  /* ── Panneau gauche : branding fixe ── */
+  .panel-left {
+    background: #0B1120;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 56px 52px;
+    overflow: hidden;
+  }
+  .panel-left::before {
+    content: '';
+    position: absolute;
+    top: -120px; left: -80px;
+    width: 420px; height: 420px;
+    background: radial-gradient(circle, rgba(14,165,233,0.14) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .panel-left::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; right: -60px;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(99,102,241,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .brand {
+    display: flex; align-items: center; gap: 12px; position: relative; z-index: 1;
+  }
+  .brand-mark {
+    width: 40px; height: 40px;
+    background: #0EA5E9;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .brand-mark svg { width: 20px; height: 20px; }
+  .brand-name {
+    font-size: 16px; font-weight: 600; color: #F8FAFC;
+    letter-spacing: -0.02em;
+  }
+
+  .panel-left-content { position: relative; z-index: 1; }
+  .panel-left-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #0EA5E9; margin-bottom: 20px;
+  }
+  .panel-left-title {
+    font-size: 34px; font-weight: 700; color: #F8FAFC;
+    letter-spacing: -0.04em; line-height: 1.15;
+    margin-bottom: 20px;
+  }
+  .panel-left-title em { color: #0EA5E9; font-style: normal; }
+  .panel-left-desc {
+    font-size: 14px; color: rgba(248,250,252,0.5);
+    line-height: 1.7; max-width: 340px;
+  }
+
+  .panel-left-steps {
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative; z-index: 1;
+  }
+  .step {
+    display: flex; align-items: flex-start; gap: 14px;
+  }
+  .step-num {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: rgba(14,165,233,0.15);
+    border: 1px solid rgba(14,165,233,0.3);
+    color: #0EA5E9;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .step-text { font-size: 13px; color: rgba(248,250,252,0.65); line-height: 1.5; }
+  .step-text strong { color: rgba(248,250,252,0.9); font-weight: 500; }
+
+  /* ── Panneau droit : document scrollable ── */
+  .panel-right {
+    background: #FFFFFF;
+    overflow-y: auto;
+    height: 100vh;
+    border-left: 1px solid #E2E8F0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .doc-header {
+    padding: 40px 44px 32px;
+    border-bottom: 1px solid #F1F5F9;
+    position: sticky; top: 0; background: #FFFFFF; z-index: 10;
+  }
+  .doc-header-top {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .doc-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #94A3B8;
+  }
+  .doc-version {
+    font-size: 11px; font-weight: 500;
+    background: #F1F5F9; color: #64748B;
+    padding: 3px 10px; border-radius: 20px;
+  }
+  .doc-title {
+    font-size: 22px; font-weight: 700; color: #0F172A;
+    letter-spacing: -0.03em; margin-bottom: 6px;
+  }
+  .doc-subtitle {
+    font-size: 13px; color: #94A3B8; line-height: 1.5;
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 2px; background: #F1F5F9;
+    position: absolute; bottom: 0; left: 0; right: 0;
+  }
+  .progress-fill {
+    height: 100%; width: 0%;
+    background: #0EA5E9;
+    transition: width 0.15s ease;
+  }
+
+  /* Corps du document */
+  .doc-body {
+    flex: 1;
+    padding: 36px 44px;
+    font-size: 14px;
+    line-height: 1.75;
+    color: #334155;
+  }
+
+  .doc-section { margin-bottom: 32px; }
+  .doc-section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #94A3B8;
+    margin-bottom: 12px; padding-bottom: 8px;
+    border-bottom: 1px solid #F1F5F9;
+  }
+  .doc-section p { margin-bottom: 12px; }
+  .doc-section p:last-child { margin-bottom: 0; }
+  .doc-section ul {
+    margin: 8px 0 12px 0; padding: 0;
+    list-style: none;
+  }
+  .doc-section ul li {
+    padding: 4px 0 4px 18px;
+    position: relative; color: #475569;
+  }
+  .doc-section ul li::before {
+    content: '—';
+    position: absolute; left: 0;
+    color: #CBD5E1; font-weight: 300;
+  }
+  .doc-section strong { color: #1E293B; font-weight: 600; }
+
+  .callout {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-left: 3px solid #0EA5E9;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px; color: #475569; line-height: 1.6;
+  }
+  .callout-danger {
+    border-left-color: #F87171;
+    background: #FFF5F5;
+    border-color: #FECACA;
+    border-left-color: #F87171;
+    color: #7F1D1D;
+  }
+
+  /* ── Formulaire de signature ── */
+  .sign-section {
+    padding: 32px 44px 44px;
+    border-top: 1px solid #F1F5F9;
+    background: #FAFBFC;
+  }
+  .sign-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #94A3B8; margin-bottom: 20px;
+  }
+  .sign-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    margin-bottom: 20px;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; color: #94A3B8;
+  }
+  .field input {
+    padding: 10px 14px;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    color: #1E293B; background: #FFFFFF;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .field input:focus {
+    border-color: #0EA5E9;
+    box-shadow: 0 0 0 3px rgba(14,165,233,0.1);
+  }
+  .field input[readonly] { background: #F8FAFC; color: #94A3B8; cursor: default; }
+
+  .confirm-block {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    background: #F0F9FF;
+    border: 1px solid #BAE6FD;
+    border-radius: 10px;
+  }
+  .confirm-block p {
+    font-size: 13px; color: #0369A1; margin-bottom: 12px; line-height: 1.55;
+  }
+  .confirm-row {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .confirm-row label {
+    font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: #0369A1; white-space: nowrap;
+  }
+  .confirm-row input {
+    flex: 1; padding: 9px 13px;
+    border: 1px solid #BAE6FD; border-radius: 8px;
+    font-size: 14px; font-family: 'DM Mono', monospace;
+    letter-spacing: 0.06em; color: #1E293B; background: #FFFFFF;
+    outline: none; transition: all 0.15s;
+  }
+  .confirm-row input:focus { border-color: #0EA5E9; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .confirm-row input.valid { border-color: #34D399; background: #F0FDF4; color: #065F46; }
+
+  .submit-btn {
+    width: 100%; padding: 14px 20px;
+    background: #0F172A;
+    color: #FFFFFF;
+    border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: all 0.2s;
+    opacity: 0.35; pointer-events: none;
+  }
+  .submit-btn.ready {
+    opacity: 1; pointer-events: all;
+    background: #0F172A;
+  }
+  .submit-btn.ready:hover { background: #1E293B; transform: translateY(-1px); }
+  .submit-btn svg { width: 16px; height: 16px; }
+
+  /* Flash */
+  .flash-error {
+    background: #FEF2F2; border: 1px solid #FECACA;
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; color: #991B1B;
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 44px 16px;
+  }
+
+  @media (max-width: 900px) {
+    .page { grid-template-columns: 1fr; }
+    .panel-left { display: none; }
+    .panel-right { height: auto; }
+  }
+</style>
+
+<div class="page">
+
+  <!-- ── Panneau gauche ── -->
+  <div class="panel-left">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M10 2L3 6v4c0 4.4 3 8.5 7 9.5 4-1 7-5.1 7-9.5V6L10 2z" fill="white" opacity="0.9"/>
+        </svg>
+      </div>
+      <span class="brand-name">SAT Platform</span>
+    </div>
+
+    <div class="panel-left-content">
+      <div class="panel-left-eyebrow">Avant de commencer</div>
+      <h1 class="panel-left-title">Votre engagement<br>pour une utilisation<br><em>éthique et légale</em></h1>
+      <p class="panel-left-desc">
+        SAT Platform vous donne des capacités puissantes de simulation de cyberattaques.
+        Cette charte encadre leur usage responsable, conformément au droit béninois.
+      </p>
+    </div>
+
+    <div class="panel-left-steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text"><strong>Lisez la charte</strong> dans son intégralité avant de signer</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text"><strong>Remplissez</strong> vos informations de signataire</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text"><strong>Confirmez</strong> avec le code d'acceptation pour accéder à la plateforme</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Panneau droit ── -->
+  <div class="panel-right" id="panelRight">
+
+    {% for msg in app.flashes('error') %}
+    <div class="flash-error" style="margin-top:20px;">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="#B91C1C" stroke-width="1.5"/><path d="M7 4v3M7 9.5v.5" stroke="#B91C1C" stroke-width="1.5" stroke-linecap="round"/></svg>
+      {{ msg }}
+    </div>
+    {% endfor %}
+
+    <!-- Header sticky -->
+    <div class="doc-header">
+      <div class="doc-header-top">
+        <span class="doc-label">Charte d'utilisation</span>
+        <span class="doc-version">v1.0 — 2026</span>
+      </div>
+      <div class="doc-title">Conditions d'utilisation de SAT Platform</div>
+      <div class="doc-subtitle">{{ entreprise.nom }} · Signataire : {{ rssi.nomComplet }}</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <!-- Corps -->
+    <div class="doc-body" id="docBody">
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 1 — Objet</div>
+        <p>La présente charte régit l'utilisation de SAT Platform par <strong>{{ entreprise.nom }}</strong>, son Responsable Sécurité (RSSI) et ses employés. SAT Platform est une solution pédagogique de sensibilisation à la cybersécurité comprenant des formations interactives, des simulations d'ingénierie sociale et des outils pratiques.</p>
+        <div class="callout">Cette charte s'applique à l'ensemble des fonctionnalités de la plateforme, notamment aux campagnes de phishing simulé, aux modules de formation et aux quiz d'évaluation.</div>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 2 — Base légale des simulations</div>
+        <p>Les simulations de phishing réalisées via SAT Platform sont fondées sur :</p>
+        <ul>
+          <li>L'autorisation explicite de la direction de <strong>{{ entreprise.nom }}</strong></li>
+          <li>La Loi n°2017-20 du 20 avril 2018 portant Code du Numérique en République du Bénin</li>
+          <li>La Politique Sectorielle de Sécurité des Systèmes d'Information de l'État (PSSIE)</li>
+          <li>Les principes du référentiel ISO/IEC 27001:2022 relatifs à la sensibilisation du personnel</li>
+        </ul>
+        <p>Les campagnes de phishing sont <strong>exclusivement pédagogiques</strong>. Aucune donnée saisie par un employé lors d'une simulation ne sera exploitée à des fins autres que la formation.</p>
+        <div class="callout callout-danger">Interdiction absolue d'utiliser SAT Platform pour mener des attaques réelles, collecter des données personnelles sans consentement, ou cibler des tiers n'appartenant pas à l'organisation déclarée.</div>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 3 — Obligations du RSSI</div>
+        <p>En acceptant cette charte, le Responsable Sécurité s'engage à :</p>
+        <ul>
+          <li>Obtenir l'accord écrit de la direction avant tout lancement de campagne de phishing simulé</li>
+          <li>Informer les ressources humaines de l'existence du programme de sensibilisation</li>
+          <li>Utiliser les résultats uniquement à des fins formatives — aucune sanction disciplinaire ne peut découler d'une simulation</li>
+          <li>Protéger la confidentialité des données individuelles des employés</li>
+          <li>Ne jamais partager ses identifiants d'accès à SAT Platform</li>
+          <li>Signaler tout incident de sécurité à l'administrateur de la plateforme dans les 24 heures</li>
+        </ul>
+        <div class="callout">Chaque campagne lancée via SAT Platform requiert une confirmation explicite d'autorisation éthique avec le nom du responsable ayant donné son accord.</div>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 4 — Protection des données personnelles</div>
+        <p>SAT Platform collecte les données suivantes dans un cadre strictement pédagogique :</p>
+        <ul>
+          <li>Informations d'identification des employés (nom, prénom, email, poste)</li>
+          <li>Données comportementales lors des simulations (ouverture d'email, clic sur lien)</li>
+          <li>Résultats de quiz et scores de vigilance</li>
+        </ul>
+        <p>Ces données sont conservées pendant la durée d'utilisation active de la plateforme, puis archivées pendant 3 ans conformément aux obligations légales béninoises.</p>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 5 — Technologies de tracking</div>
+        <p>Les emails de simulation intègrent des technologies de mesure standard :</p>
+        <ul>
+          <li><strong>Pixel de tracking 1×1px invisible</strong> — détecte si l'email a été ouvert</li>
+          <li><strong>Liens traçables</strong> — détecte si l'employé a cliqué sur le lien piégé</li>
+          <li><strong>Formulaires simulés</strong> — enregistre si des données ont été saisies</li>
+        </ul>
+        <div class="callout">L'employé est systématiquement redirigé vers une page pédagogique immédiatement après avoir cliqué, transformant chaque simulation en opportunité d'apprentissage.</div>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 6 — Responsabilités</div>
+        <p>Toute utilisation de SAT Platform contraire aux finalités définies dans la présente charte entraîne la suspension immédiate du compte et peut faire l'objet de poursuites judiciaires conformément au Code du Numérique du Bénin.</p>
+        <p>SAT Platform décline toute responsabilité en cas d'utilisation de la plateforme hors du cadre défini ou en violation des dispositions légales en vigueur.</p>
+      </div>
+
+      <div class="doc-section">
+        <div class="doc-section-title">Article 7 — Entrée en vigueur</div>
+        <p>La présente charte prend effet dès son acceptation électronique par <strong>{{ rssi.nomComplet }}</strong>, Responsable Sécurité de <strong>{{ entreprise.nom }}</strong>. Elle engage l'ensemble de l'organisation dans l'utilisation éthique et légale de SAT Platform.</p>
+      </div>
+
+    </div>
+
+    <!-- Formulaire de signature -->
+    <form method="post" id="charteForm" class="sign-section">
+
+      <div class="sign-label">Signature électronique</div>
+
+      <div class="sign-grid">
+        <div class="field">
+          <label>Nom complet *</label>
+          <input type="text" name="nom_signataire" required value="{{ nomSignataire }}" placeholder="Prénom NOM">
+        </div>
+        <div class="field">
+          <label>Fonction *</label>
+          <input type="text" name="fonction_signataire" required value="{{ fonctionSignataire }}" placeholder="RSSI, DSI...">
+        </div>
+        <div class="field">
+          <label>Entreprise</label>
+          <input type="text" value="{{ entreprise.nom }}" readonly>
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <input type="text" value="{{ 'now'|date('d/m/Y') }}" readonly>
+        </div>
+      </div>
+
+      <div class="confirm-block">
+        <p>Pour confirmer votre acceptation, saisissez exactement <code style="background:#E0F2FE;color:#0369A1;padding:2px 8px;border-radius:4px;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;">OUI_JACCEPTE</code> dans le champ ci-dessous.</p>
+        <div class="confirm-row">
+          <label>Confirmation</label>
+          <input type="text" name="acceptation_charte" id="confirmInput" placeholder="OUI_JACCEPTE" autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zm2.78 5.28l-3.5 3.5a.75.75 0 01-1.06 0l-1.5-1.5a.75.75 0 111.06-1.06L7 8.19l2.97-2.97a.75.75 0 011.06 1.06z" fill="currentColor"/></svg>
+        Accepter la charte et accéder à SAT Platform
+      </button>
+
+    </form>
+
+  </div>
+</div>
+
+<script>
+const panel = document.getElementById('panelRight');
+const fill  = document.getElementById('progressFill');
+const input = document.getElementById('confirmInput');
+const btn   = document.getElementById('submitBtn');
+
+panel.addEventListener('scroll', () => {
+  const scrolled = panel.scrollTop;
+  const total    = panel.scrollHeight - panel.clientHeight;
+  fill.style.width = (total > 0 ? (scrolled / total) * 100 : 0) + '%';
+});
+
+input.addEventListener('input', () => {
+  const ok = input.value.trim() === 'OUI_JACCEPTE';
+  input.classList.toggle('valid', ok);
+  btn.classList.toggle('ready', ok);
+});
+</script>
+{% endblock %}

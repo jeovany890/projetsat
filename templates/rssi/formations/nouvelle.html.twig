@@ -1,0 +1,165 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Nouvelle campagne de formation{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_formations_liste') }}" class="r-btn r-btn-ghost">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:780px;">
+<form method="post">
+
+<div style="display:flex;flex-direction:column;gap:20px;">
+
+{# Infos générales #}
+<div class="r-card">
+    <div class="r-card-header">
+        <div class="r-card-title"><i class="bi bi-info-circle"></i> Informations générales</div>
+    </div>
+    <div class="r-card-body" style="display:flex;flex-direction:column;gap:16px;">
+
+        <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Titre *</label>
+            <input type="text" name="titre" required placeholder="Ex: Formation Anti-Phishing Q1 2026"
+                   style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+        </div>
+
+        <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Description</label>
+            <textarea name="description" rows="3" placeholder="Objectifs de cette campagne..."
+                      style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Trimestre</label>
+                <select name="trimestre" style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    <option value="T1">T1 (Jan–Mar)</option>
+                    <option value="T2">T2 (Avr–Jun)</option>
+                    <option value="T3">T3 (Jul–Sep)</option>
+                    <option value="T4">T4 (Oct–Déc)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Année</label>
+                <input type="number" name="annee" value="{{ annee }}" min="2024" max="2030"
+                       style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Date de début *</label>
+                <input type="date" name="date_debut" required
+                       style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+            </div>
+            <div>
+                <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Date de fin *</label>
+                <input type="date" name="date_fin" required
+                       style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+            </div>
+        </div>
+
+        <div>
+            <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                Pénalité si non complété (points retirés)
+            </label>
+            <input type="number" name="points_penalite" value="50" min="0" max="500"
+                   style="width:160px;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;">
+        </div>
+
+    </div>
+</div>
+
+{# Modules #}
+<div class="r-card">
+    <div class="r-card-header">
+        <div class="r-card-title"><i class="bi bi-book-half"></i> Modules à inclure *</div>
+        <span style="font-size:12px;color:#94A3B8;">Sélectionnez au moins un module</span>
+    </div>
+    <div class="r-card-body">
+        {% if modules|length == 0 %}
+        <div class="r-empty" style="padding:30px 0;">
+            <i class="bi bi-book"></i>
+            <p>Aucun module publié disponible. L'administrateur doit d'abord publier des modules.</p>
+        </div>
+        {% else %}
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            {% for module in modules %}
+            <label style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:1px solid #E2E8F0;border-radius:10px;cursor:pointer;transition:all 0.15s;"
+                   onmouseover="this.style.borderColor='#06B6D4';this.style.background='#F0FDFF'"
+                   onmouseout="this.style.borderColor='#E2E8F0';this.style.background='white'">
+                <input type="checkbox" name="modules[]" value="{{ module.id }}"
+                       style="width:18px;height:18px;accent-color:#06B6D4;flex-shrink:0;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:#0F172A;">{{ module.titre }}</div>
+                    <div style="font-size:12px;color:#64748B;margin-top:2px;">
+                        {{ module.categorie ? module.categorie.titre : 'Sans catégorie' }}
+                        {% if module.dureeEstimee %} &nbsp;·&nbsp; {{ module.dureeEstimee }} min{% endif %}
+                        &nbsp;·&nbsp; {{ module.difficulte ?? 'N/A' }}
+                    </div>
+                </div>
+                <div style="text-align:right;flex-shrink:0;">
+                    <span class="r-badge r-badge-cyan">{{ module.pointsReussite }} pts</span>
+                </div>
+            </label>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{# Cibles #}
+<div class="r-card">
+    <div class="r-card-header">
+        <div class="r-card-title"><i class="bi bi-people"></i> Employés ciblés</div>
+    </div>
+    <div class="r-card-body" style="display:flex;flex-direction:column;gap:14px;">
+
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;padding:14px;background:#F0FDFF;border:1px solid #BAE6FD;border-radius:10px;">
+            <input type="checkbox" name="tous_employes" value="1" id="tousEmployes"
+                   style="width:18px;height:18px;accent-color:#06B6D4;"
+                   onchange="document.getElementById('blocDepts').style.display = this.checked ? 'none' : 'block'">
+            <div>
+                <div style="font-size:14px;font-weight:600;color:#0369A1;">Tous les employés actifs</div>
+                <div style="font-size:12px;color:#64748B;">La campagne s'applique à toute l'entreprise</div>
+            </div>
+        </label>
+
+        <div id="blocDepts">
+            {% if departements|length == 0 %}
+            <div style="font-size:13px;color:#94A3B8;padding:12px;text-align:center;">
+                Aucun département trouvé. Créez des départements d'abord.
+            </div>
+            {% else %}
+            <div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">Ou sélectionnez des départements :</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                {% for dept in departements %}
+                <label style="display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid #E2E8F0;border-radius:8px;cursor:pointer;">
+                    <input type="checkbox" name="departements[]" value="{{ dept.id }}"
+                           style="width:16px;height:16px;accent-color:#06B6D4;">
+                    <span style="font-size:14px;color:#374151;">{{ dept.nom }}</span>
+                </label>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+
+{# Actions #}
+<div style="display:flex;justify-content:flex-end;gap:12px;padding-bottom:8px;">
+    <a href="{{ path('rssi_formations_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
+    <button type="submit" class="r-btn r-btn-primary">
+        <i class="bi bi-check-lg"></i> Créer la campagne
+    </button>
+</div>
+
+</div>
+</form>
+</div>
+{% endblock %}

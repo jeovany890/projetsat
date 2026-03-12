@@ -1,0 +1,292 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Questions — {{ quiz.titre }}{% endblock %}
+
+{% block content %}
+
+{# En-tête #}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-6);">
+    <div>
+        <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost btn-sm" style="margin-bottom: var(--space-3);">
+            <i class="bi bi-arrow-left"></i> Tous les quiz
+        </a>
+        <p style="color: var(--gray-500); margin: 0;">
+            <i class="bi bi-book"></i> {{ quiz.module.titre }}
+            &nbsp;·&nbsp;
+            {{ quiz.questions|length }} question{{ quiz.questions|length > 1 ? 's' : '' }}
+            {% if quiz.questions|length > 0 %}
+                {% set totalPts = 0 %}{% for q in quiz.questions %}{% set totalPts = totalPts + q.points %}{% endfor %}
+                &nbsp;·&nbsp; {{ totalPts }} pts total
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ path('admin_quiz_modifier', {id: quiz.id}) }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-gear"></i> Paramètres
+    </a>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 380px; gap: var(--space-6); align-items: flex-start;">
+
+    {# ── Colonne gauche : liste des questions ── #}
+    <div>
+
+        {# Paramètres rapides #}
+        <div class="card" style="margin-bottom: var(--space-4);">
+            <div style="padding: var(--space-4) var(--space-6); display: flex; gap: var(--space-8); flex-wrap: wrap;">
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    <i class="bi bi-patch-check" style="color: var(--success);"></i>
+                    Score min. <strong>{{ quiz.scoreMinimum }}%</strong>
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    <i class="bi bi-arrow-repeat" style="color: var(--primary);"></i>
+                    <strong>{{ quiz.nombreTentativesMax }}</strong> tentative{{ quiz.nombreTentativesMax > 1 ? 's' : '' }}
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    <i class="bi bi-stopwatch" style="color: var(--warning);"></i>
+                    {% if quiz.tempsLimite %}
+                        <strong>{{ quiz.tempsLimite }} min</strong>
+                    {% else %}
+                        <span style="color: var(--gray-400);">Illimité</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: var(--text-sm); color: var(--gray-600);">
+                    <i class="bi bi-shuffle"></i>
+                    {% if quiz.isMelangerQuestions %}Aléatoire{% else %}Ordre fixe{% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Questions #}
+        {% if quiz.questions|length == 0 %}
+        <div class="card" style="text-align: center; padding: var(--space-12);">
+            <i class="bi bi-patch-question" style="font-size: 60px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+            <h3 style="color: var(--gray-700); margin-bottom: var(--space-2);">Aucune question pour l'instant</h3>
+            <p style="color: var(--gray-500); font-size: var(--text-sm);">Utilisez le formulaire à droite pour ajouter votre première question.</p>
+        </div>
+        {% else %}
+        <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+            {% for question in quiz.questions %}
+            <div class="card">
+                <div style="padding: var(--space-5) var(--space-6);">
+
+                    <div style="display: flex; align-items: flex-start; gap: var(--space-4);">
+
+                        {# Numéro #}
+                        <div style="width: 32px; height: 32px; background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); color: var(--primary); flex-shrink: 0; font-size: var(--text-sm);">
+                            {{ question.ordre }}
+                        </div>
+
+                        <div style="flex: 1; min-width: 0;">
+
+                            {# Type badge #}
+                            {% if question.typeQuestion == 'QCM_UNIQUE' %}
+                                <span class="badge" style="background: var(--info); color: white; font-size: 10px; margin-bottom: var(--space-2);">QCM — 1 réponse</span>
+                            {% elseif question.typeQuestion == 'QCM_MULTIPLE' %}
+                                <span class="badge" style="background: var(--secondary-500); color: white; font-size: 10px; margin-bottom: var(--space-2);">QCM — Plusieurs réponses</span>
+                            {% elseif question.typeQuestion == 'VRAI_FAUX' %}
+                                <span class="badge" style="background: var(--warning); color: white; font-size: 10px; margin-bottom: var(--space-2);">Vrai / Faux</span>
+                            {% endif %}
+
+                            <p style="font-weight: var(--font-semibold); color: var(--gray-900); margin-bottom: var(--space-3); line-height: 1.4;">
+                                {{ question.question }}
+                            </p>
+
+                            {# Options #}
+                            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-2);">
+                                {% for option in question.options %}
+                                    {% set isCorrect = option in question.reponsesCorrectes %}
+                                    <span style="
+                                        padding: 3px 10px;
+                                        border-radius: 20px;
+                                        font-size: var(--text-xs);
+                                        font-weight: {{ isCorrect ? 'var(--font-bold)' : 'var(--font-normal)' }};
+                                        background: {{ isCorrect ? 'var(--success-50)' : 'var(--gray-100)' }};
+                                        color: {{ isCorrect ? 'var(--success-700)' : 'var(--gray-600)' }};
+                                        border: 1px solid {{ isCorrect ? 'var(--success-200)' : 'var(--gray-200)' }};
+                                    ">
+                                        {{ isCorrect ? '✓ ' : '' }}{{ option }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+
+                            {% if question.explication %}
+                            <p style="font-size: var(--text-xs); color: var(--gray-500); font-style: italic; margin-top: var(--space-2);">
+                                <i class="bi bi-lightbulb"></i> {{ question.explication }}
+                            </p>
+                            {% endif %}
+
+                        </div>
+
+                        {# Points + actions #}
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); flex-shrink: 0;">
+                            <span class="badge" style="background: var(--warning-100); color: var(--warning-700); border: 1px solid var(--warning-200);">
+                                {{ question.points }} pts
+                            </span>
+                            <div style="display: flex; gap: var(--space-1);">
+                                {% if not loop.first %}
+                                <form method="post" action="{{ path('admin_quiz_question_monter', {quizId: quiz.id, id: question.id}) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-ghost btn-sm" style="padding: 4px 8px;" title="Monter">
+                                        <i class="bi bi-arrow-up"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if not loop.last %}
+                                <form method="post" action="{{ path('admin_quiz_question_descendre', {quizId: quiz.id, id: question.id}) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-ghost btn-sm" style="padding: 4px 8px;" title="Descendre">
+                                        <i class="bi bi-arrow-down"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form method="post" action="{{ path('admin_quiz_question_supprimer', {quizId: quiz.id, id: question.id}) }}" style="display:inline;">
+                                    <button type="submit" class="btn btn-ghost btn-sm" style="padding: 4px 8px; color: var(--danger);"
+                                        title="Supprimer" onclick="return confirm('Supprimer cette question ?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+
+    {# ── Colonne droite : formulaire ajout question ── #}
+    <div style="position: sticky; top: 24px;">
+        <div class="card">
+            <div style="padding: var(--space-5) var(--space-6); border-bottom: 1px solid var(--gray-200);">
+                <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                    <i class="bi bi-plus-circle" style="color: var(--primary);"></i>
+                    Ajouter une question
+                </h3>
+            </div>
+
+            <div style="padding: var(--space-5) var(--space-6);">
+                <form method="post" action="{{ path('admin_quiz_question_ajouter', {id: quiz.id}) }}" id="formQuestion">
+
+                    {# Type de question #}
+                    <div class="form-group" style="margin-bottom: var(--space-4);">
+                        <label class="form-label">Type *</label>
+                        <select name="type_question" class="form-control" id="typeQuestion" onchange="updateFormType(this.value)">
+                            <option value="QCM_UNIQUE">QCM — 1 seule réponse</option>
+                            <option value="QCM_MULTIPLE">QCM — Plusieurs réponses</option>
+                            <option value="VRAI_FAUX">Vrai / Faux</option>
+                        </select>
+                    </div>
+
+                    {# Question #}
+                    <div class="form-group" style="margin-bottom: var(--space-4);">
+                        <label class="form-label">Question *</label>
+                        <textarea name="question" class="form-control" rows="3"
+                            placeholder="Ex: Laquelle de ces pratiques est dangereuse ?" required></textarea>
+                    </div>
+
+                    {# Options (masqué pour VRAI_FAUX) #}
+                    <div id="optionsSection" style="margin-bottom: var(--space-4);">
+                        <label class="form-label">Réponses proposées *</label>
+                        <div id="optionsList" style="display: flex; flex-direction: column; gap: var(--space-2);">
+                            <div class="option-row" style="display: flex; gap: var(--space-2); align-items: center;">
+                                <input type="checkbox" name="reponses_correctes[]" value="" class="option-check"
+                                    title="Cocher si c'est la bonne réponse">
+                                <input type="text" name="options[]" class="form-control form-control-sm option-text"
+                                    placeholder="Option A" oninput="syncCheckValue(this)">
+                            </div>
+                            <div class="option-row" style="display: flex; gap: var(--space-2); align-items: center;">
+                                <input type="checkbox" name="reponses_correctes[]" value="" class="option-check"
+                                    title="Cocher si c'est la bonne réponse">
+                                <input type="text" name="options[]" class="form-control form-control-sm option-text"
+                                    placeholder="Option B" oninput="syncCheckValue(this)">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-ghost btn-sm" style="margin-top: var(--space-2);"
+                            onclick="addOption()">
+                            <i class="bi bi-plus"></i> Ajouter une option
+                        </button>
+                        <p style="font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-1);">
+                            ☑ Cochez la ou les bonne(s) réponse(s)
+                        </p>
+                    </div>
+
+                    {# Vrai/Faux : section dédiée (masquée par défaut) #}
+                    <div id="vraiFauxSection" style="display:none; margin-bottom: var(--space-4);">
+                        <label class="form-label">Bonne réponse *</label>
+                        <div style="display: flex; gap: var(--space-3);">
+                            <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                <input type="radio" name="reponses_correctes[]" value="Vrai"> Vrai
+                            </label>
+                            <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
+                                <input type="radio" name="reponses_correctes[]" value="Faux"> Faux
+                            </label>
+                        </div>
+                    </div>
+
+                    {# Points + explication côte à côte #}
+                    <div style="display: grid; grid-template-columns: 100px 1fr; gap: var(--space-3); margin-bottom: var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Points</label>
+                            <input type="number" name="points" class="form-control" value="10" min="1" max="100">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Explication (optionnel)</label>
+                            <input type="text" name="explication" class="form-control"
+                                placeholder="Pourquoi cette réponse ?">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <i class="bi bi-plus-circle"></i> Ajouter la question
+                    </button>
+
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function updateFormType(type) {
+    const optionsSection  = document.getElementById('optionsSection');
+    const vraiFauxSection = document.getElementById('vraiFauxSection');
+
+    if (type === 'VRAI_FAUX') {
+        optionsSection.style.display  = 'none';
+        vraiFauxSection.style.display = 'block';
+    } else {
+        optionsSection.style.display  = 'block';
+        vraiFauxSection.style.display = 'none';
+    }
+}
+
+function syncCheckValue(input) {
+    // Synchro de la valeur de la checkbox avec le texte de l'option
+    const row = input.closest('.option-row');
+    const cb  = row.querySelector('.option-check');
+    cb.value  = input.value;
+}
+
+function addOption() {
+    const list   = document.getElementById('optionsList');
+    const count  = list.querySelectorAll('.option-row').length;
+    const labels = ['A','B','C','D','E','F'];
+    const letter = labels[count] || (count + 1);
+
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;';
+    row.innerHTML = `
+        <input type="checkbox" name="reponses_correctes[]" value="" class="option-check" title="Cocher si bonne réponse">
+        <input type="text" name="options[]" class="form-control form-control-sm option-text"
+            placeholder="Option ${letter}" oninput="syncCheckValue(this)">
+        <button type="button" onclick="this.closest('.option-row').remove()"
+            style="background:none;border:none;cursor:pointer;color:var(--danger);font-size:16px;padding:0 4px;">×</button>
+    `;
+    list.appendChild(row);
+}
+</script>
+
+{% endblock %}

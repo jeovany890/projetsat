@@ -1,0 +1,121 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Quiz de formation{% endblock %}
+
+{% block content %}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+    <div>
+        <p style="color: var(--gray-600); margin: 0;">{{ quiz|length }} quiz créés</p>
+    </div>
+    <a href="{{ path('admin_quiz_nouveau') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Créer un quiz
+    </a>
+</div>
+
+{# Stats #}
+<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
+    <div class="card" style="border-left: 4px solid var(--success);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Total quiz</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">{{ quiz|length }}</div>
+        </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--primary);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Total questions</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary);">
+                {% set total = 0 %}{% for q in quiz %}{% set total = total + q.questions|length %}{% endfor %}{{ total }}
+            </div>
+        </div>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--warning);">
+        <div style="padding: var(--space-5);">
+            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Quiz sans questions</div>
+            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">
+                {{ quiz|filter(q => q.questions|length == 0)|length }}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Liste #}
+<div style="display: grid; gap: var(--space-4);">
+    {% for q in quiz %}
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-6);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="flex: 1;">
+
+                    <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
+                        <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                            {{ q.titre }}
+                        </h3>
+                        {% if q.questions|length == 0 %}
+                            <span class="badge" style="background: var(--warning); color: white;">Sans questions</span>
+                        {% else %}
+                            <span class="badge badge-success">{{ q.questions|length }} question{{ q.questions|length > 1 ? 's' : '' }}</span>
+                        {% endif %}
+                    </div>
+
+                    <p style="color: var(--gray-500); font-size: var(--text-sm); margin-bottom: var(--space-3);">
+                        <i class="bi bi-book"></i>
+                        Module : <strong>{{ q.module.titre }}</strong>
+                        &nbsp;·&nbsp;
+                        <i class="bi bi-folder"></i> {{ q.module.categorie.titre }}
+                    </p>
+
+                    <div style="display: flex; gap: var(--space-6); font-size: var(--text-sm); color: var(--gray-600); flex-wrap: wrap;">
+                        <span><i class="bi bi-patch-check"></i> Score min. : <strong>{{ q.scoreMinimum }}%</strong></span>
+                        <span><i class="bi bi-arrow-repeat"></i> {{ q.nombreTentativesMax }} tentative{{ q.nombreTentativesMax > 1 ? 's' : '' }} max</span>
+                        {% if q.tempsLimite %}
+                            <span><i class="bi bi-stopwatch"></i> {{ q.tempsLimite }} min</span>
+                        {% else %}
+                            <span style="color: var(--gray-400);"><i class="bi bi-stopwatch"></i> Pas de limite</span>
+                        {% endif %}
+                        <span>
+                            <i class="bi bi-shuffle"></i>
+                            {% if q.isMelangerQuestions %}Questions mélangées{% else %}Ordre fixe{% endif %}
+                        </span>
+                        {% if q.questions|length > 0 %}
+                            {% set totalPts = 0 %}{% for qu in q.questions %}{% set totalPts = totalPts + qu.points %}{% endfor %}
+                            <span><i class="bi bi-trophy"></i> {{ totalPts }} pts total</span>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+            <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200); margin-top: var(--space-4);">
+                <a href="{{ path('admin_quiz_questions', {id: q.id}) }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-list-check"></i> Gérer les questions
+                </a>
+                <a href="{{ path('admin_quiz_modifier', {id: q.id}) }}" class="btn btn-ghost btn-sm">
+                    <i class="bi bi-pencil"></i> Paramètres
+                </a>
+                <form method="post" action="{{ path('admin_quiz_supprimer', {id: q.id}) }}" style="display: inline; margin-left: auto;">
+                    <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);"
+                        onclick="return confirm('Supprimer ce quiz et toutes ses questions ?')">
+                        <i class="bi bi-trash"></i> Supprimer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="text-align: center; padding: var(--space-16);">
+        <i class="bi bi-patch-question" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+            Aucun quiz créé
+        </h3>
+        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">
+            Créez un quiz pour chaque module de formation
+        </p>
+        <a href="{{ path('admin_quiz_nouveau') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer un quiz
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}

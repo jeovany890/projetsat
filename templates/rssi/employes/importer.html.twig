@@ -1,0 +1,100 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Importer des employés (CSV){% endblock %}
+
+{% block content %}
+<div style="max-width:720px;display:flex;flex-direction:column;gap:20px;">
+
+    {# Formulaire import #}
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-file-earmark-arrow-up"></i> Importer depuis un fichier CSV</div>
+        </div>
+        <div class="r-card-body">
+            <form method="post" enctype="multipart/form-data">
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Fichier CSV *
+                    </label>
+                    <input type="file" name="fichier_csv" accept=".csv,.txt" required
+                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;background:white;">
+                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">Formats acceptés : .csv, .txt — Encodage UTF-8 recommandé</div>
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Département par défaut <span style="color:#94A3B8;font-weight:400;">(si non spécifié dans le CSV)</span>
+                    </label>
+                    <select name="departement_defaut"
+                            style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        <option value="">-- Aucun département par défaut --</option>
+                        {% for dept in departements %}
+                            <option value="{{ dept.id }}">{{ dept.nom }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="background:#FEF9C3;padding:14px 16px;border-radius:8px;border:1px solid #FEF08A;margin-bottom:20px;font-size:13px;color:#854D0E;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="r-btn r-btn-primary">
+                        <i class="bi bi-upload"></i> Importer et envoyer les emails
+                    </button>
+                    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Format attendu #}
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-info-circle"></i> Format du fichier CSV</div>
+        </div>
+        <div class="r-card-body">
+            <p style="font-size:13px;color:#475569;margin:0 0 14px;">
+                La première ligne est ignorée (en-tête). Séparateur : virgule <code>,</code> ou point-virgule <code>;</code>.
+            </p>
+
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;margin-bottom:16px;overflow-x:auto;">
+                <div style="color:#94A3B8;margin-bottom:8px;">// En-tête (ignorée)</div>
+                <div style="color:#64748B;">prenom;nom;email;telephone;poste;departement</div>
+                <div style="margin-top:8px;color:#1E293B;">Jean;Dupont;jean.dupont@gmail.com;+22997000001;Comptable;Comptabilité</div>
+                <div style="color:#1E293B;">Marie;Koto;marie.koto@gmail.com;+22997000002;RH;</div>
+                <div style="color:#1E293B;">Paul;Ahounou;paul.ahounou@gmail.com;;;Informatique</div>
+            </div>
+
+            <table class="r-table">
+                <thead>
+                    <tr>
+                        <th>Colonne</th>
+                        <th>Champ</th>
+                        <th>Obligatoire</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>1</td><td>Prénom</td><td><span class="r-badge r-badge-red">Oui</span></td><td>—</td></tr>
+                    <tr><td>2</td><td>Nom</td><td><span class="r-badge r-badge-red">Oui</span></td><td>—</td></tr>
+                    <tr><td>3</td><td>Email</td><td><span class="r-badge r-badge-red">Oui</span></td><td>Doit être unique</td></tr>
+                    <tr><td>4</td><td>Téléphone</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Peut être vide</td></tr>
+                    <tr><td>5</td><td>Poste</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Peut être vide</td></tr>
+                    <tr><td>6</td><td>Département</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Nom exact du département, sinon département par défaut</td></tr>
+                </tbody>
+            </table>
+
+            <div style="margin-top:16px;text-align:center;">
+                <a href="data:text/csv;charset=utf-8,prenom;nom;email;telephone;poste;departement%0AJean;Dupont;jean.dupont@exemple.com;%2B22997000001;Comptable;Comptabilit%C3%A9"
+                   download="modele_employes.csv" class="r-btn r-btn-ghost">
+                    <i class="bi bi-download"></i> Télécharger le modèle CSV
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

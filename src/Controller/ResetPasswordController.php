@@ -4,12 +4,14 @@ namespace App\Controller;
 
 use App\Entity\Utilisateur;
 use App\Service\EmailService;
+use App\Service\EmailTemplateService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class ResetPasswordController extends AbstractController
 {
@@ -17,37 +19,36 @@ class ResetPasswordController extends AbstractController
     public function request(
         Request $request,
         EntityManagerInterface $entityManager,
-        EmailService $emailService
+        EmailService $emailService,
+        UrlGeneratorInterface $router
     ): Response {
         if ($request->isMethod('POST')) {
             $email = $request->request->get('email');
-
-            $user = $entityManager->getRepository(Utilisateur::class)
-                ->findOneBy(['email' => $email]);
+            $user  = $entityManager->getRepository(Utilisateur::class)->findOneBy(['email' => $email]);
 
             if ($user) {
-                // Générer token
                 $token = bin2hex(random_bytes(32));
                 $user->setResetPasswordToken($token);
                 $user->setResetPasswordExpiration((new \DateTime())->modify('+1 hour'));
-
                 $entityManager->flush();
 
-                // Envoyer email
-                $resetLink = $this->generateUrl('app_reset_password_reset', ['token' => $token], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
-
-                $emailService->envoyerEmailLeitime(
-                    $user->getEmail(),
-                    'Réinitialisation de votre mot de passe',
-                    "<h1>Réinitialisation de mot de passe</h1>
-                    <p>Bonjour {$user->getPrenom()},</p>
-                    <p>Cliquez sur le lien ci-dessous pour réinitialiser votre mot de passe :</p>
-                    <p><a href='{$resetLink}' style='background:#6366F1; color:white; padding:12px 24px; text-decoration:none; border-radius:8px; display:inline-block;'>Réinitialiser mon mot de passe</a></p>
-                    <p>Ce lien expire dans 1 heure.</p>"
+                $resetLink = $router->generate(
+                    'app_reset_password_reset',
+                    ['token' => $token],
+                    UrlGeneratorInterface::ABSOLUTE_URL
                 );
+
+                try {
+                    $emailService->envoyerEmailLeitime(
+                        $user->getEmail(),
+                        'Réinitialisation de votre mot de passe — SAT Platform',
+                        EmailTemplateService::reinitialiserMotDePasse($user->getPrenom(), $resetLink)
+                    );
+                } catch (\Exception $e) {
+                    error_log('Email reset password : ' . $e->getMessage());
+                }
             }
 
-            // Message générique pour sécurité
             $this->addFlash('success', 'Si cet email existe, vous recevrez un lien de réinitialisation.');
             return $this->redirectToRoute('app_login');
         }
@@ -62,8 +63,7 @@ class ResetPasswordController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher
     ): Response {
-        $user = $entityManager->getRepository(Utilisateur::class)
-            ->findOneBy(['resetPasswordToken' => $token]);
+        $user = $entityManager->getRepository(Utilisateur::class)->findOneBy(['resetPasswordToken' => $token]);
 
         if (!$user || !$user->isTokenResetValide()) {
             $this->addFlash('error', 'Lien de réinitialisation invalide ou expiré.');
@@ -71,7 +71,7 @@ class ResetPasswordController extends AbstractController
         }
 
         if ($request->isMethod('POST')) {
-            $password = $request->request->get('password');
+            $password        = $request->request->get('password');
             $passwordConfirm = $request->request->get('password_confirm');
 
             if ($password !== $passwordConfirm) {
@@ -79,20 +79,16 @@ class ResetPasswordController extends AbstractController
             } elseif (strlen($password) < 8) {
                 $this->addFlash('error', 'Le mot de passe doit contenir au moins 8 caractères.');
             } else {
-                $hashedPassword = $passwordHasher->hashPassword($user, $password);
-                $user->setMotDePasse($hashedPassword);
+                $user->setMotDePasse($passwordHasher->hashPassword($user, $password));
                 $user->setResetPasswordToken(null);
                 $user->setResetPasswordExpiration(null);
-
                 $entityManager->flush();
 
-                $this->addFlash('success', '✅ Votre mot de passe a été réinitialisé avec succès !');
+                $this->addFlash('success', 'Votre mot de passe a été réinitialisé avec succès.');
                 return $this->redirectToRoute('app_login');
             }
         }
 
-        return $this->render('security/reset_password_reset.html.twig', [
-            'token' => $token,
-        ]);
+        return $this->render('security/reset_password_reset.html.twig', ['token' => $token]);
     }
 }

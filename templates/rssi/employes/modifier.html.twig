@@ -1,0 +1,68 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Modifier — {{ employe.prenom }} {{ employe.nom }}{% endblock %}
+
+{% block content %}
+<div style="max-width:620px;">
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-pencil"></i> Modifier l'employé</div>
+        </div>
+        <div class="r-card-body">
+            <form method="post">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Prénom *</label>
+                        <input type="text" name="prenom" required value="{{ employe.prenom }}"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Nom *</label>
+                        <input type="text" name="nom" required value="{{ employe.nom }}"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Email</label>
+                    <input type="email" value="{{ employe.email }}" disabled
+                           style="width:100%;padding:10px 14px;border:1px solid #E2E8F0;border-radius:8px;font-size:14px;box-sizing:border-box;background:#F8FAFC;color:#94A3B8;">
+                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">L'email ne peut pas être modifié.</div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Téléphone</label>
+                        <input type="text" name="telephone" value="{{ employe.telephone }}"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Poste</label>
+                        <input type="text" name="poste" value="{{ employe.poste }}"
+                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Département *</label>
+                    <select name="departement" required
+                            style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                        {% for dept in departements %}
+                            <option value="{{ dept.id }}" {% if employe.departement and employe.departement.id == dept.id %}selected{% endif %}>
+                                {{ dept.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:flex;gap:10px;">
+                    <button type="submit" class="r-btn r-btn-primary">
+                        <i class="bi bi-check-lg"></i> Enregistrer
+                    </button>
+                    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

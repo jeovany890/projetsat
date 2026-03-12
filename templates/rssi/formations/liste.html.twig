@@ -1,0 +1,90 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Campagnes de formation{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_formations_nouvelle') }}" class="r-btn r-btn-primary">
+        <i class="bi bi-plus-lg"></i> Nouvelle campagne
+    </a>
+{% endblock %}
+
+{% block content %}
+
+{% set nbEnCours  = campagnes|filter(c => c.statut == 'EN_COURS')|length %}
+{% set nbPlanifie = campagnes|filter(c => c.statut == 'PLANIFIEE')|length %}
+{% set nbTermine  = campagnes|filter(c => c.statut == 'TERMINEE')|length %}
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
+    <div class="r-card" style="padding:20px;text-align:center;">
+        <div style="font-size:30px;font-weight:800;color:#0F172A;line-height:1;">{{ campagnes|length }}</div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">Total</div>
+    </div>
+    <div class="r-card" style="padding:20px;text-align:center;">
+        <div style="font-size:30px;font-weight:800;color:#0891B2;line-height:1;">{{ nbEnCours }}</div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">En cours</div>
+    </div>
+    <div class="r-card" style="padding:20px;text-align:center;">
+        <div style="font-size:30px;font-weight:800;color:#D97706;line-height:1;">{{ nbPlanifie }}</div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">Planifiées</div>
+    </div>
+    <div class="r-card" style="padding:20px;text-align:center;">
+        <div style="font-size:30px;font-weight:800;color:#166534;line-height:1;">{{ nbTermine }}</div>
+        <div style="font-size:12px;color:#64748B;margin-top:4px;">Terminées</div>
+    </div>
+</div>
+
+{% if campagnes|length == 0 %}
+<div class="r-card"><div class="r-card-body"><div class="r-empty">
+    <i class="bi bi-mortarboard"></i>
+    <p>Aucune campagne. Créez-en une pour assigner des modules à vos employés.</p>
+    <a href="{{ path('rssi_formations_nouvelle') }}" class="r-btn r-btn-primary"><i class="bi bi-plus-lg"></i> Créer</a>
+</div></div></div>
+{% else %}
+<div style="display:flex;flex-direction:column;gap:12px;">
+{% for c in campagnes %}
+{% set pct = c.totalParticipants > 0 ? ((c.nombreTermines / c.totalParticipants) * 100)|round : 0 %}
+<div class="r-card" style="padding:20px;">
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+        <div style="width:52px;height:52px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;
+            {% if c.statut == 'EN_COURS' %}background:#CFFAFE;color:#0891B2;
+            {% elseif c.statut == 'PLANIFIEE' %}background:#FEF9C3;color:#CA8A04;
+            {% elseif c.statut == 'TERMINEE' %}background:#DCFCE7;color:#166534;
+            {% else %}background:#F1F5F9;color:#94A3B8;{% endif %}">
+            <i class="bi bi-{% if c.statut == 'EN_COURS' %}play-circle-fill{% elseif c.statut == 'PLANIFIEE' %}clock{% elseif c.statut == 'TERMINEE' %}check-circle-fill{% else %}x-circle{% endif %}"></i>
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
+                <span style="font-size:15px;font-weight:700;color:#0F172A;">{{ c.titre }}</span>
+                <span class="r-badge {% if c.statut == 'EN_COURS' %}r-badge-cyan{% elseif c.statut == 'PLANIFIEE' %}r-badge-orange{% elseif c.statut == 'TERMINEE' %}r-badge-green{% else %}r-badge-gray{% endif %}">
+                    {{ c.statut|replace({'_': ' '}) }}
+                </span>
+            </div>
+            <div style="font-size:12px;color:#64748B;margin-bottom:10px;">
+                T{{ c.trimestre }} {{ c.annee }} &nbsp;·&nbsp;
+                {{ c.dateDebut|date('d/m/Y') }} → {{ c.dateFin|date('d/m/Y') }} &nbsp;·&nbsp;
+                {{ c.modules|length }} module(s) &nbsp;·&nbsp; {{ c.totalParticipants }} participant(s)
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <div style="flex:1;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                    <div style="height:100%;width:{{ pct }}%;background:linear-gradient(90deg,#06B6D4,#0284C7);border-radius:99px;"></div>
+                </div>
+                <span style="font-size:12px;font-weight:700;color:#475569;">{{ pct }}%</span>
+                <span style="font-size:11px;color:#94A3B8;">{{ c.nombreTermines }}/{{ c.totalParticipants }} terminés</span>
+                {% if c.nombreEnRetard > 0 %}<span class="r-badge r-badge-red">{{ c.nombreEnRetard }} en retard</span>{% endif %}
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-shrink:0;">
+            <a href="{{ path('rssi_formations_detail', {id: c.id}) }}" class="r-btn r-btn-ghost"><i class="bi bi-eye"></i> Voir</a>
+            {% if c.statut != 'EN_COURS' %}
+            <form method="post" action="{{ path('rssi_formations_supprimer', {id: c.id}) }}" onsubmit="return confirm('Supprimer ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('suppr_' ~ c.id) }}">
+                <button type="submit" class="r-btn r-btn-danger" style="padding:9px 12px;"><i class="bi bi-trash"></i></button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

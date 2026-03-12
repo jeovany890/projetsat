@@ -1,0 +1,155 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}{{ campagne.titre }}{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_formations_liste') }}" class="r-btn r-btn-ghost">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+    {% if campagne.statut == 'PLANIFIEE' %}
+        <form method="post" action="{{ path('rssi_formations_statut', {id: campagne.id, statut: 'EN_COURS'}) }}" style="display:inline;">
+            <input type="hidden" name="_token" value="{{ csrf_token('statut_' ~ campagne.id) }}">
+            <button type="submit" class="r-btn r-btn-primary"><i class="bi bi-play-fill"></i> Lancer</button>
+        </form>
+    {% elseif campagne.statut == 'EN_COURS' %}
+        <form method="post" action="{{ path('rssi_formations_statut', {id: campagne.id, statut: 'TERMINEE'}) }}" style="display:inline;"
+              onsubmit="return confirm('Marquer cette campagne comme terminée ?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('statut_' ~ campagne.id) }}">
+            <button type="submit" class="r-btn r-btn-ghost"><i class="bi bi-stop-fill"></i> Terminer</button>
+        </form>
+        <form method="post" action="{{ path('rssi_formations_statut', {id: campagne.id, statut: 'ANNULEE'}) }}" style="display:inline;"
+              onsubmit="return confirm('Annuler cette campagne ?')">
+            <input type="hidden" name="_token" value="{{ csrf_token('statut_' ~ campagne.id) }}">
+            <button type="submit" class="r-btn r-btn-danger" style="padding:9px 14px;"><i class="bi bi-x-circle"></i> Annuler</button>
+        </form>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+
+{# ── En-tête campagne ── #}
+{% set pct = campagne.totalParticipants > 0 ? ((campagne.nombreTermines / campagne.totalParticipants) * 100)|round : 0 %}
+
+<div class="r-card" style="padding:24px;margin-bottom:20px;">
+    <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;">
+        <div style="width:60px;height:60px;border-radius:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;
+            {% if campagne.statut == 'EN_COURS' %}background:#CFFAFE;color:#0891B2;
+            {% elseif campagne.statut == 'PLANIFIEE' %}background:#FEF9C3;color:#CA8A04;
+            {% elseif campagne.statut == 'TERMINEE' %}background:#DCFCE7;color:#166534;
+            {% else %}background:#F1F5F9;color:#94A3B8;{% endif %}">
+            <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <div style="flex:1;min-width:200px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+                <h1 style="font-size:20px;font-weight:800;color:#0F172A;margin:0;">{{ campagne.titre }}</h1>
+                <span class="r-badge {% if campagne.statut == 'EN_COURS' %}r-badge-cyan{% elseif campagne.statut == 'PLANIFIEE' %}r-badge-orange{% elseif campagne.statut == 'TERMINEE' %}r-badge-green{% else %}r-badge-gray{% endif %}">
+                    {{ campagne.statut|replace({'_': ' '}) }}
+                </span>
+            </div>
+            {% if campagne.description %}
+            <p style="font-size:14px;color:#475569;margin:0 0 12px;">{{ campagne.description }}</p>
+            {% endif %}
+            <div style="font-size:12px;color:#94A3B8;display:flex;gap:16px;flex-wrap:wrap;">
+                <span><i class="bi bi-calendar3"></i> T{{ campagne.trimestre }} {{ campagne.annee }}</span>
+                <span><i class="bi bi-play"></i> {{ campagne.dateDebut|date('d/m/Y') }}</span>
+                <span><i class="bi bi-stop"></i> {{ campagne.dateFin|date('d/m/Y') }}</span>
+                <span><i class="bi bi-people"></i> {{ campagne.totalParticipants }} participant(s)</span>
+                <span><i class="bi bi-exclamation-triangle"></i> -{{ campagne.pointsPenalite }} pts si non complété</span>
+            </div>
+        </div>
+        <div style="text-align:center;flex-shrink:0;">
+            <div style="font-size:36px;font-weight:800;color:{% if pct >= 80 %}#166534{% elseif pct >= 50 %}#0891B2{% else %}#D97706{% endif %};">{{ pct }}%</div>
+            <div style="font-size:12px;color:#94A3B8;">complété</div>
+        </div>
+    </div>
+
+    {# Barre globale #}
+    <div style="margin-top:20px;">
+        <div style="height:8px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+            <div style="height:100%;width:{{ pct }}%;background:linear-gradient(90deg,#06B6D4,#0284C7);border-radius:99px;transition:width 0.5s;"></div>
+        </div>
+        <div style="display:flex;gap:20px;margin-top:8px;font-size:12px;color:#64748B;">
+            <span><i class="bi bi-check-circle" style="color:#166534;"></i> {{ campagne.nombreTermines }} terminés</span>
+            <span><i class="bi bi-play-circle" style="color:#0891B2;"></i> {{ campagne.nombreEnCours }} en cours</span>
+            <span><i class="bi bi-clock" style="color:#D97706;"></i> {{ campagne.nombreEnRetard }} en retard</span>
+        </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+{# ── Progression par module ── #}
+<div class="r-card">
+    <div class="r-card-header">
+        <div class="r-card-title"><i class="bi bi-book-half"></i> Modules ({{ statsModules|length }})</div>
+    </div>
+    <div class="r-card-body" style="display:flex;flex-direction:column;gap:14px;">
+        {% for s in statsModules %}
+        <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                <div>
+                    <div style="font-size:13px;font-weight:600;color:#0F172A;">{{ s.module.titre }}</div>
+                    <div style="font-size:11px;color:#94A3B8;">{{ s.termines }}/{{ s.total }} terminés · {{ s.enCours }} en cours</div>
+                </div>
+                <span style="font-size:14px;font-weight:700;color:#0891B2;">{{ s.pct }}%</span>
+            </div>
+            <div style="height:5px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
+                <div style="height:100%;width:{{ s.pct }}%;background:linear-gradient(90deg,#06B6D4,#0284C7);border-radius:99px;"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{# ── Résumé participants ── #}
+<div class="r-card">
+    <div class="r-card-header">
+        <div class="r-card-title"><i class="bi bi-people"></i> Participants ({{ parEmploye|length }})</div>
+    </div>
+    <div style="overflow-y:auto;max-height:340px;">
+        {% if parEmploye|length == 0 %}
+        <div class="r-empty" style="padding:30px 0;"><i class="bi bi-people"></i><p>Aucun participant assigné.</p></div>
+        {% else %}
+        <table class="r-table">
+            <thead><tr>
+                <th>Employé</th>
+                <th>Progression</th>
+                <th>Statut</th>
+            </tr></thead>
+            <tbody>
+            {% for data in parEmploye %}
+            {% set epct = data.total > 0 ? ((data.termines / data.total) * 100)|round : 0 %}
+            <tr>
+                <td>
+                    <div style="font-size:13px;font-weight:600;color:#0F172A;">{{ data.employe.prenom }} {{ data.employe.nom }}</div>
+                    <div style="font-size:11px;color:#94A3B8;">{{ data.employe.departement ? data.employe.departement.nom : '—' }}</div>
+                </td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <div style="flex:1;height:5px;background:#E2E8F0;border-radius:99px;overflow:hidden;min-width:60px;">
+                            <div style="height:100%;width:{{ epct }}%;background:#06B6D4;border-radius:99px;"></div>
+                        </div>
+                        <span style="font-size:11px;font-weight:700;color:#475569;">{{ epct }}%</span>
+                    </div>
+                </td>
+                <td>
+                    {% if data.retard %}
+                        <span class="r-badge r-badge-red">Retard</span>
+                    {% elseif epct == 100 %}
+                        <span class="r-badge r-badge-green">Terminé</span>
+                    {% elseif epct > 0 %}
+                        <span class="r-badge r-badge-cyan">En cours</span>
+                    {% else %}
+                        <span class="r-badge r-badge-gray">Non commencé</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+</div>
+
+</div>
+{% endblock %}

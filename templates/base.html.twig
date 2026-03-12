@@ -19,6 +19,7 @@
     {# Design System Premium #}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
     
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
@@ -27,6 +28,19 @@
     {# Alpine.js pour interactions #}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     
+
+    <script>
+    // Rend tous les tableaux scrollables sur mobile sans casser leur structure
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.a-content table, .r-content table, .card table').forEach(function(table) {
+            if (table.closest('.table-scroll-wrap')) return;
+            var wrap = document.createElement('div');
+            wrap.className = 'table-scroll-wrap';
+            table.parentNode.insertBefore(wrap, table);
+            wrap.appendChild(table);
+        });
+    });
+    </script>
     {% block javascripts %}{% endblock %}
 </body>
 </html>

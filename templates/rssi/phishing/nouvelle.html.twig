@@ -1,0 +1,215 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Nouvelle campagne phishing{% endblock %}
+
+{% block content %}
+<div style="max-width:800px;display:flex;flex-direction:column;gap:20px;">
+
+    {# Avertissement éthique #}
+    <div style="background:linear-gradient(135deg,#FEF9C3,#FEF3C7);border:1px solid #FDE68A;border-radius:14px;padding:20px 24px;display:flex;gap:16px;align-items:flex-start;">
+        <div style="font-size:28px;flex-shrink:0;">⚠️</div>
+        <div>
+            <div style="font-weight:700;color:#92400E;font-size:15px;margin-bottom:6px;">Utilisation éthique et légale</div>
+            <div style="font-size:13px;color:#78350F;line-height:1.6;">
+                Les campagnes phishing simulées doivent être réalisées <strong>avec l'accord explicite de la direction</strong> de l'entreprise.
+                Ces tests sont réservés aux fins de sensibilisation interne. Tout usage malveillant est strictement interdit.
+            </div>
+        </div>
+    </div>
+
+    <form method="post">
+
+        {# Informations de base #}
+        <div class="r-card" style="margin-bottom:20px;">
+            <div class="r-card-header">
+                <div class="r-card-title"><i class="bi bi-info-circle"></i> Informations de la campagne</div>
+            </div>
+            <div class="r-card-body">
+                <div style="margin-bottom:16px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Titre de la campagne *</label>
+                    <input type="text" name="titre" required placeholder="ex: Test phishing BOA Décembre 2026"
+                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                </div>
+                <div style="margin-bottom:0;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Description <span style="color:#94A3B8;font-weight:400;">(optionnel)</span></label>
+                    <textarea name="description" rows="2" placeholder="Objectif de cette campagne..."
+                              style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        {# Choix du gabarit #}
+        <div class="r-card" style="margin-bottom:20px;">
+            <div class="r-card-header">
+                <div class="r-card-title"><i class="bi bi-envelope-fill"></i> Gabarit phishing</div>
+            </div>
+            <div class="r-card-body">
+                {% if gabarits|length == 0 %}
+                    <div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">
+                        <i class="bi bi-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:8px;"></i>
+                        Aucun gabarit disponible. L'administrateur doit en créer.
+                    </div>
+                {% else %}
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="gabaritsGrid">
+                    {% for g in gabarits %}
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="gabarit" value="{{ g.id }}" required style="display:none;" class="gabarit-radio">
+                        <div class="gabarit-card" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;transition:all 0.2s;position:relative;">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                                <div style="font-weight:700;color:#1E293B;font-size:14px;">{{ g.titre }}</div>
+                                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
+                                    {% if g.difficulte == 'FACILE' %}background:#DCFCE7;color:#166534;
+                                    {% elseif g.difficulte == 'MOYEN' %}background:#FEF9C3;color:#854D0E;
+                                    {% else %}background:#FEE2E2;color:#991B1B;{% endif %}">
+                                    {{ g.difficulte }}
+                                </span>
+                            </div>
+                            <div style="font-size:11px;color:#64748B;margin-bottom:8px;">{{ g.categorie }}</div>
+                            {% if g.description %}
+                                <div style="font-size:12px;color:#94A3B8;line-height:1.4;">{{ g.description|slice(0,80) }}{% if g.description|length > 80 %}…{% endif %}</div>
+                            {% endif %}
+                            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #F1F5F9;font-size:11px;color:#94A3B8;">
+                                <i class="bi bi-person-fill"></i> {{ g.nomExpediteur }}
+                                &nbsp;&bull;&nbsp;
+                                <i class="bi bi-envelope"></i> {{ g.emailExpediteur }}
+                            </div>
+                            <div style="position:absolute;top:12px;right:12px;display:none;" class="check-icon">
+                                <i class="bi bi-check-circle-fill" style="color:#0891B2;font-size:18px;"></i>
+                            </div>
+                        </div>
+                    </label>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Sélection des cibles #}
+        <div class="r-card" style="margin-bottom:20px;">
+            <div class="r-card-header">
+                <div class="r-card-title"><i class="bi bi-people-fill"></i> Cibles de la campagne</div>
+            </div>
+            <div class="r-card-body">
+                <div style="margin-bottom:14px;display:flex;gap:8px;">
+                    <button type="button" onclick="toutSelectionner()" class="r-btn r-btn-ghost" style="font-size:12px;padding:6px 12px;">
+                        <i class="bi bi-check-all"></i> Tout sélectionner
+                    </button>
+                    <button type="button" onclick="toutDeselectionner()" class="r-btn r-btn-ghost" style="font-size:12px;padding:6px 12px;">
+                        <i class="bi bi-x-circle"></i> Tout désélectionner
+                    </button>
+                </div>
+
+                {% if departements|length == 0 %}
+                    <div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">Aucun département trouvé.</div>
+                {% else %}
+                {% for dept in departements %}
+                    <div style="margin-bottom:16px;">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #F1F5F9;">
+                            <input type="checkbox" id="dept_{{ dept.id }}" name="cibles[]" value="dept_{{ dept.id }}"
+                                   onchange="toggleDept('{{ dept.id }}')"
+                                   style="width:16px;height:16px;accent-color:#0891B2;">
+                            <label for="dept_{{ dept.id }}" style="font-weight:700;color:#1E293B;font-size:14px;cursor:pointer;">
+                                <i class="bi bi-diagram-3-fill" style="color:#0891B2;margin-right:4px;"></i>
+                                {{ dept.nom }}
+                                <span style="font-weight:400;color:#94A3B8;font-size:12px;margin-left:6px;">({{ dept.employes|length }} employé(s))</span>
+                            </label>
+                        </div>
+                        <div style="padding-left:24px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                        {% for emp in dept.employes %}
+                            {% if emp.estActif %}
+                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#475569;">
+                                <input type="checkbox" name="cibles[]" value="{{ emp.id }}"
+                                       class="emp-check dept-{{ dept.id }}"
+                                       style="width:14px;height:14px;accent-color:#0891B2;">
+                                {{ emp.prenom }} {{ emp.nom }}
+                                <span style="font-size:11px;color:#CBD5E1;">{{ emp.email }}</span>
+                            </label>
+                            {% endif %}
+                        {% endfor %}
+                        </div>
+                    </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# Date planifiée #}
+        <div class="r-card" style="margin-bottom:20px;">
+            <div class="r-card-header">
+                <div class="r-card-title"><i class="bi bi-calendar-event"></i> Planification</div>
+            </div>
+            <div class="r-card-body">
+                <div style="max-width:300px;">
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Date d'envoi *</label>
+                    <input type="datetime-local" name="date_planifiee" required
+                           min="{{ 'now'|date('Y-m-d\\TH:i') }}"
+                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">L'envoi se fait manuellement depuis le détail de la campagne.</div>
+                </div>
+            </div>
+        </div>
+
+        {# Autorisation éthique — obligatoire #}
+        <div class="r-card" style="margin-bottom:24px;border:2px solid #FDE68A;">
+            <div class="r-card-header" style="background:#FFFBEB;">
+                <div class="r-card-title" style="color:#92400E;"><i class="bi bi-shield-exclamation"></i> Autorisation obligatoire</div>
+            </div>
+            <div class="r-card-body">
+                <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;margin-bottom:16px;">
+                    <input type="checkbox" name="autorisation_confirmee" value="1" required id="checkAutorisation"
+                           style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#D97706;">
+                    <span style="font-size:13px;color:#374151;line-height:1.6;">
+                        Je confirme que cette simulation de phishing a été <strong>autorisée par la direction</strong> de l'entreprise
+                        et qu'elle est réalisée dans un cadre légal et éthique à des fins de sensibilisation.
+                    </span>
+                </label>
+                <div>
+                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
+                        Nom du responsable ayant donné l'autorisation *
+                    </label>
+                    <input type="text" name="nom_autorisateur" placeholder="Prénom Nom, Titre"
+                           style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #FDE68A;border-radius:8px;font-size:14px;box-sizing:border-box;background:#FFFBEB;">
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+            <button type="submit" class="r-btn r-btn-primary" style="background:linear-gradient(135deg,#D97706,#B45309);">
+                <i class="bi bi-fish"></i> Créer la campagne
+            </button>
+            <a href="{{ path('rssi_phishing_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
+        </div>
+
+    </form>
+</div>
+
+<script>
+// Sélection gabarit avec highlight visuel
+document.querySelectorAll('.gabarit-radio').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.gabarit-card').forEach(c => {
+            c.style.borderColor = '#E2E8F0';
+            c.style.background  = 'white';
+            c.querySelector('.check-icon').style.display = 'none';
+        });
+        const card = radio.closest('label').querySelector('.gabarit-card');
+        card.style.borderColor = '#0891B2';
+        card.style.background  = '#F0F9FF';
+        card.querySelector('.check-icon').style.display = 'block';
+    });
+});
+
+// Sélection par département
+function toggleDept(deptId) {
+    const deptCheck = document.getElementById('dept_' + deptId);
+    document.querySelectorAll('.dept-' + deptId).forEach(c => c.checked = deptCheck.checked);
+}
+
+function toutSelectionner() {
+    document.querySelectorAll('input[name="cibles[]"]').forEach(c => c.checked = true);
+}
+function toutDeselectionner() {
+    document.querySelectorAll('input[name="cibles[]"]').forEach(c => c.checked = false);
+}
+</script>
+{% endblock %}

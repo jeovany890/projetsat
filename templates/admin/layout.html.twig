@@ -1,133 +1,220 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-<div style="display: flex; min-height: 100vh;">
-    
-    {# Sidebar #}
-    <aside style="width: 280px; background: var(--gray-900); color: white; padding: var(--space-6); display: flex; flex-direction: column;">
-        
-        <div style="margin-bottom: var(--space-8);">
-            <a href="{{ path('admin_dashboard') }}" style="text-decoration: none; color: white;">
-                <h1 style="font-size: var(--text-2xl); font-weight: var(--font-black); color: white; margin-bottom: var(--space-2);">
-                    SAT Platform
-                </h1>
-            </a>
-            <span class="badge" style="background: var(--danger); color: white;">ADMIN</span>
+
+<div class="sb-overlay" id="sbOverlay" onclick="sbClose()"></div>
+
+<div class="a-shell" id="aShell">
+
+    <aside class="a-sidebar" id="aSidebar">
+
+        <div class="a-brand">
+            <div class="a-brand-icon"><i class="bi bi-shield-shaded"></i></div>
+            <div class="a-brand-text">
+                <div class="a-brand-name">SAT Platform</div>
+                <div class="a-brand-role">Administration</div>
+            </div>
+            <button class="a-collapse-btn" onclick="sbToggle()" title="Réduire">
+                <i class="bi bi-layout-sidebar-reverse"></i>
+            </button>
         </div>
 
-        <nav style="flex: 1;">
-            <a href="{{ path('admin_dashboard') }}" class="nav-link {% if app.request.attributes.get('_route') == 'admin_dashboard' %}active{% endif %}">
-                <i class="bi bi-speedometer2"></i> Dashboard
-            </a>
-            
-            <div style="margin-top: var(--space-6); margin-bottom: var(--space-3); font-size: var(--text-xs); text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: var(--font-semibold); letter-spacing: 0.05em;">
-                Entreprises
-            </div>
-            <a href="{{ path('admin_entreprises_en_attente') }}" class="nav-link {% if 'admin_entreprises_en_attente' in app.request.attributes.get('_route') %}active{% endif %}">
-                <i class="bi bi-clock-history"></i> En attente
-            </a>
-            <a href="{{ path('admin_entreprises_liste') }}" class="nav-link {% if 'admin_entreprises_liste' in app.request.attributes.get('_route') %}active{% endif %}">
-                <i class="bi bi-building"></i> Toutes les entreprises
+        <nav class="a-nav">
+            <a href="{{ path('admin_dashboard') }}"
+               class="a-nav-link {% if app.request.attributes.get('_route') == 'admin_dashboard' %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+                <span class="a-nav-label">Tableau de bord</span>
             </a>
 
-            <div style="margin-top: var(--space-6); margin-bottom: var(--space-3); font-size: var(--text-xs); text-transform: uppercase; color: rgba(255,255,255,0.5); font-weight: var(--font-semibold); letter-spacing: 0.05em;">
-                Contenus
-            </div>
-            <a href="{{ path('admin_categories_liste') }}" class="nav-link {% if 'admin_categories' in app.request.attributes.get('_route') %}active{% endif %}">
-    <i class="bi bi-folder"></i> Catégories
-</a>
-            <a href="{{ path('admin_modules_liste') }}" class="nav-link {% if 'admin_modules' in app.request.attributes.get('_route') %}active{% endif %}">
-    <i class="bi bi-book"></i> Modules formation
-</a>
-         <a href="{{ path('admin_gabarits_liste') }}" class="nav-link {% if 'admin_gabarits' in app.request.attributes.get('_route') %}active{% endif %}">
-    <i class="bi bi-envelope-paper"></i> Systeme phishing
-</a>
+            <div class="a-nav-sep"><span class="a-nav-sep-text">Entreprises</span></div>
 
+            <a href="{{ path('admin_entreprises_en_attente') }}"
+               class="a-nav-link {% if 'admin_entreprises_en_attente' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-clock-history"></i></span>
+                <span class="a-nav-label">En attente</span>
+            </a>
+
+            <a href="{{ path('admin_entreprises_liste') }}"
+               class="a-nav-link {% if app.request.attributes.get('_route') == 'admin_entreprises_liste' %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-building"></i></span>
+                <span class="a-nav-label">Toutes les entreprises</span>
+            </a>
+
+            <div class="a-nav-sep"><span class="a-nav-sep-text">Contenus</span></div>
+
+            <a href="{{ path('admin_categories_liste') }}"
+               class="a-nav-link {% if 'admin_categories' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-folder-fill"></i></span>
+                <span class="a-nav-label">Catégories</span>
+            </a>
+
+            <a href="{{ path('admin_modules_liste') }}"
+               class="a-nav-link {% if 'admin_modules' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-book-half"></i></span>
+                <span class="a-nav-label">Modules de formation</span>
+            </a>
+
+            <a href="{{ path('admin_quiz_liste') }}"
+               class="a-nav-link {% if 'admin_quiz' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-patch-question-fill"></i></span>
+                <span class="a-nav-label">Quiz</span>
+            </a>
+
+            <div class="a-nav-sep"><span class="a-nav-sep-text">Cybersécurité</span></div>
+
+            <a href="{{ path('admin_gabarits_liste') }}"
+               class="a-nav-link {% if 'admin_gabarits' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-envelope-paper-fill"></i></span>
+                <span class="a-nav-label">Gabarits phishing</span>
+            </a>
         </nav>
 
-        <div style="padding-top: var(--space-6); border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold);">
-              {{ (app.user.prenom|default(''))|slice(0,1) ~ (app.user.nom|default(''))|slice(0,1) }}
-                </div>
-                <div>
-                    <div style="font-weight: var(--font-semibold); font-size: var(--text-sm);">{{ app.user.nomComplet }}</div>
-                    <div style="font-size: var(--text-xs); color: rgba(255,255,255,0.6);">{{ app.user.email }}</div>
-                </div>
+        <div class="a-user">
+            <div class="a-user-avatar">
+                {{ (app.user.prenom|default(''))|slice(0,1)|upper }}{{ (app.user.nom|default(''))|slice(0,1)|upper }}
             </div>
-            <a href="{{ path('app_logout') }}" class="btn btn-ghost" style="width: 100%; color: rgba(255,255,255,0.8); justify-content: flex-start;">
-                <i class="bi bi-box-arrow-right"></i> Déconnexion
+            <div class="a-user-info">
+                <div class="a-user-name">{{ app.user.nomComplet }}</div>
+                <div class="a-user-email">{{ app.user.email }}</div>
+            </div>
+            <a href="{{ path('app_logout') }}" class="a-logout" title="Déconnexion">
+                <i class="bi bi-power"></i>
             </a>
         </div>
 
     </aside>
 
-    {# Main Content #}
-    <main style="flex: 1; background: var(--gray-50); overflow-y: auto;">
-        
-        {# Header #}
-        <header style="background: white; border-bottom: 1px solid var(--gray-200); padding: var(--space-6) var(--space-8);">
-            {% block header %}
-                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-                    {% block page_title %}Page{% endblock %}
-                </h2>
-            {% endblock %}
+    <div class="a-main">
+
+        <header class="a-topbar">
+            <div class="a-topbar-left">
+                <button class="a-menu-btn" id="aMenuBtn" title="Menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="a-breadcrumb">
+                    <span class="a-breadcrumb-root">Admin</span>
+                    <i class="bi bi-chevron-right a-breadcrumb-sep"></i>
+                    <span class="a-breadcrumb-current">{% block page_title %}Page{% endblock %}</span>
+                </div>
+            </div>
+            <div class="a-topbar-right">
+                {% block topbar_actions %}{% endblock %}
+                <div class="a-topbar-badge">
+                    <i class="bi bi-shield-fill-check"></i>
+                    <span>Administrateur</span>
+                </div>
+            </div>
         </header>
 
-        {# Flash Messages #}
-        <div style="padding: var(--space-6) var(--space-8);">
-            {% for message in app.flashes('success') %}
-                <div class="alert alert-success" style="margin-bottom: var(--space-4);">
-                    <i class="bi bi-check-circle-fill alert-icon"></i>
-                    <div class="alert-content">{{ message }}</div>
-                </div>
+        <div class="a-flashes">
+            {% for msg in app.flashes('success') %}
+            <div class="a-flash a-flash-success"><i class="bi bi-check-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
-
-            {% for message in app.flashes('error') %}
-                <div class="alert alert-danger" style="margin-bottom: var(--space-4);">
-                    <i class="bi bi-x-circle-fill alert-icon"></i>
-                    <div class="alert-content">{{ message }}</div>
-                </div>
+            {% for msg in app.flashes('error') %}
+            <div class="a-flash a-flash-error"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
-
-            {% for message in app.flashes('warning') %}
-                <div class="alert alert-warning" style="margin-bottom: var(--space-4);">
-                    <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
-                    <div class="alert-content">{{ message }}</div>
-                </div>
+            {% for msg in app.flashes('danger') %}
+            <div class="a-flash a-flash-error"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
+            {% endfor %}
+            {% for msg in app.flashes('warning') %}
+            <div class="a-flash a-flash-warning"><i class="bi bi-exclamation-triangle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
         </div>
 
-        {# Content #}
-        <div style="padding: 0 var(--space-8) var(--space-8);">
-            {% block content %}{% endblock %}
-        </div>
+        <div class="a-content">{% block content %}{% endblock %}</div>
 
-    </main>
-
+    </div>
 </div>
 
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+{% endblock %}
+
 <style>
-.nav-link {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    padding: var(--space-3);
-    border-radius: var(--radius-lg);
-    color: rgba(255,255,255,0.7);
-    margin-bottom: var(--space-2);
-    transition: all var(--transition-fast);
-    text-decoration: none;
-}
-
-.nav-link:hover {
-    background: rgba(255,255,255,0.05);
-    color: white;
-}
-
-.nav-link.active {
-    background: rgba(255,255,255,0.1);
-    color: white;
-}
+:root{--a-sb-bg:#0F172A;--a-accent:#E53E3E;--a-accent-dim:rgba(229,62,62,0.12);--a-text:#F1F5F9;--a-muted:rgba(241,245,249,0.4);--a-hover:rgba(255,255,255,0.05);--a-border:rgba(255,255,255,0.07)}
+.a-brand{display:flex;align-items:center;gap:12px;padding:20px 16px 18px;border-bottom:1px solid var(--a-border);flex-shrink:0;background:var(--a-sb-bg)}
+.a-brand-icon{width:40px;height:40px;background:linear-gradient(135deg,#E53E3E,#C53030);border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;color:white;flex-shrink:0;box-shadow:0 4px 14px rgba(229,62,62,0.3)}
+.a-brand-name{font-size:14px;font-weight:800;color:var(--a-text);letter-spacing:-0.02em;white-space:nowrap}
+.a-brand-role{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--a-accent);white-space:nowrap}
+.a-brand-text{flex:1;min-width:0}
+.a-collapse-btn{width:28px;height:28px;background:var(--a-hover);border:1px solid var(--a-border);border-radius:7px;color:var(--a-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.15s;flex-shrink:0}
+.a-collapse-btn:hover{background:rgba(255,255,255,0.1);color:var(--a-text)}
+.a-nav{flex:1;padding:12px 10px;overflow-y:auto;overflow-x:hidden;background:var(--a-sb-bg)}
+.a-nav-sep{padding:14px 8px 5px;display:flex;align-items:center}
+.a-nav-sep-text{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--a-muted);white-space:nowrap}
+.a-nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;color:var(--a-muted);text-decoration:none;font-size:13.5px;font-weight:500;margin-bottom:2px;transition:all 0.15s;overflow:hidden}
+.a-nav-link:hover{background:var(--a-hover);color:var(--a-text)}
+.a-nav-link.active{background:var(--a-accent-dim);color:var(--a-accent);font-weight:600}
+.a-nav-icon{width:20px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.a-nav-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-user{display:flex;align-items:center;gap:10px;padding:14px;border-top:1px solid var(--a-border);flex-shrink:0;background:var(--a-sb-bg)}
+.a-user-avatar{width:34px;height:34px;background:linear-gradient(135deg,#E53E3E,#C53030);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0}
+.a-user-info{flex:1;min-width:0}
+.a-user-name{font-size:13px;font-weight:600;color:var(--a-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-user-email{font-size:11px;color:var(--a-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-logout{width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--a-muted);font-size:15px;border-radius:8px;text-decoration:none;transition:all 0.15s;flex-shrink:0}
+.a-logout:hover{background:rgba(248,113,113,0.15);color:#F87171}
+.a-sidebar{background:var(--a-sb-bg);display:flex;flex-direction:column}
+.a-topbar{height:60px;background:white;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50;gap:16px;flex-shrink:0}
+.a-topbar-left{display:flex;align-items:center;gap:14px;min-width:0}
+.a-topbar-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.a-menu-btn{width:36px;height:36px;background:#F1F5F9;border:1px solid #E2E8F0;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#475569;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.a-menu-btn:hover{background:#E2E8F0;color:#1E293B}
+.a-breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;min-width:0;overflow:hidden}
+.a-breadcrumb-root{color:#94A3B8;font-weight:500;flex-shrink:0}
+.a-breadcrumb-sep{font-size:10px;color:#CBD5E1;flex-shrink:0}
+.a-breadcrumb-current{font-size:14px;font-weight:700;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.a-topbar-badge{display:flex;align-items:center;gap:6px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;white-space:nowrap}
+.a-flashes{padding:16px 24px 0;display:flex;flex-direction:column;gap:8px}
+.a-flashes:empty{padding:0}
+.a-flash{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;font-size:13.5px;font-weight:500}
+.a-flash button{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;opacity:0.5;font-size:16px;padding:0 4px}
+.a-flash button:hover{opacity:1}
+.a-flash-success{background:#DCFCE7;color:#166534;border:1px solid #BBF7D0}
+.a-flash-error{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA}
+.a-flash-warning{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+.a-content{padding:24px;flex:1}
 </style>
+
+<script>
+(function(){
+    var KEY = 'sat_admin_sb';
+    var shell = document.getElementById('aShell');
+    var sidebar = document.getElementById('aSidebar');
+    var overlay = document.getElementById('sbOverlay');
+    var mob = function(){ return window.innerWidth <= 768; };
+
+    // Restaurer état desktop
+    if(!mob() && localStorage.getItem(KEY) === 'mini'){
+        shell.classList.add('sidebar-mini');
+    }
+
+    window.sbToggle = function(){
+        if(mob()){ sbOpen(); return; }
+        shell.classList.toggle('sidebar-mini');
+        localStorage.setItem(KEY, shell.classList.contains('sidebar-mini') ? 'mini' : 'open');
+    };
+
+    window.sbOpen = function(){
+        sidebar.classList.add('mob-open');
+        overlay.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.sbClose = function(){
+        sidebar.classList.remove('mob-open');
+        overlay.classList.remove('show');
+        document.body.style.overflow = '';
+    };
+
+    document.getElementById('aMenuBtn').addEventListener('click', function(){
+        mob() ? sbOpen() : sbToggle();
+    });
+
+    window.addEventListener('resize', function(){
+        if(!mob()){ sbClose(); }
+    });
+})();
+</script>
+
 {% endblock %}
