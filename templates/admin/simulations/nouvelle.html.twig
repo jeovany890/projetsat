@@ -1,0 +1,213 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}Nouvelle simulation{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_simulations_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux simulations
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-8);">
+
+            <div style="text-align: center; margin-bottom: var(--space-8);">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: linear-gradient(135deg, #8B5CF6, #6D28D9); border-radius: var(--radius-full); margin-bottom: var(--space-4);">
+                    <i class="bi bi-joystick" style="font-size: var(--text-4xl); color: white;"></i>
+                </div>
+                <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900);">
+                    Créer une simulation interactive
+                </h2>
+                <p style="color: var(--gray-600);">Scénario réaliste que l'employé devra analyser et identifier</p>
+            </div>
+
+            <form method="post" id="formSimulation">
+
+                {# ── INFOS GÉNÉRALES ── #}
+                <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">📋 Informations générales</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" class="form-control" name="titre" required placeholder="Ex: Faux email Gmail - Connexion suspecte">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2" placeholder="Description pédagogique..."></textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Type de simulation *</label>
+                            <select class="form-control" name="type_simulation" id="typeSimulation" onchange="updateFormulaire()" required>
+                                <option value="">Choisir...</option>
+                                {% for key, label in types %}
+                                    <option value="{{ key }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Difficulté</label>
+                            <select class="form-control" name="difficulte">
+                                <option value="facile">Facile</option>
+                                <option value="moyen" selected>Moyen</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Durée estimée (min)</label>
+                            <input type="number" class="form-control" name="duree_estimee" value="10" min="1" max="60">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Points en cas de réussite</label>
+                            <input type="number" class="form-control" name="points_reussite" value="100" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Points en cas d'échec</label>
+                            <input type="number" class="form-control" name="points_echec" value="0" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                {# ── CONTENU DYNAMIQUE SELON LE TYPE ── #}
+                <div id="contenuDynamique" style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                    <div style="text-align: center; padding: var(--space-8); color: var(--gray-400);">
+                        <i class="bi bi-arrow-up-circle" style="font-size: 40px; display: block; margin-bottom: var(--space-3);"></i>
+                        Sélectionnez un type de simulation ci-dessus
+                    </div>
+                </div>
+
+                {# ── INDICES ET EXPLICATION ── #}
+                <div id="sectionsCommunes" style="display: none; margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🎯 Pédagogie</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Indices à détecter (un par ligne)</label>
+                        <textarea class="form-control" name="indices" rows="4"
+                            placeholder="Ex:
+L'URL contient des fautes d'orthographe
+L'expéditeur ne correspond pas au domaine officiel
+Urgence artificielle créée"></textarea>
+                        <small style="color: var(--gray-500); font-size: var(--text-xs);">Ces indices seront montrés après la simulation</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Explication pédagogique</label>
+                        <textarea class="form-control" name="explication" rows="3"
+                            placeholder="Expliquez pourquoi c'est suspect et comment l'employé aurait dû réagir..."></textarea>
+                    </div>
+                </div>
+
+                {# ── PUBLICATION ── #}
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
+                        <input type="checkbox" name="est_publie" style="width: 20px; height: 20px;">
+                        <div>
+                            <div style="font-weight: var(--font-semibold);">Publier immédiatement</div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-600);">La simulation sera disponible pour être liée aux modules</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Créer la simulation
+                    </button>
+                    <a href="{{ path('admin_simulations_liste') }}" class="btn btn-secondary btn-lg">Annuler</a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateFormulaire() {
+    const type = document.getElementById('typeSimulation').value;
+    const container = document.getElementById('contenuDynamique');
+    const communs = document.getElementById('sectionsCommunes');
+
+    if (!type) { communs.style.display = 'none'; return; }
+    communs.style.display = 'block';
+
+    const formulaires = {
+        GMAIL: `
+            <h3 style="font-size:var(--text-lg);font-weight:var(--font-bold);margin-bottom:var(--space-6);">📧 Contenu de l'email Gmail</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                <div class="form-group">
+                    <label class="form-label">Nom expéditeur affiché</label>
+                    <input type="text" class="form-control" name="gmail_expediteur_nom" value="Google Security" placeholder="Google Security">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email expéditeur affiché</label>
+                    <input type="text" class="form-control" name="gmail_expediteur_email" value="noreply@google-securite.com" placeholder="email suspect">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Sujet de l'email</label>
+                <input type="text" class="form-control" name="gmail_sujet" value="⚠️ Connexion suspecte détectée sur votre compte">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Corps de l'email (HTML)</label>
+                <textarea class="form-control" name="gmail_corps" rows="6" placeholder="Contenu HTML de l'email..."><p>Bonjour,</p><p>Nous avons détecté une connexion suspecte depuis un appareil inconnu. Cliquez ci-dessous pour sécuriser votre compte immédiatement.</p></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Texte du lien piège</label>
+                <input type="text" class="form-control" name="gmail_lien_texte" value="Sécuriser mon compte maintenant">
+            </div>`,
+
+        MOT_DE_PASSE: `
+            <h3 style="font-size:var(--text-lg);font-weight:var(--font-bold);margin-bottom:var(--space-6);">🔒 Faux formulaire de mot de passe</h3>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                <div class="form-group">
+                    <label class="form-label">Nom du site imité</label>
+                    <input type="text" class="form-control" name="mdp_site_nom" value="BOA Bénin" placeholder="BOA Bénin">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">URL affichée (fausse)</label>
+                    <input type="text" class="form-control" name="mdp_site_url" value="https://boa-benin.securite-compte.com" placeholder="URL suspecte">
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                <div class="form-group">
+                    <label class="form-label">Emoji / logo</label>
+                    <input type="text" class="form-control" name="mdp_logo" value="🏦" placeholder="🏦">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Message affiché</label>
+                    <input type="text" class="form-control" name="mdp_message" value="Votre mot de passe a expiré. Veuillez le renouveler.">
+                </div>
+            </div>`,
+
+        LIEN_SUSPECT: `
+            <h3 style="font-size:var(--text-lg);font-weight:var(--font-bold);margin-bottom:var(--space-6);">🔗 Détection de lien suspect</h3>
+            <div class="form-group">
+                <label class="form-label">Liste de liens (un par ligne) *</label>
+                <textarea class="form-control" name="liens" rows="6" placeholder="https://www.google.com&#10;https://paypa1.com/secure&#10;https://facebook.com&#10;https://arnaque-cadeaux.biz/offre">https://www.google.com
+https://paypa1.com/secure-login
+https://facebook.com
+https://arnaque-promo-benin.net/offre-speciale</textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Index du/des liens pièges (0 = premier)</label>
+                <input type="text" class="form-control" name="lien_piege_index" value="1" placeholder="Ex: 1,3">
+                <small style="color:var(--gray-500);font-size:var(--text-xs);">L'employé devra identifier ces liens comme suspects</small>
+            </div>`,
+
+        default: `
+            <div class="form-group">
+                <label class="form-label">Contenu de la simulation</label>
+                <textarea class="form-control" name="contenu_message" rows="5" placeholder="Décrivez le scénario..."></textarea>
+            </div>`
+    };
+
+    container.innerHTML = formulaires[type] || formulaires.default;
+}
+</script>
+{% endblock %}

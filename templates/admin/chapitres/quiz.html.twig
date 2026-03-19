@@ -1,0 +1,166 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Quiz — {{ chapitre.titre }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+
+    <div style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-4);">
+        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" style="color: var(--gray-600); font-size: var(--text-sm); display: inline-flex; align-items: center; gap: var(--space-2);">
+            <i class="bi bi-arrow-left"></i> Retour aux chapitres de {{ module.titre }}
+        </a>
+    </div>
+
+    {% if quiz is null %}
+        <div class="card" style="text-align: center; padding: var(--space-12);">
+            <i class="bi bi-patch-question" style="font-size: 80px; color: var(--gray-300); display: block; margin-bottom: var(--space-4);"></i>
+            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-3);">
+                Ce chapitre n'a pas encore de quiz
+            </h2>
+            <p style="color: var(--gray-600); margin-bottom: var(--space-6);">
+                Créez un quiz pour évaluer la compréhension après ce chapitre.
+            </p>
+            <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}?creer=1" class="btn btn-primary btn-lg">
+                <i class="bi bi-plus-circle"></i> Créer le quiz
+            </a>
+        </div>
+    {% else %}
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+
+        {# Questions existantes #}
+        <div class="card">
+            <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                    <i class="bi bi-list-ol" style="color: var(--primary-600);"></i>
+                    Questions ({{ quiz.questions|length }})
+                </h3>
+                <span class="badge badge-primary">Seuil réussite : {{ quiz.scoreMinimum }}%</span>
+            </div>
+            <div style="padding: var(--space-4);">
+                {% if quiz.questions is empty %}
+                    <div style="text-align: center; padding: var(--space-8); color: var(--gray-500);">
+                        Aucune question. Ajoutez-en une →
+                    </div>
+                {% else %}
+                    {% for question in quiz.questions %}
+                        <div style="padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
+                            <div style="display: flex; justify-content: space-between; gap: var(--space-3);">
+                                <div style="flex: 1;">
+                                    <div style="font-weight: var(--font-semibold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                                        {{ loop.index }}. {{ question.question }}
+                                    </div>
+                                    <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2);">
+                                        {% for option in question.options %}
+                                            <span style="padding: 2px 8px; border-radius: var(--radius-full); font-size: var(--text-xs);
+                                                background: {{ option in question.reponsesCorrectes ? '#DCFCE7' : '#F3F4F6' }};
+                                                color: {{ option in question.reponsesCorrectes ? '#166534' : '#6B7280' }};
+                                                border: 1px solid {{ option in question.reponsesCorrectes ? '#BBF7D0' : '#E5E7EB' }};">
+                                                {{ option in question.reponsesCorrectes ? '✓ ' : '' }}{{ option }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                    {% if question.explication %}
+                                        <div style="font-size: var(--text-xs); color: var(--gray-500); font-style: italic;">
+                                            💡 {{ question.explication }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <form method="post" action="{{ path('admin_chapitre_quiz_question_supprimer', {moduleId: module.id, id: chapitre.id, qId: question.id}) }}" onsubmit="return confirm('Supprimer ?')">
+                                    <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
+        {# Ajouter une question #}
+        <div class="card">
+            <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100);">
+                <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                    <i class="bi bi-plus-circle" style="color: var(--success);"></i> Ajouter une question
+                </h3>
+            </div>
+            <div style="padding: var(--space-6);">
+                <form method="post">
+
+                    <div class="form-group">
+                        <label class="form-label">Question *</label>
+                        <textarea class="form-control" name="question" rows="3" required
+                            placeholder="Ex: Quel est le principal signe d'un email phishing ?"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Type de question</label>
+                        <select class="form-control" name="type_question" id="typeQuestion" onchange="updateType()">
+                            <option value="QCM">QCM (une seule bonne réponse)</option>
+                            <option value="QCM_MULTIPLE">QCM Multiple</option>
+                            <option value="VRAI_FAUX">Vrai / Faux</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Options *</label>
+                        <div id="optionsContainer">
+                            <input type="text" class="form-control" name="options[]" placeholder="Option A" style="margin-bottom:6px;" required>
+                            <input type="text" class="form-control" name="options[]" placeholder="Option B" style="margin-bottom:6px;" required>
+                            <input type="text" class="form-control" name="options[]" placeholder="Option C" style="margin-bottom:6px;">
+                            <input type="text" class="form-control" name="options[]" placeholder="Option D">
+                        </div>
+                        <button type="button" onclick="ajouterOption()" class="btn btn-sm btn-secondary" style="margin-top:6px;">
+                            + Option
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Bonne(s) réponse(s) *</label>
+                        <input type="text" class="form-control" name="reponses_correctes[]" required
+                            placeholder="Texte exact de la bonne option">
+                        <small style="color:var(--gray-500);font-size:var(--text-xs);">
+                            Doit correspondre exactement à une option ci-dessus
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Explication (optionnel)</label>
+                        <textarea class="form-control" name="explication" rows="2"
+                            placeholder="Explication affichée après la correction..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Points</label>
+                        <input type="number" class="form-control" name="points" value="10" min="1" max="100">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width:100%;">
+                        <i class="bi bi-plus"></i> Ajouter la question
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function updateType() {
+    const type = document.getElementById('typeQuestion').value;
+    if (type === 'VRAI_FAUX') {
+        document.getElementById('optionsContainer').innerHTML = `
+            <input type="text" class="form-control" name="options[]" value="Vrai" readonly style="margin-bottom:6px;">
+            <input type="text" class="form-control" name="options[]" value="Faux">
+        `;
+    }
+}
+function ajouterOption() {
+    const c = document.getElementById('optionsContainer');
+    const i = document.createElement('input');
+    i.type = 'text'; i.className = 'form-control'; i.name = 'options[]';
+    i.placeholder = 'Nouvelle option'; i.style.marginTop = '6px';
+    c.appendChild(i);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}Simulations interactives{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+    <div>
+        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900);">Simulations interactives</h2>
+        <p style="color: var(--gray-600); font-size: var(--text-sm);">Créez des scénarios réalistes pour former les employés</p>
+    </div>
+    <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Nouvelle simulation
+    </a>
+</div>
+
+{% if simulations is empty %}
+    <div class="card" style="text-align: center; padding: var(--space-12);">
+        <i class="bi bi-joystick" style="font-size: 80px; color: var(--gray-300); display: block; margin-bottom: var(--space-4);"></i>
+        <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-700); margin-bottom: var(--space-3);">
+            Aucune simulation créée
+        </h3>
+        <p style="color: var(--gray-500); margin-bottom: var(--space-6);">
+            Créez des simulations réalistes (fausse Gmail, faux formulaire, lien suspect...) 
+            que les employés devront analyser et identifier.
+        </p>
+        <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle"></i> Créer la première simulation
+        </a>
+    </div>
+{% else %}
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+        {% for simulation in simulations %}
+            {% set typeLabel = types[simulation.typeSimulation] ?? simulation.typeSimulation %}
+            {% set typeIcon = {
+                'GMAIL': 'envelope-fill',
+                'MOT_DE_PASSE': 'lock-fill',
+                'FORMULAIRE': 'ui-checks',
+                'LIEN_SUSPECT': 'link-45deg',
+                'PIECE_JOINTE': 'paperclip'
+            }[simulation.typeSimulation] ?? 'bug' %}
+            {% set typeColor = {
+                'GMAIL': '#EA4335',
+                'MOT_DE_PASSE': '#F59E0B',
+                'FORMULAIRE': '#3B82F6',
+                'LIEN_SUSPECT': '#8B5CF6',
+                'PIECE_JOINTE': '#EF4444'
+            }[simulation.typeSimulation] ?? '#6B7280' %}
+
+            <div class="card" style="border-top: 4px solid {{ typeColor }};">
+                <div style="padding: var(--space-6);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
+                        <div style="width: 48px; height: 48px; background: {{ typeColor }}20; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-{{ typeIcon }}" style="font-size: 22px; color: {{ typeColor }};"></i>
+                        </div>
+                        <span class="badge badge-{{ simulation.estPublie ? 'success' : 'secondary' }}">
+                            {{ simulation.estPublie ? 'Publiée' : 'Brouillon' }}
+                        </span>
+                    </div>
+
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                        {{ simulation.titre }}
+                    </h3>
+                    <p style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-3);">
+                        {{ simulation.description|slice(0, 80) }}{% if simulation.description|length > 80 %}...{% endif %}
+                    </p>
+
+                    <div style="display: flex; gap: var(--space-3); font-size: var(--text-xs); color: var(--gray-500); margin-bottom: var(--space-4);">
+                        <span><i class="bi bi-tag"></i> {{ typeLabel }}</span>
+                        <span><i class="bi bi-clock"></i> {{ simulation.dureeEstimee }} min</span>
+                        <span><i class="bi bi-trophy"></i> {{ simulation.pointsReussite }} pts</span>
+                    </div>
+
+                    {% if simulation.module %}
+                        <div style="background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--primary-700); margin-bottom: var(--space-4);">
+                            <i class="bi bi-book"></i> Liée au module : {{ simulation.module.titre }}
+                        </div>
+                    {% endif %}
+
+                    <div style="display: flex; gap: var(--space-2);">
+                        <a href="{{ path('admin_simulation_modifier', {id: simulation.id}) }}" class="btn btn-sm btn-ghost">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <form method="post" action="{{ path('admin_simulation_toggle', {id: simulation.id}) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-{{ simulation.estPublie ? 'warning' : 'success' }}">
+                                <i class="bi bi-{{ simulation.estPublie ? 'eye-slash' : 'eye' }}"></i>
+                                {{ simulation.estPublie ? 'Dépublier' : 'Publier' }}
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_simulation_supprimer', {id: simulation.id}) }}" style="display: inline; margin-left: auto;" onsubmit="return confirm('Supprimer cette simulation ?')">
+                            <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger);">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

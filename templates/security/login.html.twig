@@ -1,130 +1,308 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Connexion - SAT Platform{% endblock %}
+{% block title %}Connexion · SAT Platform{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root { --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
+        body { font-family:var(--font-body); background-color:#060810; color:#e2e8f0; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family:var(--font-display); }
+        .bg-grid { background-size:40px 40px; background-image:linear-gradient(to right,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.03) 1px,transparent 1px); }
+        .glow-emerald { background:radial-gradient(circle at center,rgba(0,229,160,.15) 0%,transparent 70%); }
+        .glow-red { background:radial-gradient(circle at center,rgba(255,59,92,.1) 0%,transparent 70%); }
+
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .animate-blink { animation:blink 1s step-end infinite; }
+
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)}  to{opacity:1;transform:translateY(0)} }
+        @keyframes pulseGlow { 0%,100%{box-shadow:0 0 8px rgba(0,229,160,.6)} 50%{box-shadow:0 0 22px rgba(0,229,160,1)} }
+        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+        .anim-fade-up    { animation:fadeUp   .7s cubic-bezier(.22,.68,0,1.2) both; }
+        .delay-1  { animation-delay:.1s }
+        .delay-2  { animation-delay:.2s }
+
+        .dot-pulse  { animation:pulseGlow 2s ease-in-out infinite; }
+        .float-anim { animation:floatY 5s ease-in-out infinite; }
+
+        .card-lift { transition:transform .3s ease,border-color .3s ease,background .3s ease; }
+        .card-lift:hover { transform:translateY(-6px); }
+
+        ::-webkit-scrollbar{width:8px} ::-webkit-scrollbar-track{background:#060810}
+        ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+        ::-webkit-scrollbar-thumb:hover{background:#334155}
+
+        /* Style des inputs */
+        .input-sat {
+            background: #0C0F1D;
+            border: 1px solid rgba(255,255,255,0.07);
+            color: #F9FAFB;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .input-sat:focus {
+            border-color: #00E5A0;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0,229,160,0.15);
+        }
+        .input-sat::placeholder {
+            color: #4B5563;
+        }
+        .btn-primary-sat {
+            background: #00E5A0;
+            color: #060810;
+            border: none;
+            border-radius: 9999px;
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            width: 100%;
+            box-shadow: 0 8px 20px rgba(0,229,160,0.2);
+        }
+        .btn-primary-sat:hover {
+            background: white;
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(0,229,160,0.4);
+        }
+        .alert-sat {
+            background: rgba(0,229,160,0.1);
+            border: 1px solid rgba(0,229,160,0.2);
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #e2e8f0;
+            margin-bottom: 1.5rem;
+        }
+        .alert-sat-error {
+            background: rgba(255,59,92,0.1);
+            border-color: rgba(255,59,92,0.2);
+        }
+        .alert-sat i {
+            font-size: 1.25rem;
+            color: #00E5A0;
+        }
+        .alert-sat-error i {
+            color: #FF3B5C;
+        }
+        a.link-sat {
+            color: #00E5A0;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        a.link-sat:hover {
+            color: white;
+        }
+    </style>
+{% endblock %}
 
 {% block body %}
-<div style="min-height: 100vh; display: flex; background: linear-gradient(135deg, var(--primary-50) 0%, var(--secondary-50) 100%);">
-    
-    {# Partie gauche - Hero #}
-    <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-12);">
-        <div style="max-width: 500px;">
-            <div style="margin-bottom: var(--space-8);">
-                <h1 style="font-size: var(--text-5xl); font-weight: var(--font-black); background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: var(--space-4);">
-                    SAT Platform
+<!-- Navigation (identique à l'accueil) -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-[#060810]/80 backdrop-blur-lg border-b border-white/5">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 rounded-lg bg-[#0C0F1D] border border-white/10 flex items-center justify-center text-[#00E5A0] group-hover:border-[#00E5A0]/50 group-hover:scale-110 transition-all">
+                    <iconify-icon icon="solar:shield-linear" width="20"></iconify-icon>
+                </div>
+                <div class="flex flex-col leading-none">
+                    <span class="font-display font-semibold text-white tracking-tighter text-lg uppercase">SAT</span>
+                    <span class="font-display font-medium text-slate-500 tracking-tighter text-xs uppercase">Platform</span>
+                </div>
+            </a>
+            <div class="hidden md:flex items-center px-3 py-1 rounded-full bg-[#00E5A0]/10 border border-[#00E5A0]/20 text-[#00E5A0] text-xs font-medium tracking-wide">Bénin · PME</div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="{{ path('app_register') }}" class="text-sm text-slate-400 hover:text-white transition-colors font-medium">Créer un compte</a>
+        </div>
+    </div>
+</nav>
+
+<main class="min-h-screen flex items-center justify-center pt-20 pb-10 px-4 bg-grid relative overflow-hidden">
+    <!-- Glows décoratifs -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] glow-emerald pointer-events-none float-anim opacity-40"></div>
+    <div class="absolute bottom-0 right-0 w-[600px] h-[600px] glow-red pointer-events-none opacity-30"></div>
+
+    <div class="max-w-6xl w-full relative z-10 flex flex-col lg:flex-row gap-8 items-stretch">
+        <!-- Partie gauche : Hero / stats (version sombre) -->
+        <div class="flex-1 flex flex-col justify-center p-8 lg:p-12 rounded-3xl bg-[#0C0F1D]/60 backdrop-blur-md border border-white/5 anim-fade-up delay-1">
+            <div class="mb-8">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-[#060810]/80 backdrop-blur-sm mb-6">
+                    <span class="flex h-2 w-2 rounded-full bg-[#00E5A0] dot-pulse"></span>
+                    <span class="text-xs font-medium text-slate-300 uppercase tracking-widest">Security Awareness Training</span>
+                </div>
+                <h1 class="font-display font-semibold text-4xl md:text-5xl text-white tracking-tight leading-tight mb-4">
+                    Transformez vos employés en <span class="text-[#00E5A0">bouclier humain</span>
                 </h1>
-                <p style="font-size: var(--text-xl); color: var(--gray-600);">
-                    Formation Cybersécurité & Audit de Conformité pour entreprises béninoises
+                <p class="text-slate-400 text-base md:text-lg max-w-md">
+                    Formations contextualisées, simulations de phishing éthique et analytics comportementaux — spécialement conçus pour les PME béninoises.
                 </p>
             </div>
-            
-            <div style="display: flex; gap: var(--space-6); margin-top: var(--space-8);">
+
+            <div class="grid grid-cols-3 gap-4 mt-6">
                 <div>
-                    <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-600);">500+</div>
-                    <div style="color: var(--gray-600);">Employés formés</div>
+                    <div class="font-display font-semibold text-3xl text-white tracking-tighter">500+</div>
+                    <div class="text-xs text-slate-500 font-medium">Employés formés</div>
                 </div>
                 <div>
-                    <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--secondary-600);">98%</div>
-                    <div style="color: var(--gray-600);">Taux de réussite</div>
+                    <div class="font-display font-semibold text-3xl text-white tracking-tighter">98%</div>
+                    <div class="text-xs text-slate-500 font-medium">Taux de réussite</div>
                 </div>
                 <div>
-                    <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">24/7</div>
-                    <div style="color: var(--gray-600);">Support disponible</div>
+                    <div class="font-display font-semibold text-3xl text-white tracking-tighter">24/7</div>
+                    <div class="text-xs text-slate-500 font-medium">Support prioritaire</div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    {# Partie droite - Formulaire #}
-    <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: white; padding: var(--space-12); box-shadow: var(--shadow-2xl);">
-        <div style="width: 100%; max-width: 450px;">
-            
-            {# Flashes #}
-            {% for message in app.flashes('success') %}
-                <div class="alert alert-success" style="margin-bottom: var(--space-6);">
-                    <i class="bi bi-check-circle-fill alert-icon"></i>
-                    <div class="alert-content">{{ message }}</div>
-                </div>
-            {% endfor %}
-
-            {% for message in app.flashes('error') %}
-                <div class="alert alert-danger" style="margin-bottom: var(--space-6);">
-                    <i class="bi bi-x-circle-fill alert-icon"></i>
-                    <div class="alert-content">{{ message }}</div>
-                </div>
-            {% endfor %}
-
-            {% if error %}
-                <div class="alert alert-danger" style="margin-bottom: var(--space-6);">
-                    <i class="bi bi-x-circle-fill alert-icon"></i>
-                    <div class="alert-content">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-                </div>
-            {% endif %}
-
-            <div style="text-align: center; margin-bottom: var(--space-8);">
-                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
-                    Bon retour ! 👋
-                </h2>
-                <p style="color: var(--gray-600);">Connectez-vous pour accéder à votre espace</p>
+            <!-- Témoignage ou citation optionnelle -->
+            <div class="mt-8 pt-6 border-t border-white/5 text-sm text-slate-500 italic">
+                « L'humain n'est pas seulement un utilisateur, il est la composante la plus exploitée du système d'information. »
             </div>
-
-            <form method="post">
-                <div class="form-group">
-                    <label class="form-label" for="username">
-                        <i class="bi bi-envelope"></i> Adresse email
-                    </label>
-                    <input 
-                        type="email" 
-                        class="form-control" 
-                        id="username" 
-                        name="_username" 
-                        value="{{ last_username }}" 
-                        required 
-                        autofocus
-                        placeholder="exemple@email.com"
-                    >
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="password">
-                        <i class="bi bi-lock"></i> Mot de passe
-                    </label>
-                    <input 
-                        type="password" 
-                        class="form-control" 
-                        id="password" 
-                        name="_password" 
-                        required
-                        placeholder="••••••••"
-                    >
-                </div>
-
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-                    <label style="display: flex; align-items: center; gap: var(--space-2); cursor: pointer;">
-                        <input type="checkbox" name="_remember_me" style="width: 18px; height: 18px;">
-                        <span style="font-size: var(--text-sm); color: var(--gray-600);">Se souvenir de moi</span>
-                    </label>
-                    <a href="{{ path('app_reset_password_request') }}" style="font-size: var(--text-sm); color: var(--primary-600); font-weight: var(--font-semibold);">
-                        Mot de passe oublié ?
-                    </a>
-                </div>
-
-                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-                <button type="submit" class="btn btn-primary btn-lg btn-block" style="margin-bottom: var(--space-4);">
-                    <i class="bi bi-box-arrow-in-right"></i>
-                    Se connecter
-                </button>
-
-                <div style="text-align: center; color: var(--gray-600); font-size: var(--text-sm);">
-                    Pas encore de compte ?
-                    <a href="{{ path('app_register') }}" style="color: var(--primary-600); font-weight: var(--font-semibold);">
-                        Inscrire votre entreprise
-                    </a>
-                </div>
-            </form>
-
         </div>
-    </div>
 
+        <!-- Partie droite : Formulaire de connexion -->
+        <div class="flex-1 flex items-center justify-center">
+            <div class="w-full max-w-md p-8 lg:p-10 rounded-3xl bg-[#0C0F1D] border border-white/10 shadow-2xl card-lift anim-fade-up delay-2">
+                
+                <!-- Messages flash -->
+                {% for message in app.flashes('success') %}
+                    <div class="alert-sat">
+                        <iconify-icon icon="solar:check-circle-linear" width="20" class="text-[#00E5A0]"></iconify-icon>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+
+                {% for message in app.flashes('error') %}
+                    <div class="alert-sat alert-sat-error">
+                        <iconify-icon icon="solar:close-circle-linear" width="20" class="text-[#FF3B5C]"></iconify-icon>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+
+                {% if error %}
+                    <div class="alert-sat alert-sat-error">
+                        <iconify-icon icon="solar:close-circle-linear" width="20" class="text-[#FF3B5C]"></iconify-icon>
+                        <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
+                    </div>
+                {% endif %}
+
+                <div class="text-center mb-8">
+                    <h2 class="font-display font-semibold text-2xl md:text-3xl text-white tracking-tight mb-2">
+                        Bon retour
+                    </h2>
+                    <p class="text-slate-400 text-sm">Connectez-vous pour accéder à votre tableau de bord</p>
+                </div>
+
+                <form method="post" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-slate-300 mb-2">
+                            <iconify-icon icon="solar:letter-linear" class="inline mr-1 text-[#00E5A0]"></iconify-icon>
+                            Adresse email
+                        </label>
+                        <input 
+                            type="email" 
+                            id="username" 
+                            name="_username" 
+                            value="{{ last_username }}" 
+                            required 
+                            autofocus
+                            placeholder="exemple@email.com"
+                            class="input-sat"
+                        >
+                    </div>
+
+                    <div class="relative">
+    <label for="password" class="block text-sm font-medium text-slate-300 mb-2">
+        <iconify-icon icon="solar:lock-linear" class="inline mr-1 text-[#00E5A0]"></iconify-icon>
+        Mot de passe
+    </label>
+    <div class="relative">
+        <input 
+            type="password" 
+            id="password" 
+            name="_password" 
+            required
+            placeholder="••••••••"
+            class="input-sat pr-12"
+        >
+        <button 
+            type="button"
+            onclick="togglePasswordVisibility()"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#00E5A0] transition-colors focus:outline-none"
+            aria-label="Afficher/masquer le mot de passe"
+        >
+            <iconify-icon id="password-eye-icon" icon="solar:eye-linear" width="20"></iconify-icon>
+        </button>
+    </div>
 </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer text-slate-400">
+                            <input type="checkbox" name="_remember_me" class="w-4 h-4 rounded border-white/20 bg-[#060810] text-[#00E5A0] focus:ring-[#00E5A0]">
+                            <span>Se souvenir de moi</span>
+                        </label>
+                        <a href="{{ path('app_reset_password_request') }}" class="link-sat text-sm">
+                            Mot de passe oublié ?
+                        </a>
+                    </div>
+
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                    <button type="submit" class="btn-primary-sat mt-4">
+                        <iconify-icon icon="solar:login-2-linear" width="18"></iconify-icon>
+                        Se connecter
+                    </button>
+
+                    <div class="text-center text-sm text-slate-500 pt-4">
+                        Pas encore de compte ?
+                        <a href="{{ path('app_register') }}" class="link-sat font-semibold">
+                            Inscrire votre entreprise
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Footer simple (optionnel) -->
+<footer class="bg-[#060810] border-t border-white/5 py-4 text-center text-xs text-slate-500">
+    © 2025 SAT Platform · Projet L3 SSR · Cotonou, Bénin
+</footer>
+
+<!-- Animation au scroll (optionnel mais cohérent) -->
+<script>
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) e.target.classList.add('visible');
+        });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.anim-fade-up').forEach(el => observer.observe(el));
+    function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('password-eye-icon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        eyeIcon.setAttribute('icon', 'solar:eye-closed-linear');
+    } else {
+        passwordInput.type = 'password';
+        eyeIcon.setAttribute('icon', 'solar:eye-linear');
+    }
+}
+</script>
 {% endblock %}

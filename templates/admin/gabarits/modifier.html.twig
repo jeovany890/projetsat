@@ -1,0 +1,188 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Modifier le gabarit — {{ gabarit.titre }}{% endblock %}
+
+{% block content %}
+
+<div style="max-width: 1200px; margin: 0 auto;">
+
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_gabarits_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux gabarits
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-10);">
+
+            <div style="text-align: center; margin-bottom: var(--space-8);">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: linear-gradient(135deg, var(--warning), var(--danger)); border-radius: var(--radius-full); margin-bottom: var(--space-4);">
+                    <i class="bi bi-pencil-square" style="font-size: var(--text-4xl); color: white;"></i>
+                </div>
+                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                    Modifier le gabarit
+                </h2>
+                <p style="color: var(--gray-600);">{{ gabarit.titre }}</p>
+            </div>
+
+            <form method="post">
+
+                {# Informations de base #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        📝 Informations générales
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="titre">
+                            <i class="bi bi-type"></i> Titre du gabarit *
+                        </label>
+                        <input type="text" class="form-control" id="titre" name="titre" required value="{{ gabarit.titre }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="description">
+                            <i class="bi bi-text-paragraph"></i> Description
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="2">{{ gabarit.description }}</textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="categorie">
+                                <i class="bi bi-folder"></i> Catégorie *
+                            </label>
+                            <select class="form-control" id="categorie" name="categorie" required>
+                                <option value="">Sélectionnez...</option>
+                                <option value="banque" {{ gabarit.categorie == 'banque' ? 'selected' }}>Banque</option>
+                                <option value="service_public" {{ gabarit.categorie == 'service_public' ? 'selected' }}>Service public</option>
+                                <option value="recrutement" {{ gabarit.categorie == 'recrutement' ? 'selected' }}>Recrutement</option>
+                                <option value="ecommerce" {{ gabarit.categorie == 'ecommerce' ? 'selected' }}>E-commerce</option>
+                                <option value="reseau_social" {{ gabarit.categorie == 'reseau_social' ? 'selected' }}>Réseau social</option>
+                                <option value="autre" {{ gabarit.categorie == 'autre' ? 'selected' }}>Autre</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="difficulte">
+                                <i class="bi bi-signal"></i> Difficulté
+                            </label>
+                            <select class="form-control" id="difficulte" name="difficulte">
+                                <option value="facile" {{ gabarit.difficulte == 'facile' ? 'selected' }}>Facile (indices évidents)</option>
+                                <option value="moyen" {{ gabarit.difficulte == 'moyen' ? 'selected' }}>Moyen</option>
+                                <option value="difficile" {{ gabarit.difficulte == 'difficile' ? 'selected' }}>Difficile (très réaliste)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="compte_email_dsn">
+                                <i class="bi bi-envelope"></i> Compte email
+                            </label>
+                            <select class="form-control" id="compte_email_dsn" name="compte_email_dsn">
+                                <option value="MAILER_PHISHING_BOA" {{ gabarit.compteEmailDsn == 'MAILER_PHISHING_BOA' ? 'selected' }}>BOA Bénin (boa.benin.2026)</option>
+                                <option value="MAILER_PHISHING_SBEE" {{ gabarit.compteEmailDsn == 'MAILER_PHISHING_SBEE' ? 'selected' }}>SBEE (sbee.benin.2026)</option>
+                                <option value="MAILER_PHISHING_UNICEF" {{ gabarit.compteEmailDsn == 'MAILER_PHISHING_UNICEF' ? 'selected' }}>UNICEF (unicef.inter.2026)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                {# Informations expéditeur #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        👤 Expéditeur (ce que verra l'employé)
+                    </h3>
+
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                        <div class="form-group">
+                            <label class="form-label" for="nom_expediteur">
+                                <i class="bi bi-person-badge"></i> Nom de l'expéditeur *
+                            </label>
+                            <input type="text" class="form-control" id="nom_expediteur" name="nom_expediteur" required value="{{ gabarit.nomExpediteur }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" for="email_expediteur">
+                                <i class="bi bi-at"></i> Email affiché *
+                            </label>
+                            <input type="email" class="form-control" id="email_expediteur" name="email_expediteur" required value="{{ gabarit.emailExpediteur }}">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="sujet_email">
+                            <i class="bi bi-chat-left-text"></i> Sujet de l'email *
+                        </label>
+                        <input type="text" class="form-control" id="sujet_email" name="sujet_email" required value="{{ gabarit.sujetEmail }}">
+                    </div>
+                </div>
+
+                {# Contenu email #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        ✉️ Contenu de l'email
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="contenu_html">
+                            <i class="bi bi-code-slash"></i> Contenu HTML *
+                        </label>
+                        <textarea class="form-control" id="contenu_html" name="contenu_html" rows="15" required style="font-family: var(--font-mono); font-size: var(--text-sm);">{{ gabarit.contenuHtml }}</textarea>
+                        <small style="color: var(--gray-500); font-size: var(--text-xs); margin-top: var(--space-1); display: block;">
+                            💡 Variables disponibles : <code>{% verbatim %}{{LIEN_PIEGE}}{% endverbatim %}</code>, <code>{% verbatim %}{{NOM_EMPLOYE}}{% endverbatim %}</code>, <code>{% verbatim %}{{PRENOM_EMPLOYE}}{% endverbatim %}</code>
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="contenu_texte">
+                            <i class="bi bi-file-text"></i> Version texte (optionnel)
+                        </label>
+                        <textarea class="form-control" id="contenu_texte" name="contenu_texte" rows="5">{{ gabarit.contenuTexte }}</textarea>
+                    </div>
+                </div>
+
+                {# Indices pièges #}
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
+                        🎯 Indices de phishing (pour la correction)
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label" for="indices_pieges">
+                            <i class="bi bi-list-check"></i> Liste des pièges/indices
+                        </label>
+                        <textarea class="form-control" id="indices_pieges" name="indices_pieges" rows="6">{{ gabarit.indicesPieges ? gabarit.indicesPieges|join('\n') : '' }}</textarea>
+                        <small style="color: var(--gray-500); font-size: var(--text-xs); margin-top: var(--space-1); display: block;">
+                            Ces indices seront montrés aux employés après le test
+                        </small>
+                    </div>
+                </div>
+
+                {# Activation #}
+                <div style="margin-bottom: var(--space-8);">
+                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
+                        <input type="checkbox" name="est_actif" {{ gabarit.estActif ? 'checked' }} style="width: 20px; height: 20px;">
+                        <div>
+                            <div style="font-weight: var(--font-semibold); color: var(--gray-900);">Gabarit actif</div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Le gabarit sera disponible pour les campagnes phishing</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Enregistrer les modifications
+                    </button>
+                    <a href="{{ path('admin_gabarits_liste') }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

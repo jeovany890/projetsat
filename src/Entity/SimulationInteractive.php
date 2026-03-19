@@ -20,6 +20,7 @@ class SimulationInteractive
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    // TYPES : GMAIL | MOT_DE_PASSE | FORMULAIRE | LIEN_SUSPECT
     #[ORM\Column(type: 'string', length: 50)]
     private ?string $typeSimulation = null;
 
@@ -35,14 +36,19 @@ class SimulationInteractive
     #[ORM\Column(type: 'integer', options: ['default' => 100])]
     private int $pointsReussite = 100;
 
-    #[ORM\Column(type: 'integer', options: ['default' => 70])]
-    private int $seuilReussite = 70;
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    private int $pointsEchec = 0;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $estPublie = false;
 
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
+
+    // ✅ NOUVEAU : Simulation liée à un module (fin de module)
+    #[ORM\OneToOne(targetEntity: ModuleFormation::class, inversedBy: 'simulation')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?ModuleFormation $module = null;
 
     public function __construct()
     {
@@ -64,11 +70,13 @@ class SimulationInteractive
     public function setContenuSimulation(array $contenuSimulation): static { $this->contenuSimulation = $contenuSimulation; return $this; }
     public function getPointsReussite(): int { return $this->pointsReussite; }
     public function setPointsReussite(int $pointsReussite): static { $this->pointsReussite = $pointsReussite; return $this; }
-    public function getSeuilReussite(): int { return $this->seuilReussite; }
-    public function setSeuilReussite(int $seuilReussite): static { $this->seuilReussite = $seuilReussite; return $this; }
+    public function getPointsEchec(): int { return $this->pointsEchec; }
+    public function setPointsEchec(int $pointsEchec): static { $this->pointsEchec = $pointsEchec; return $this; }
     public function isEstPublie(): bool { return $this->estPublie; }
     public function setEstPublie(bool $estPublie): static { $this->estPublie = $estPublie; return $this; }
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+    public function getModule(): ?ModuleFormation { return $this->module; }
+    public function setModule(?ModuleFormation $module): static { $this->module = $module; return $this; }
     public function __toString(): string { return $this->titre ?? ''; }
 }

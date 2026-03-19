@@ -37,8 +37,14 @@ class Quiz
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
 
+    // ✅ Quiz lié à un Chapitre
+    #[ORM\OneToOne(targetEntity: Chapitre::class, inversedBy: 'quiz')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+    private ?Chapitre $chapitre = null;
+
+    // Relation module gardée nullable pour compatibilité
     #[ORM\OneToOne(targetEntity: ModuleFormation::class, inversedBy: 'quiz')]
-    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
     private ?ModuleFormation $module = null;
 
     #[ORM\OneToMany(targetEntity: QuestionQuiz::class, mappedBy: 'quiz', cascade: ['persist', 'remove'])]
@@ -66,6 +72,8 @@ class Quiz
     public function setMelangerQuestions(bool $melangerQuestions): static { $this->melangerQuestions = $melangerQuestions; return $this; }
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+    public function getChapitre(): ?Chapitre { return $this->chapitre; }
+    public function setChapitre(?Chapitre $chapitre): static { $this->chapitre = $chapitre; return $this; }
     public function getModule(): ?ModuleFormation { return $this->module; }
     public function setModule(?ModuleFormation $module): static { $this->module = $module; return $this; }
     public function getQuestions(): Collection { return $this->questions; }

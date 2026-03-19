@@ -1,0 +1,193 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}{{ module.titre }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto;">
+
+    <div style="margin-bottom: var(--space-6); display: flex; justify-content: space-between; align-items: center;">
+        <a href="{{ path('admin_modules_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux modules
+        </a>
+        <div style="display: flex; gap: var(--space-3);">
+            <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-pencil"></i> Modifier le module
+            </a>
+            <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus"></i> Ajouter un chapitre
+            </a>
+        </div>
+    </div>
+
+    {# ── INFOS MODULE ── #}
+    <div class="card" style="margin-bottom: var(--space-6); border-left: 4px solid var(--primary-600);">
+        <div style="padding: var(--space-6);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
+                        {{ module.titre }}
+                    </h2>
+                    <p style="color: var(--gray-600); margin-bottom: var(--space-3);">{{ module.description }}</p>
+                    <div style="display: flex; gap: var(--space-4); font-size: var(--text-sm); color: var(--gray-500);">
+                        <span><i class="bi bi-folder"></i> {{ module.categorie.nom }}</span>
+                        <span><i class="bi bi-signal"></i> {{ module.difficulte }}</span>
+                        <span><i class="bi bi-clock"></i> {{ module.dureeEstimee }} min</span>
+                        <span><i class="bi bi-book"></i> {{ module.chapitres|length }} chapitre(s)</span>
+                    </div>
+                </div>
+                <span class="badge badge-{{ module.estPublie ? 'success' : 'secondary' }} badge-lg">
+                    {{ module.estPublie ? '✅ Publié' : '📝 Brouillon' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6);">
+
+        {# ── CHAPITRES ── #}
+        <div>
+            <div class="card">
+                <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
+                        <i class="bi bi-journal-text" style="color: var(--primary-600);"></i>
+                        Chapitres ({{ module.chapitres|length }})
+                    </h3>
+                    <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-plus"></i> Ajouter
+                    </a>
+                </div>
+                <div style="padding: var(--space-4);">
+                    {% if module.chapitres is empty %}
+                        <div style="text-align: center; padding: var(--space-8); color: var(--gray-500);">
+                            <i class="bi bi-journal-x" style="font-size: 48px; display: block; margin-bottom: var(--space-3);"></i>
+                            Aucun chapitre. Commencez par en ajouter un.
+                        </div>
+                    {% else %}
+                        {% for chapitre in module.chapitres %}
+                            <div style="padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-3);">
+                                    <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                        <div style="width: 32px; height: 32px; background: var(--primary-100); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; font-weight: var(--font-bold); color: var(--primary-700); font-size: var(--text-sm); flex-shrink: 0;">
+                                            {{ chapitre.ordre }}
+                                        </div>
+                                        <div>
+                                            <div style="font-weight: var(--font-semibold); color: var(--gray-900);">{{ chapitre.titre }}</div>
+                                            <div style="font-size: var(--text-xs); color: var(--gray-500);">
+                                                {% if chapitre.urlVideo %}<i class="bi bi-play-circle"></i> Vidéo{% endif %}
+                                                {% if chapitre.quiz %}
+                                                    <span style="color: var(--success); margin-left: var(--space-2);">
+                                                        <i class="bi bi-patch-question-fill"></i> Quiz ({{ chapitre.quiz.questions|length }} questions)
+                                                    </span>
+                                                {% else %}
+                                                    <span style="color: var(--gray-400); margin-left: var(--space-2);">
+                                                        <i class="bi bi-patch-question"></i> Pas de quiz
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: var(--space-2);">
+                                    <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-sm btn-ghost">
+                                        <i class="bi bi-pencil"></i> Modifier
+                                    </a>
+                                    <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}"
+                                       class="btn btn-sm {{ chapitre.quiz ? 'btn-success' : 'btn-secondary' }}">
+                                        <i class="bi bi-patch-question{{ chapitre.quiz ? '-fill' : '' }}"></i>
+                                        {{ chapitre.quiz ? 'Gérer quiz' : 'Ajouter quiz' }}
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ── COLONNE DROITE : SIMULATION FINALE ── #}
+        <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+            {# Récap chapitres #}
+            <div class="card" style="padding: var(--space-6);">
+                <h4 style="font-size: var(--text-sm); font-weight: var(--font-bold); color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-4);">
+                    Résumé
+                </h4>
+                {% set chapAvecQuiz = module.chapitres|filter(c => c.quiz is not null)|length %}
+                {% set chapSansQuiz = module.chapitres|length - chapAvecQuiz %}
+                <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                        <span style="color: var(--gray-600);">Chapitres total</span>
+                        <strong>{{ module.chapitres|length }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                        <span style="color: var(--success);">Chapitres avec quiz</span>
+                        <strong style="color: var(--success);">{{ chapAvecQuiz }}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: var(--text-sm);">
+                        <span style="color: var(--gray-400);">Sans quiz</span>
+                        <strong style="color: var(--gray-400);">{{ chapSansQuiz }}</strong>
+                    </div>
+                </div>
+            </div>
+
+            {# Simulation finale #}
+            <div class="card" style="padding: var(--space-6); border: 2px solid {{ module.simulation ? '#10B981' : 'var(--gray-200)' }};">
+                <h4 style="font-size: var(--text-sm); font-weight: var(--font-bold); color: var(--gray-700); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--space-4);">
+                    <i class="bi bi-joystick" style="color: #8B5CF6;"></i>
+                    Simulation finale
+                </h4>
+
+                {% if module.simulation %}
+                    <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4);">
+                        <div style="font-weight: var(--font-semibold); color: #166534; margin-bottom: var(--space-1);">
+                            ✅ {{ module.simulation.titre }}
+                        </div>
+                        <div style="font-size: var(--text-xs); color: #15803D;">
+                            {{ {
+                                'GMAIL': '📧 Fausse Gmail',
+                                'MOT_DE_PASSE': '🔒 Formulaire mot de passe',
+                                'FORMULAIRE': '📋 Faux formulaire',
+                                'LIEN_SUSPECT': '🔗 Lien suspect',
+                                'PIECE_JOINTE': '📎 Pièce jointe'
+                            }[module.simulation.typeSimulation] ?? module.simulation.typeSimulation }}
+                            · {{ module.simulation.dureeEstimee }} min
+                        </div>
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: var(--space-4); color: var(--gray-400); margin-bottom: var(--space-4);">
+                        <i class="bi bi-joystick" style="font-size: 32px; display: block; margin-bottom: var(--space-2);"></i>
+                        Aucune simulation liée
+                    </div>
+                {% endif %}
+
+                {# Formulaire pour lier/changer la simulation #}
+                <form method="post" action="{{ path('admin_module_simulation', {id: module.id}) }}">
+                    <div class="form-group" style="margin-bottom: var(--space-3);">
+                        <select class="form-control" name="simulation_id" style="font-size: var(--text-sm);">
+                            <option value="aucune">— Aucune simulation —</option>
+                            {% for sim in simulationsDisponibles %}
+                                <option value="{{ sim.id }}" {{ module.simulation and module.simulation.id == sim.id ? 'selected' }}>
+                                    {{ sim.titre }} ({{ sim.typeSimulation }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary" style="width: 100%;">
+                        <i class="bi bi-link-45deg"></i>
+                        {{ module.simulation ? 'Changer la simulation' : 'Lier une simulation' }}
+                    </button>
+                </form>
+
+                {% if simulationsDisponibles is empty %}
+                    <div style="text-align: center; margin-top: var(--space-3);">
+                        <a href="{{ path('admin_simulation_nouvelle') }}" style="font-size: var(--text-xs); color: var(--primary-600);">
+                            + Créer une simulation d'abord
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

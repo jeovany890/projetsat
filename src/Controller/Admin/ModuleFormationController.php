@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use App\Entity\SimulationInteractive;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
@@ -172,10 +173,48 @@ class ModuleFormationController extends AbstractController
     }
 
     #[Route('/{id}', name: 'admin_module_details')]
-    public function details(ModuleFormation $module): Response
+    public function details(ModuleFormation $module, EntityManagerInterface $em): Response
     {
+        $simulationsDisponibles = $em->getRepository(SimulationInteractive::class)->findBy(
+            ['estPublie' => true],
+            ['titre' => 'ASC']
+        );
         return $this->render('admin/modules/details.html.twig', [
-            'module' => $module,
+            'module'                  => $module,
+            'simulationsDisponibles'  => $simulationsDisponibles,
         ]);
+    }
+
+    #[Route('/{id}/simulation', name: 'admin_module_simulation', methods: ['POST'])]
+    public function lierSimulation(
+        ModuleFormation $module,
+        Request $request,
+        EntityManagerInterface $em
+    ): Response {
+        $simulationId = $request->request->get('simulation_id');
+
+        if ($simulationId === 'aucune') {
+            // Délier la simulation
+            if ($module->getSimulation()) {
+                $module->getSimulation()->setModule(null);
+                $module->setSimulation(null);
+                $em->flush();
+            }
+            $this->addFlash('success', 'Simulation retirée du module.');
+        } else {
+            $simulation = $em->getRepository(SimulationInteractive::class)->find($simulationId);
+            if ($simulation) {
+                // Détacher de l'ancien module si nécessaire
+                if ($simulation->getModule() && $simulation->getModule() !== $module) {
+                    $simulation->getModule()->setSimulation(null);
+                }
+                $simulation->setModule($module);
+                $module->setSimulation($simulation);
+                $em->flush();
+                $this->addFlash('success', '✅ Simulation « ' . $simulation->getTitre() . ' » liée au module !');
+            }
+        }
+
+        return $this->redirectToRoute('admin_module_details', ['id' => $module->getId()]);
     }
 }

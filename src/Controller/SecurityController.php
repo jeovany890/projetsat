@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\RSSI;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
@@ -12,7 +14,6 @@ class SecurityController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function login(AuthenticationUtils $authenticationUtils): Response
     {
-        // Rediriger si déjà connecté
         if ($this->getUser()) {
             return $this->redirectToRoute('app_redirect_dashboard');
         }
@@ -22,18 +23,18 @@ class SecurityController extends AbstractController
 
         return $this->render('security/login.html.twig', [
             'last_username' => $lastUsername,
-            'error' => $error,
+            'error'         => $error,
         ]);
     }
 
     #[Route('/logout', name: 'app_logout')]
     public function logout(): void
     {
-        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+        throw new \LogicException('Intercepted by firewall.');
     }
 
     #[Route('/redirect-dashboard', name: 'app_redirect_dashboard')]
-    public function redirectDashboard(): Response
+    public function redirectDashboard(Request $request): Response
     {
         $user = $this->getUser();
 
@@ -41,12 +42,19 @@ class SecurityController extends AbstractController
             return $this->redirectToRoute('app_login');
         }
 
-        // Redirection selon le type d'utilisateur
         if (in_array('ROLE_ADMIN', $user->getRoles())) {
             return $this->redirectToRoute('admin_dashboard');
-        }elseif (in_array('ROLE_RSSI', $user->getRoles())) {
+        }
+
+        if (in_array('ROLE_RSSI', $user->getRoles())) {
+            // ✅ 2FA obligatoire pour les RSSI
+            if (!$request->getSession()->get('2fa_verified')) {
+                return $this->redirectToRoute('app_2fa');
+            }
             return $this->redirectToRoute('rssi_dashboard');
-        }elseif (in_array('ROLE_EMPLOYE', $user->getRoles())) {
+        }
+
+        if (in_array('ROLE_EMPLOYE', $user->getRoles())) {
             return $this->redirectToRoute('employe_dashboard');
         }
 

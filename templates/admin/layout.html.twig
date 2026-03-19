@@ -62,6 +62,12 @@
 
             <div class="a-nav-sep"><span class="a-nav-sep-text">Cybersécurité</span></div>
 
+            <a href="{{ path('admin_simulations_liste') }}"
+               class="a-nav-link {% if 'admin_simulation' in app.request.attributes.get('_route') %}active{% endif %}">
+                <span class="a-nav-icon"><i class="bi bi-joystick"></i></span>
+                <span class="a-nav-label">Simulations</span>
+            </a>
+
             <a href="{{ path('admin_gabarits_liste') }}"
                class="a-nav-link {% if 'admin_gabarits' in app.request.attributes.get('_route') %}active{% endif %}">
                 <span class="a-nav-icon"><i class="bi bi-envelope-paper-fill"></i></span>

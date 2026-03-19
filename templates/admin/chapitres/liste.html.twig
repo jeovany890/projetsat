@@ -90,6 +90,11 @@
                     <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-sm btn-ghost">
                         <i class="bi bi-pencil"></i> Modifier
                     </a>
+                    <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}"
+                       class="btn btn-sm {{ chapitre.quiz ? 'btn-success' : 'btn-secondary' }}">
+                        <i class="bi bi-patch-question{{ chapitre.quiz ? '-fill' : '' }}"></i>
+                        {{ chapitre.quiz ? 'Quiz (' ~ chapitre.quiz.questions|length ~ ')' : 'Ajouter quiz' }}
+                    </a>
                     <form method="post" action="{{ path('admin_chapitre_supprimer', {moduleId: module.id, id: chapitre.id}) }}" style="display: inline; margin-left: auto;">
                         <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger);" onclick="return confirm('Supprimer ce chapitre ?')">
                             <i class="bi bi-trash"></i> Supprimer

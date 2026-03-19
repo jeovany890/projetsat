@@ -36,8 +36,8 @@ class PhishingService
         $gabarit  = $campagne->getGabarit();
         $employe  = $envoi->getEmploye();
 
-        $urlPixel = $this->urlGenerator->generate('phishing_track_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-        $urlClic  = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+        // Tracking par clic uniquement — le pixel est bloqué par Gmail
+        $urlClic = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $contenu = $this->personnaliserContenu(
             $gabarit->getContenuHtml(),
@@ -45,19 +45,6 @@ class PhishingService
             $urlClic,
             $token
         );
-        // ── TRACKING MULTI-MÉTHODES ──
-        $pixelImg     = "<img src=\"{$urlPixel}\" width=\"1\" height=\"1\""
-            . " style=\"display:none;border:0;position:absolute;\" alt=\"\">";
-        $pixelCss     = "<div style=\"background-image:url('{$urlPixel}');"
-            . "width:1px;height:1px;position:absolute;opacity:0;overflow:hidden;font-size:0;\"></div>";
-        $pixelPreload = "<link rel=\"preload\" as=\"image\" href=\"{$urlPixel}\">";
-
-        if (stripos($contenu, '</head>') !== false) {
-            $contenu = str_ireplace('</head>', $pixelPreload . '</head>', $contenu);
-        } else {
-            $contenu = $pixelPreload . $contenu;
-        }
-        $contenu .= $pixelImg . $pixelCss;
 
         $this->emailService->envoyerEmailPhishing(
             destinataire:    $envoi->getEmailDestinataire(),
@@ -82,14 +69,26 @@ class PhishingService
         string $token
     ): string {
         return str_replace(
-            ['{LIEN_PIEGE}', '{{LIEN_PIEGE}}', '{TOKEN}', '{{TOKEN}}',
-             '{PRENOM}', '{NOM}', '{NOM_COMPLET}', '{EMAIL}', '{POSTE}'],
-            [$urlClic, $urlClic, $token, $token,
-             $employe->getPrenom(),
-             $employe->getNom(),
-             $employe->getPrenom() . ' ' . $employe->getNom(),
-             $employe->getEmail(),
-             $employe->getPoste() ?? 'Employé'],
+            [
+                '{LIEN_PIEGE}',    '{{LIEN_PIEGE}}',
+                '{TOKEN}',         '{{TOKEN}}',
+                '{PRENOM}',        '{{PRENOM_EMPLOYE}}',
+                '{NOM}',           '{{NOM_EMPLOYE}}',
+                '{NOM_COMPLET}',   '{{NOM_COMPLET}}',
+                '{EMAIL}',         '{{EMAIL_EMPLOYE}}',
+                '{POSTE}',         '{{POSTE_EMPLOYE}}',
+            ],
+            [
+                $urlClic,          $urlClic,
+                $token,            $token,
+                $employe->getPrenom(), $employe->getPrenom(),
+                $employe->getNom(),    $employe->getNom(),
+                $employe->getPrenom() . ' ' . $employe->getNom(),
+                $employe->getPrenom() . ' ' . $employe->getNom(),
+                $employe->getEmail(),  $employe->getEmail(),
+                $employe->getPoste() ?? 'Employé',
+                $employe->getPoste() ?? 'Employé',
+            ],
             $contenu
         );
     }

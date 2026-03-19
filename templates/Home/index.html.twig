@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAT Platform · Security Awareness Training</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <style>
+        :root { --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
+        body { font-family:var(--font-body); background-color:#060810; color:#e2e8f0; }
+        h1,h2,h3,h4,h5,h6,.font-display { font-family:var(--font-display); }
+        .bg-grid { background-size:40px 40px; background-image:linear-gradient(to right,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.03) 1px,transparent 1px); }
+        .glow-emerald { background:radial-gradient(circle at center,rgba(0,229,160,.15) 0%,transparent 70%); }
+        .glow-red { background:radial-gradient(circle at center,rgba(255,59,92,.1) 0%,transparent 70%); }
+
+        /* ── ANIMATIONS ── */
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+        .animate-blink { animation:blink 1s step-end infinite; }
+
+        @keyframes fadeDown { from{opacity:0;transform:translateY(-24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeUp   { from{opacity:0;transform:translateY(24px)}  to{opacity:1;transform:translateY(0)} }
+        @keyframes slideRight { from{opacity:0;transform:translateX(-32px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes navSlide { from{opacity:0;transform:translateY(-100%)} to{opacity:1;transform:translateY(0)} }
+        @keyframes pulseGlow { 0%,100%{box-shadow:0 0 8px rgba(0,229,160,.6)} 50%{box-shadow:0 0 22px rgba(0,229,160,1)} }
+        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+        @keyframes terminalType { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes counterUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+        .anim-nav        { animation:navSlide .5s ease both; }
+        .anim-fade-down  { animation:fadeDown .7s cubic-bezier(.22,.68,0,1.2) both; }
+        .anim-fade-up    { animation:fadeUp   .7s cubic-bezier(.22,.68,0,1.2) both; }
+
+        .delay-0  { animation-delay:.0s }  .delay-1  { animation-delay:.1s }
+        .delay-2  { animation-delay:.2s }  .delay-3  { animation-delay:.3s }
+        .delay-4  { animation-delay:.4s }  .delay-5  { animation-delay:.5s }
+
+        .dot-pulse  { animation:pulseGlow 2s ease-in-out infinite; }
+        .float-anim { animation:floatY 5s ease-in-out infinite; }
+
+        /* Terminal lignes */
+        .tl { animation:terminalType .5s ease both; opacity:0; }
+        .tl:nth-child(1){animation-delay:.3s}  .tl:nth-child(2){animation-delay:.8s}
+        .tl:nth-child(3){animation-delay:1.3s} .tl:nth-child(4){animation-delay:1.8s}
+        .tl:nth-child(5){animation-delay:2.3s} .tl:nth-child(6){animation-delay:2.8s}
+        .tl:nth-child(7){animation-delay:3.3s}
+
+        /* Stats */
+        .stat-item { animation:counterUp .7s cubic-bezier(.22,.68,0,1.2) both; }
+        .stat-item:nth-child(1){animation-delay:.6s} .stat-item:nth-child(2){animation-delay:.75s}
+        .stat-item:nth-child(3){animation-delay:.9s} .stat-item:nth-child(4){animation-delay:1.05s}
+
+        /* Scroll reveal */
+        .reveal,.reveal-left { opacity:0; transition:opacity .7s ease,transform .7s cubic-bezier(.22,.68,0,1.2); }
+        .reveal      { transform:translateY(28px); }
+        .reveal-left { transform:translateX(-28px); }
+        .reveal.visible,.reveal-left.visible { opacity:1; transform:translate(0); }
+
+        /* Card hover */
+        .card-lift { transition:transform .3s ease,border-color .3s ease,background .3s ease; }
+        .card-lift:hover { transform:translateY(-6px); }
+
+        ::-webkit-scrollbar{width:8px} ::-webkit-scrollbar-track{background:#060810}
+        ::-webkit-scrollbar-thumb{background:#1e293b;border-radius:4px}
+        ::-webkit-scrollbar-thumb:hover{background:#334155}
+    </style>
+</head>
+<body class="antialiased selection:bg-[#00E5A0]/20 selection:text-[#00E5A0] overflow-x-hidden">
+
+<!-- NAV -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-[#060810]/80 backdrop-blur-lg border-b border-white/5 anim-nav">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+        <div class="flex items-center gap-6">
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 rounded-lg bg-[#0C0F1D] border border-white/10 flex items-center justify-center text-[#00E5A0] group-hover:border-[#00E5A0]/50 group-hover:scale-110 transition-all">
+                    <iconify-icon icon="solar:shield-check-linear" width="20" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div class="flex flex-col leading-none">
+                    <span class="font-display font-semibold text-white tracking-tighter text-lg uppercase">SAT</span>
+                    <span class="font-display font-medium text-slate-500 tracking-tighter text-xs uppercase">Platform</span>
+                </div>
+            </a>
+            <div class="hidden md:flex items-center px-3 py-1 rounded-full bg-[#00E5A0]/10 border border-[#00E5A0]/20 text-[#00E5A0] text-xs font-medium tracking-wide">Bénin · PME</div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="#solution" class="hidden md:block text-sm text-slate-400 hover:text-white transition-colors font-medium">Plateforme</a>
+            <a href="#action"   class="hidden md:block text-sm text-slate-400 hover:text-white transition-colors font-medium mr-4">Simulation</a>
+            <a href="{{ path('app_login') }}" class="flex items-center gap-2 text-sm font-medium text-white px-5 py-2.5 rounded-full bg-[#0C0F1D] border border-white/10 hover:border-[#00E5A0]/50 hover:bg-[#00E5A0]/5 hover:scale-105 transition-all">
+                <span>Connexion</span>
+                <iconify-icon icon="solar:login-2-linear" width="18" stroke-width="1.5" class="text-[#00E5A0]"></iconify-icon>
+            </a>
+        </div>
+    </div>
+</nav>
+
+<!-- HERO -->
+<section class="relative pt-40 pb-24 md:pt-52 md:pb-32 overflow-hidden bg-grid">
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] glow-emerald pointer-events-none float-anim"></div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10 flex flex-col items-center text-center">
+
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-[#0C0F1D]/80 backdrop-blur-sm mb-8 anim-fade-down delay-0">
+            <span class="flex h-2 w-2 rounded-full bg-[#00E5A0] dot-pulse"></span>
+            <span class="text-xs font-medium text-slate-300 uppercase tracking-widest">Security Awareness Training</span>
+        </div>
+
+        <h1 class="font-display font-semibold text-5xl md:text-7xl lg:text-8xl tracking-tighter text-white max-w-5xl leading-[1.05] mb-8 anim-fade-down delay-1">
+            Votre plus grande faille <br class="hidden md:block">
+            travaille déjà chez vous.<br>
+            Son nom : <span class="text-[#00E5A0]">l'humain.</span>
+        </h1>
+
+        <p class="text-base md:text-xl text-slate-400 max-w-3xl mb-12 font-medium leading-relaxed anim-fade-down delay-2">
+            Dans un contexte de transformation numérique accélérée, les cyberattaques exploitant le facteur humain représentent la menace la plus sous-estimée des PME béninoises. SAT Platform transforme vos employés en première ligne de défense active.
+        </p>
+
+        <div class="flex flex-col sm:flex-row items-center gap-4 mb-24 anim-fade-down delay-3">
+            <a href="{{ path('app_login') }}" class="flex items-center gap-2 px-8 py-4 rounded-full bg-[#00E5A0] text-[#060810] font-semibold text-sm hover:bg-white transition-all shadow-[0_0_24px_rgba(0,229,160,.3)] hover:shadow-[0_0_40px_rgba(0,229,160,.5)] hover:scale-105">
+                <iconify-icon icon="solar:shield-network-linear" width="20" stroke-width="1.5"></iconify-icon>
+                Accéder à la plateforme
+            </a>
+            <a href="#solution" class="flex items-center gap-2 px-8 py-4 rounded-full bg-transparent border border-white/15 text-white font-medium text-sm hover:bg-white/5 hover:border-white/30 transition-all">
+                Explorer la solution
+                <iconify-icon icon="solar:arrow-down-linear" width="16"></iconify-icon>
+            </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="w-full max-w-5xl grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4 p-8 rounded-3xl bg-[#0C0F1D]/60 backdrop-blur-md border border-white/5 anim-fade-up delay-4">
+            <div class="stat-item flex flex-col items-center md:items-start text-center md:text-left">
+                <div class="font-display font-semibold text-4xl text-white mb-1 tracking-tighter">1 848</div>
+                <div class="text-xs text-slate-500 font-medium">Cyberattaques/semaine ciblant l'Afrique (vs 1 164 dans le monde)</div>
+            </div>
+            <div class="stat-item flex flex-col items-center md:items-start text-center md:text-left">
+                <div class="font-display font-semibold text-4xl text-white mb-1 tracking-tighter">4 114</div>
+                <div class="text-xs text-slate-500 font-medium">Plaintes cybercriminelles recensées par la BCLCC au Bénin en 2024</div>
+            </div>
+            <div class="stat-item flex flex-col items-center md:items-start text-center md:text-left">
+                <div class="font-display font-semibold text-4xl text-white mb-1 tracking-tighter">1,7 <span class="text-slate-500 text-2xl">Md</span></div>
+                <div class="text-xs text-slate-500 font-medium">FCFA de préjudice financier lié à la cybercriminalité au Bénin</div>
+            </div>
+            <div class="stat-item flex flex-col items-center md:items-start text-center md:text-left">
+                <div class="font-display font-semibold text-4xl text-white mb-1 tracking-tighter">31<span class="text-[#00E5A0]">,9%</span></div>
+                <div class="text-xs text-slate-500 font-medium">Taux moyen de conformité à la PSSIE parmi les entités auditées (ASIN)</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- THREAT -->
+<section class="py-24 relative" id="context">
+    <div class="absolute top-1/2 right-0 w-[600px] h-[600px] glow-red pointer-events-none -translate-y-1/2"></div>
+    <div class="max-w-7xl mx-auto px-6 relative z-10">
+        <div class="flex flex-col md:flex-row gap-16 md:items-end mb-16">
+            <div class="max-w-3xl reveal-left">
+                <h2 class="font-display font-semibold text-sm text-[#FF3B5C] tracking-widest uppercase mb-4">La Faille Humaine</h2>
+                <h3 class="font-display font-semibold text-3xl md:text-5xl text-white tracking-tight leading-tight">
+                    L'humain n'est pas qu'un utilisateur,<br>c'est la cible principale.
+                </h3>
+            </div>
+            <p class="text-slate-400 text-base md:text-lg max-w-md font-medium reveal">
+                Un clic imprudent ou un mot de passe compromis suffit à paralyser une infrastructure entière. Les organisations investissent massivement dans des solutions techniques en négligeant la psychologie humaine — pourtant responsable de plus de 90 % des incidents de cybersécurité.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="reveal bg-[#0C0F1D] border border-white/5 rounded-3xl p-8 card-lift hover:border-[#FF3B5C]/30 group" style="transition-delay:.0s">
+                <div class="w-12 h-12 rounded-xl bg-[#FF3B5C]/10 flex items-center justify-center text-[#FF3B5C] mb-8 group-hover:scale-110 transition-transform">
+                    <iconify-icon icon="solar:target-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div class="font-display font-semibold text-3xl text-white mb-3 tracking-tighter">1 848 <span class="text-lg text-slate-500 font-medium tracking-normal">/ semaine</span></div>
+                <div class="text-sm text-slate-400 font-medium leading-relaxed">L'Afrique est la région la plus ciblée au monde avec 1 848 cyberattaques par semaine, contre 1 164 en moyenne mondiale. Une pression constante sur vos équipes.</div>
+            </div>
+            <div class="reveal bg-[#0C0F1D] border border-white/5 rounded-3xl p-8 card-lift hover:border-[#F59E0B]/30 group" style="transition-delay:.15s">
+                <div class="w-12 h-12 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center text-[#F59E0B] mb-8 group-hover:scale-110 transition-transform">
+                    <iconify-icon icon="solar:wallet-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div class="font-display font-semibold text-3xl text-white mb-3 tracking-tighter">&gt; 1,7 Milliard</div>
+                <div class="text-sm text-slate-400 font-medium leading-relaxed">De FCFA de préjudice financier issu des 4 114 plaintes cybercriminelles recensées par la Brigade de Lutte contre la Cybercriminalité au Bénin en 2024.</div>
+            </div>
+            <div class="reveal bg-[#0C0F1D] border border-white/5 rounded-3xl p-8 card-lift hover:border-[#00E5A0]/30 group" style="transition-delay:.3s">
+                <div class="w-12 h-12 rounded-xl bg-[#00E5A0]/10 flex items-center justify-center text-[#00E5A0] mb-8 group-hover:scale-110 transition-transform">
+                    <iconify-icon icon="solar:document-text-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div class="font-display font-semibold text-3xl text-white mb-3 tracking-tighter">31,9% <span class="text-lg text-slate-500 font-medium tracking-normal">PSSIE</span></div>
+                <div class="text-sm text-slate-400 font-medium leading-relaxed">Taux moyen de conformité des entités auditées selon le rapport ASIN. La PSSIE et la norme ISO 27001 (clause 7.3) imposent pourtant la sensibilisation comme obligation.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="py-24 bg-[#0C0F1D]/30 border-y border-white/5 relative" id="solution">
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="text-center max-w-4xl mx-auto mb-20 reveal">
+            <h2 class="font-display font-semibold text-sm text-[#00E5A0] tracking-widest uppercase mb-4">Conçu pour les PME Béninoises</h2>
+            <h3 class="font-display font-semibold text-3xl md:text-5xl text-white tracking-tight mb-6 leading-tight">Au-delà des solutions génériques inaccessibles.</h3>
+            <p class="text-slate-400 text-base md:text-lg font-medium max-w-3xl mx-auto">Les plateformes internationales (KnowBe4, Proofpoint, Terranova) imposent des tarifs prohibitifs et des contenus déconnectés de vos réalités locales. SAT Platform est une alternative contextualisée, axée sur la transformation durable des comportements au sein des PME béninoises.</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="reveal flex gap-6 p-8 rounded-3xl bg-[#060810] border border-white/5 card-lift hover:bg-[#0C0F1D] hover:border-[#00E5A0]/20" style="transition-delay:.0s">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-[#00E5A0]/10 border border-[#00E5A0]/20 flex items-center justify-center text-[#00E5A0]">
+                    <iconify-icon icon="solar:diploma-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div>
+                    <h4 class="font-display font-semibold text-xl text-white mb-2 tracking-tight">Formations structurées & Quiz</h4>
+                    <p class="text-sm text-slate-400 font-medium leading-relaxed">Des modules par chapitres avec vidéos et quiz de validation après chaque chapitre. L'employé avance à son rythme et valide ses acquis progressivement grâce à la gamification.</p>
+                </div>
+            </div>
+            <div class="reveal flex gap-6 p-8 rounded-3xl bg-[#060810] border border-white/5 card-lift hover:bg-[#0C0F1D] hover:border-[#FF3B5C]/20" style="transition-delay:.1s">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-[#FF3B5C]/10 border border-[#FF3B5C]/20 flex items-center justify-center text-[#FF3B5C]">
+                    <iconify-icon icon="solar:ghost-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div>
+                    <h4 class="font-display font-semibold text-xl text-white mb-2 tracking-tight">Campagnes de Phishing Éthique</h4>
+                    <p class="text-sm text-slate-400 font-medium leading-relaxed">Le RSSI déploie de vraies campagnes d'emails piégés et suit en temps réel qui ouvre, clique ou soumet ses identifiants. Des scénarios ancrés dans les réalités béninoises : banques locales, services publics.</p>
+                </div>
+            </div>
+            <div class="reveal flex gap-6 p-8 rounded-3xl bg-[#060810] border border-white/5 card-lift hover:bg-[#0C0F1D] hover:border-[#3B82F6]/20" style="transition-delay:.2s">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-[#3B82F6]/10 border border-[#3B82F6]/20 flex items-center justify-center text-[#3B82F6]">
+                    <iconify-icon icon="solar:gamepad-minimalistic-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div>
+                    <h4 class="font-display font-semibold text-xl text-white mb-2 tracking-tight">Simulations Interactives Réalistes</h4>
+                    <p class="text-sm text-slate-400 font-medium leading-relaxed">À la fin de chaque module, l'employé affronte une simulation immersive : fausse interface Gmail, faux formulaire de mot de passe, détection de lien suspect. Pas de la théorie abstraite.</p>
+                </div>
+            </div>
+            <div class="reveal flex gap-6 p-8 rounded-3xl bg-[#060810] border border-white/5 card-lift hover:bg-[#0C0F1D] hover:border-[#F59E0B]/20" style="transition-delay:.3s">
+                <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-[#F59E0B]/10 border border-[#F59E0B]/20 flex items-center justify-center text-[#F59E0B]">
+                    <iconify-icon icon="solar:chart-square-linear" width="24" stroke-width="1.5"></iconify-icon>
+                </div>
+                <div>
+                    <h4 class="font-display font-semibold text-xl text-white mb-2 tracking-tight">Analytique Comportementale</h4>
+                    <p class="text-sm text-slate-400 font-medium leading-relaxed">Score de vigilance individuel évolutif, classement des employés vulnérables, taux de clic — des métriques concrètes pour piloter la maturité cyber de votre organisation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TERMINAL -->
+<section class="py-32 relative" id="action">
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] glow-emerald pointer-events-none opacity-50"></div>
+    <div class="max-w-7xl mx-auto px-6">
+        <div class="mb-12 reveal-left">
+            <h2 class="font-display font-semibold text-sm text-slate-400 tracking-widest uppercase mb-4">Ingénierie Sociale en Action</h2>
+            <h3 class="font-display font-semibold text-3xl md:text-4xl text-white tracking-tight">Anatomie d'une simulation réaliste.</h3>
+        </div>
+        <div class="w-full rounded-2xl bg-[#030408] border border-white/10 shadow-[0_20px_60px_-15px_rgba(0,0,0,.8)] overflow-hidden font-mono text-xs md:text-sm reveal">
+            <div class="flex items-center px-4 py-3 bg-[#0a0d16] border-b border-white/5">
+                <div class="flex gap-2 mr-4">
+                    <div class="w-3 h-3 rounded-full bg-[#FF3B5C]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#F59E0B]"></div>
+                    <div class="w-3 h-3 rounded-full bg-[#00E5A0]"></div>
+                </div>
+                <div class="text-slate-500 font-medium">sat_platform — tracking_engine.log</div>
+                <div class="ml-auto text-slate-600 flex items-center gap-2">
+                    <iconify-icon icon="solar:lock-keyhole-linear" width="14"></iconify-icon>
+                    RSSI Access
+                </div>
+            </div>
+            <div class="p-6 md:p-8 space-y-3 text-slate-300 leading-relaxed overflow-x-auto">
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:14:32]</span><span class="text-[#3B82F6] font-semibold w-16 shrink-0">INFO</span><span>Déploiement campagne <span class="text-white">"Fausse alerte sécurité BOA Bénin"</span> → digne.idri@entreprise-bj.com</span></div>
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:17:08]</span><span class="text-slate-400 font-semibold w-16 shrink-0">TRACK</span><span>Email ouvert — IP: <span class="text-white">197.234.12.88 (Cotonou)</span> · Agent: Gmail Android</span></div>
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:17:43]</span><span class="text-[#F59E0B] font-semibold w-16 shrink-0">ALERTE</span><span>Lien piégé cliqué <span class="text-slate-500">(/boa-verification-compte)</span> — Score vigilance <span class="text-[#FF3B5C]">-10 pts</span></span></div>
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:18:01]</span><span class="text-[#FF3B5C] font-semibold w-16 shrink-0">DANGER</span><span>Identifiants soumis sur fausse page BOA — Score vigilance <span class="text-[#FF3B5C]">-15 pts</span></span></div>
+                <div class="tl flex gap-4 opacity-80"><span class="text-slate-600 shrink-0">[09:18:04]</span><span class="text-[#00E5A0] font-semibold w-16 shrink-0">ACTION</span><span class="text-[#00E5A0]">Page pédagogique affichée — module de formation déclenché automatiquement.</span></div>
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:22:17]</span><span class="text-[#3B82F6] font-semibold w-16 shrink-0">UPDATE</span><span>Profil <span class="text-white">Digne Idri</span> : Score vigilance 35% → <span class="text-[#FF3B5C]">25%</span> · Niveau : <span class="text-[#FF3B5C] bg-[#FF3B5C]/10 px-1 rounded">À RISQUE</span></span></div>
+                <div class="tl flex gap-4"><span class="text-slate-600 shrink-0">[09:22:18]</span><span class="text-slate-400 font-semibold w-16 shrink-0">NOTIFY</span><span>Rapport comportemental généré pour le RSSI — formation corrective assignée.<span class="inline-block w-2 h-4 bg-slate-400 ml-1 translate-y-1 animate-blink"></span></span></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-24 border-t border-white/5 bg-[#0C0F1D]/50 relative overflow-hidden">
+    <div class="absolute inset-0 bg-grid opacity-50"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] glow-emerald pointer-events-none"></div>
+    <div class="max-w-4xl mx-auto px-6 relative z-10 text-center reveal">
+        <h2 class="font-display font-semibold text-4xl md:text-6xl text-white tracking-tighter mb-6">Renforcez votre résilience humaine.</h2>
+        <p class="text-slate-400 text-base md:text-lg mb-10 font-medium max-w-2xl mx-auto">Rejoignez les entreprises béninoises qui font de leurs employés leur meilleur bouclier contre les cyberattaques.</p>
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="{{ path('app_login') }}" class="px-8 py-4 rounded-full bg-[#00E5A0] text-[#060810] font-semibold text-sm hover:bg-white transition-all shadow-[0_0_30px_rgba(0,229,160,.2)] hover:shadow-[0_0_50px_rgba(0,229,160,.4)] hover:scale-105">Accéder à SAT Platform</a>
+            <a href="#context" class="px-8 py-4 rounded-full bg-[#060810] border border-white/10 text-white font-medium text-sm hover:border-white/30 hover:bg-white/5 transition-all">Voir les statistiques</a>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-[#060810] border-t border-white/5 py-8">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div class="flex flex-col">
+            <span class="font-display font-semibold text-white tracking-tighter text-sm uppercase">SAT</span>
+            <span class="font-display font-medium text-slate-500 tracking-tighter text-[10px] uppercase">Platform</span>
+        </div>
+        <div class="text-xs text-slate-500 font-medium">© 2025 SAT Platform · Projet L3 Sécurité des Systèmes et Réseaux · Cotonou, Bénin</div>
+        <div class="flex gap-4 text-slate-500">
+            <a href="#" class="hover:text-[#00E5A0] transition-colors"><iconify-icon icon="solar:shield-check-linear" width="18"></iconify-icon></a>
+            <a href="#" class="hover:text-white transition-colors"><iconify-icon icon="solar:letter-linear" width="18"></iconify-icon></a>
+        </div>
+    </div>
+</footer>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal, .reveal-left').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

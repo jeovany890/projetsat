@@ -33,9 +33,6 @@ class CampagnePhishingController extends AbstractController
         return $this->getRssi()->getEntreprise();
     }
 
-    // ================================================================
-    // LISTE
-    // ================================================================
     #[Route('', name: 'rssi_phishing_liste')]
     public function liste(EntityManagerInterface $em): Response
     {
@@ -43,18 +40,13 @@ class CampagnePhishingController extends AbstractController
             ['rssi' => $this->getRssi()],
             ['dateCreation' => 'DESC']
         );
-
         $gabarits = $em->getRepository(GabaritPhishing::class)->findBy(['estActif' => true]);
-
         return $this->render('rssi/phishing/liste.html.twig', [
             'campagnes' => $campagnes,
             'gabarits'  => $gabarits,
         ]);
     }
 
-    // ================================================================
-    // NOUVELLE CAMPAGNE
-    // ================================================================
     #[Route('/nouvelle', name: 'rssi_phishing_nouvelle', methods: ['GET', 'POST'])]
     public function nouvelle(Request $request, EntityManagerInterface $em): Response
     {
@@ -77,7 +69,6 @@ class CampagnePhishingController extends AbstractController
                 $this->addFlash('error', 'Vous devez confirmer l\'autorisation éthique et saisir le nom du responsable.');
                 return $this->render('rssi/phishing/nouvelle.html.twig', compact('gabarits', 'departements'));
             }
-
             if (empty($titre) || !$gabaritId || empty($cibles) || !$datePlanifiee) {
                 $this->addFlash('error', 'Tous les champs obligatoires doivent être remplis.');
                 return $this->render('rssi/phishing/nouvelle.html.twig', compact('gabarits', 'departements'));
@@ -104,21 +95,17 @@ class CampagnePhishingController extends AbstractController
                 ->setDatePlanifiee(new \DateTime($datePlanifiee))
                 ->setTotalCibles(count($employes))
                 ->confirmerAutorisation($nomAutorisateur);
-
             $em->persist($campagne);
 
-            // ✅ CORRECT : créer EnvoiPhishing + ResultatPhishing liés
             foreach ($employes as $employe) {
                 $token = bin2hex(random_bytes(32));
 
-                // ResultatPhishing : comportement de l'employé (tracking)
                 $resultat = new ResultatPhishing();
                 $resultat->setJetonTrackingUnique($token)
                     ->setCampagne($campagne)
                     ->setEmploye($employe);
                 $em->persist($resultat);
 
-                // EnvoiPhishing : acte d'envoi SMTP + lien vers ResultatPhishing
                 $envoi = new EnvoiPhishing();
                 $envoi->setCampagne($campagne)
                     ->setEmploye($employe)
@@ -126,12 +113,11 @@ class CampagnePhishingController extends AbstractController
                     ->setSujetUtilise($gabarit->getSujetEmail())
                     ->setDatePlanifiee(new \DateTime($datePlanifiee))
                     ->setStatut('PLANIFIE')
-                    ->setResultat($resultat); // ✅ LIEN CRITIQUE
+                    ->setResultat($resultat);
                 $em->persist($envoi);
             }
 
             $em->flush();
-
             $gabarit->incrementerUtilisations();
             $em->flush();
 
@@ -142,22 +128,13 @@ class CampagnePhishingController extends AbstractController
         return $this->render('rssi/phishing/nouvelle.html.twig', compact('gabarits', 'departements'));
     }
 
-    // ================================================================
-    // DÉTAIL + STATS
-    // ================================================================
     #[Route('/{id}', name: 'rssi_phishing_detail', requirements: ['id' => '\d+'])]
     public function detail(CampagnePhishing $campagne): Response
     {
         $this->verifierAcces($campagne);
-
-        return $this->render('rssi/phishing/detail.html.twig', [
-            'campagne' => $campagne,
-        ]);
+        return $this->render('rssi/phishing/detail.html.twig', ['campagne' => $campagne]);
     }
 
-    // ================================================================
-    // LANCER LA CAMPAGNE (envoi réel des emails)
-    // ================================================================
     #[Route('/{id}/lancer', name: 'rssi_phishing_lancer', methods: ['POST'])]
     public function lancer(
         CampagnePhishing $campagne,
@@ -183,71 +160,57 @@ class CampagnePhishingController extends AbstractController
         $gabarit = $campagne->getGabarit();
         $envoyes = 0;
         $echoues = 0;
+        $erreurMessage = '';
 
         foreach ($envois as $index => $envoi) {
-            if ($index > 0) {
-                sleep(4); // Latence anti-spam
-            }
+            if ($index > 0) sleep(4);
 
-            // ✅ CORRECT : récupérer le token depuis ResultatPhishing lié
             $resultat = $envoi->getResultat();
             if (!$resultat) {
-                error_log("Phishing: ResultatPhishing manquant pour EnvoiPhishing ID {$envoi->getId()}");
                 $echoues++;
                 continue;
             }
 
             $token = $resultat->getJetonTrackingUnique();
             if (!$token) {
-                error_log("Phishing: token vide pour ResultatPhishing ID {$resultat->getId()}");
                 $echoues++;
                 continue;
             }
 
             try {
-                // URLs de tracking absolues
-                $urlPixel = $router->generate('phishing_track_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
-                $urlClic  = $router->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+                // Tracking par clic uniquement — pixel bloqué par Gmail
+                $urlClic = $router->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
-                // Personnaliser le contenu HTML du gabarit
+                $employe = $envoi->getEmploye();
+                $prenom  = $employe->getPrenom();
+                $nom     = $employe->getNom();
+                $poste   = $employe->getPoste() ?? 'Employé';
+                $email   = $employe->getEmail();
+
+                // ✅ REMPLACEMENT COMPLET — toutes les variantes couvertes
                 $contenu = $gabarit->getContenuHtml();
                 $contenu = str_replace(
-                    ['{LIEN_PIEGE}', '{{LIEN_PIEGE}}', '{TOKEN}', '{{TOKEN}}',
-                     '{PRENOM}', '{NOM}', '{NOM_COMPLET}', '{EMAIL}', '{POSTE}'],
-                    [$urlClic, $urlClic, $token, $token,
-                     $envoi->getEmploye()->getPrenom(),
-                     $envoi->getEmploye()->getNom(),
-                     $envoi->getEmploye()->getPrenom() . ' ' . $envoi->getEmploye()->getNom(),
-                     $envoi->getEmailDestinataire(),
-                     $envoi->getEmploye()->getPoste() ?? 'Employé'],
+                    [
+                        '{{LIEN_PIEGE}}',    '{LIEN_PIEGE}',
+                        '{{PRENOM_EMPLOYE}}', '{PRENOM_EMPLOYE}', '{PRENOM}',
+                        '{{NOM_EMPLOYE}}',    '{NOM_EMPLOYE}',    '{NOM}',
+                        '{{NOM_COMPLET}}',    '{NOM_COMPLET}',
+                        '{{EMAIL_EMPLOYE}}',  '{EMAIL}',
+                        '{{POSTE_EMPLOYE}}',  '{POSTE}',
+                        '{{TOKEN}}',          '{TOKEN}',
+                    ],
+                    [
+                        $urlClic,  $urlClic,
+                        $prenom,   $prenom,   $prenom,
+                        $nom,      $nom,      $nom,
+                        $prenom . ' ' . $nom,
+                        $prenom . ' ' . $nom,
+                        $email,    $email,
+                        $poste,    $poste,
+                        $token,    $token,
+                    ],
                     $contenu
                 );
-
-                // ── TRACKING MULTI-MÉTHODES (inspiré KnowBe4) ──
-
-                // Méthode 1 : <img> classique — simple mais bloqué par certains clients
-                $pixelImg = "<img src=\"{$urlPixel}\" width=\"1\" height=\"1\""
-                    . " style=\"display:none;border:0;position:absolute;\" alt=\"\">";
-
-                // Méthode 2 : background-image CSS — contourne le blocage des <img>
-                // car chargé par le moteur CSS, pas le filtre d'images
-                $pixelCss = "<div style=\"background-image:url('{$urlPixel}');"
-                    . "width:1px;height:1px;position:absolute;opacity:0;overflow:hidden;font-size:0;\">"
-                    . "</div>";
-
-                // Méthode 3 : <link rel=preload> — chargé par le moteur de rendu
-                // avant l'affichage du contenu, très difficile à bloquer
-                $pixelPreload = "<link rel=\"preload\" as=\"image\" href=\"{$urlPixel}\">";
-
-                // Injecter preload dans <head> si présent, sinon en haut du body
-                if (stripos($contenu, '</head>') !== false) {
-                    $contenu = str_ireplace('</head>', $pixelPreload . '</head>', $contenu);
-                } else {
-                    $contenu = $pixelPreload . $contenu;
-                }
-
-                // Injecter img + css en fin de body
-                $contenu .= $pixelImg . $pixelCss;
 
                 $emailService->envoyerEmailPhishing(
                     destinataire:    $envoi->getEmailDestinataire(),
@@ -258,29 +221,24 @@ class CampagnePhishingController extends AbstractController
                     compteEmailDsn:  $gabarit->getCompteEmailDsn()
                 );
 
-                // Marquer envoi comme envoyé
                 $envoi->marquerCommeEnvoye();
-
-                // Marquer le ResultatPhishing comme email envoyé
                 $resultat->setEmailEnvoye(true)->setDateEnvoi(new \DateTime());
-
                 $campagne->incrementerEmailsEnvoyes();
                 $envoyes++;
 
             } catch (\Exception $e) {
                 $envoi->marquerCommeEchoue($e->getMessage());
                 $echoues++;
+                $erreurMessage = $e->getMessage();
                 error_log("Phishing envoi échoué [{$envoi->getEmailDestinataire()}] : " . $e->getMessage());
             }
 
             $em->flush();
         }
 
-        // Terminer la campagne si tous les envois planifiés ont été traités
         if ($echoues === 0 && $envoyes > 0) {
             $campagne->setStatut('TERMINEE')->setDateTermine(new \DateTime());
         } elseif ($envoyes > 0 && $echoues > 0) {
-            // Partiellement envoyé : on repasse en PLANIFIEE pour retry possible
             $campagne->setStatut('PLANIFIEE');
         }
         $em->flush();
@@ -289,32 +247,24 @@ class CampagnePhishingController extends AbstractController
             $this->addFlash('success', "{$envoyes} email(s) phishing envoyé(s) avec succès.");
         }
         if ($echoues > 0) {
-            $this->addFlash('warning', "{$echoues} envoi(s) ont échoué. Vérifiez les logs.");
+            $this->addFlash('warning', "{$echoues} envoi(s) ont échoué. Erreur : {$erreurMessage}");
         }
 
         return $this->redirectToRoute('rssi_phishing_detail', ['id' => $campagne->getId()]);
     }
 
-    // ================================================================
-    // ANNULER
-    // ================================================================
     #[Route('/{id}/annuler', name: 'rssi_phishing_annuler', methods: ['POST'])]
     public function annuler(CampagnePhishing $campagne, EntityManagerInterface $em): Response
     {
         $this->verifierAcces($campagne);
-
         if (in_array($campagne->getStatut(), ['PLANIFIEE', 'EN_COURS'])) {
             $campagne->setStatut('ANNULEE');
             $em->flush();
             $this->addFlash('success', 'Campagne annulée.');
         }
-
         return $this->redirectToRoute('rssi_phishing_detail', ['id' => $campagne->getId()]);
     }
 
-    // ================================================================
-    // SUPPRIMER
-    // ================================================================
     #[Route('/{id}/supprimer', name: 'rssi_phishing_supprimer', methods: ['POST'])]
     public function supprimer(CampagnePhishing $campagne, EntityManagerInterface $em): Response
     {
@@ -326,9 +276,6 @@ class CampagnePhishingController extends AbstractController
         return $this->redirectToRoute('rssi_phishing_liste');
     }
 
-    // ================================================================
-    // HELPERS
-    // ================================================================
     private function verifierAcces(CampagnePhishing $campagne): void
     {
         if ($campagne->getRssi()->getId() !== $this->getRssi()->getId()) {
@@ -359,7 +306,7 @@ class CampagnePhishingController extends AbstractController
                     $emp = $em->getRepository(Employe::class)->find($empId);
                     if ($emp && $emp->isEstActif()) {
                         $employes[] = $emp;
-                        $ids[]      = $empId;
+                        $ids[]      = $emp->getId();
                     }
                 }
             }

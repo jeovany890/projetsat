@@ -1,0 +1,143 @@
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block content %}
+
+{# ── HEADER BIENVENUE ── #}
+<div style="background: linear-gradient(135deg, #10B981, #059669); border-radius: var(--radius-xl); padding: var(--space-8); margin-bottom: var(--space-6); color: white; position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -30px; right: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+    <div style="position: relative; z-index: 1;">
+        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); margin-bottom: var(--space-1);">
+            Bonjour, {{ app.user.prenom }} ! 👋
+        </h2>
+        <p style="opacity: 0.9; margin-bottom: var(--space-4);">{{ app.user.poste ?? 'Employé' }} — {{ app.user.departement ? app.user.departement.nom : 'Aucun département' }}</p>
+        <div style="display: flex; gap: var(--space-6); flex-wrap: wrap;">
+            <div>
+                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.scoreVigilance|round }}%</div>
+                <div style="opacity: 0.8; font-size: var(--text-sm);">Score vigilance</div>
+            </div>
+            <div>
+                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.totalPoints }}</div>
+                <div style="opacity: 0.8; font-size: var(--text-sm);">Points</div>
+            </div>
+            <div>
+                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.totalEtoiles }} ⭐</div>
+                <div style="opacity: 0.8; font-size: var(--text-sm);">Étoiles</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── STATS ── #}
+<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6);">
+    <div class="card" style="text-align: center; padding: var(--space-6);">
+        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-600);">{{ statsFormations.total }}</div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">Formations assignées</div>
+    </div>
+    <div class="card" style="text-align: center; padding: var(--space-6);">
+        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">{{ statsFormations.terminees }}</div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">Formations terminées</div>
+    </div>
+    <div class="card" style="text-align: center; padding: var(--space-6);">
+        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">{{ statsFormations.enCours }}</div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">En cours</div>
+    </div>
+    <div class="card" style="text-align: center; padding: var(--space-6);">
+        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--danger);">{{ statsFormations.enRetard }}</div>
+        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">En retard</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6);">
+
+    {# ── FORMATIONS EN COURS ── #}
+    <div class="card">
+        <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100);">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900);">
+                <i class="bi bi-mortarboard-fill" style="color: var(--primary-600);"></i>
+                Mes formations en cours
+            </h3>
+        </div>
+        <div style="padding: var(--space-6);">
+            {% if progressions is empty %}
+                <div style="text-align: center; padding: var(--space-8); color: var(--gray-500);">
+                    <i class="bi bi-inbox" style="font-size: 48px; display: block; margin-bottom: var(--space-3);"></i>
+                    Aucune formation assignée pour le moment
+                </div>
+            {% else %}
+                {% for progression in progressions %}
+                    <div style="padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2);">
+                            <div>
+                                <div style="font-weight: var(--font-semibold); color: var(--gray-900);">{{ progression.module.titre }}</div>
+                                <div style="font-size: var(--text-sm); color: var(--gray-500);">
+                                    {{ progression.module.chapitres|length }} chapitre(s)
+                                    {% if progression.module.quiz %} · Quiz disponible{% endif %}
+                                </div>
+                            </div>
+                            <span class="badge badge-{{ progression.statut == 'TERMINE' ? 'success' : (progression.statut == 'EN_COURS' ? 'warning' : 'secondary') }}">
+                                {{ progression.statut|replace({'_': ' '}) }}
+                            </span>
+                        </div>
+                        <div style="background: var(--gray-200); border-radius: var(--radius-full); height: 8px; margin-bottom: var(--space-3);">
+                            <div style="background: var(--primary-600); height: 8px; border-radius: var(--radius-full); width: {{ progression.pourcentageProgression }}%;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: var(--text-sm); color: var(--gray-600);">{{ progression.pourcentageProgression }}% complété</span>
+                            <a href="{{ path('employe_formation_detail', {id: progression.module.id}) }}" class="btn btn-sm btn-primary">
+                                {{ progression.statut == 'NON_COMMENCE' ? 'Commencer' : (progression.statut == 'TERMINE' ? 'Revoir' : 'Continuer') }}
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div style="text-align: center; margin-top: var(--space-4);">
+                    <a href="{{ path('employe_formations') }}" style="color: var(--primary-600); font-size: var(--text-sm);">
+                        Voir toutes mes formations →
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# ── COLONNE DROITE ── #}
+    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
+
+        <div class="card" style="padding: var(--space-6);">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-4);">
+                <i class="bi bi-shield-fill-check" style="color: var(--success);"></i>
+                Niveau de vigilance
+            </h3>
+            {% set score = app.user.scoreVigilance|round %}
+            {% set couleur = score >= 80 ? '#10B981' : (score >= 60 ? '#3B82F6' : (score >= 40 ? '#F59E0B' : '#EF4444')) %}
+            <div style="text-align: center; margin-bottom: var(--space-4);">
+                <div style="font-size: var(--text-5xl); font-weight: var(--font-bold); color: {{ couleur }};">{{ score }}%</div>
+                <div style="font-size: var(--text-lg); color: var(--gray-700); font-weight: var(--font-semibold);">{{ app.user.niveauVigilance }}</div>
+            </div>
+            <div style="background: var(--gray-200); border-radius: var(--radius-full); height: 12px;">
+                <div style="background: {{ couleur }}; height: 12px; border-radius: var(--radius-full); width: {{ score }}%;"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">
+                <span>À risque</span><span>Expert</span>
+            </div>
+        </div>
+
+        <div class="card" style="padding: var(--space-6);">
+            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-4);">
+                <i class="bi bi-bug-fill" style="color: var(--danger);"></i>
+                Simulations
+            </h3>
+            <p style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-4);">
+                Entraînez-vous à détecter les attaques avant qu'elles arrivent vraiment.
+            </p>
+            <a href="{{ path('employe_simulations') }}" class="btn btn-danger" style="width: 100%;">
+                <i class="bi bi-play-fill"></i> Lancer une simulation
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

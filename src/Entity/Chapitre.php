@@ -36,6 +36,10 @@ class Chapitre
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?ModuleFormation $module = null;
 
+    // ✅ NOUVEAU : Quiz lié à ce chapitre
+    #[ORM\OneToOne(targetEntity: Quiz::class, mappedBy: 'chapitre', cascade: ['persist', 'remove'])]
+    private ?Quiz $quiz = null;
+
     public function __construct()
     {
         $this->dateCreation = new \DateTime();
@@ -56,6 +60,9 @@ class Chapitre
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
     public function getModule(): ?ModuleFormation { return $this->module; }
     public function setModule(?ModuleFormation $module): static { $this->module = $module; return $this; }
+    public function getQuiz(): ?Quiz { return $this->quiz; }
+    public function setQuiz(?Quiz $quiz): static { $this->quiz = $quiz; return $this; }
     public function aVideo(): bool { return $this->urlVideo !== null; }
+    public function aQuiz(): bool { return $this->quiz !== null; }
     public function __toString(): string { return $this->titre ?? ''; }
 }

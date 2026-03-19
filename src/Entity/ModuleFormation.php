@@ -57,8 +57,13 @@ class ModuleFormation
     #[ORM\OrderBy(["ordre" => "ASC"])]
     private Collection $chapitres;
 
+    // Gardé nullable pour compatibilité — les nouveaux modules n'ont plus de quiz ici
     #[ORM\OneToOne(targetEntity: Quiz::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
     private ?Quiz $quiz = null;
+
+    // ✅ NOUVEAU : Simulation réelle à la fin du module
+    #[ORM\OneToOne(targetEntity: SimulationInteractive::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
+    private ?SimulationInteractive $simulation = null;
 
     public function __construct()
     {
@@ -96,5 +101,7 @@ class ModuleFormation
     public function removeChapitre(Chapitre $chapitre): static { if ($this->chapitres->removeElement($chapitre)) { if ($chapitre->getModule() === $this) { $chapitre->setModule(null); } } return $this; }
     public function getQuiz(): ?Quiz { return $this->quiz; }
     public function setQuiz(?Quiz $quiz): static { if ($quiz === null && $this->quiz !== null) { $this->quiz->setModule(null); } if ($quiz !== null && $quiz->getModule() !== $this) { $quiz->setModule($this); } $this->quiz = $quiz; return $this; }
+    public function getSimulation(): ?SimulationInteractive { return $this->simulation; }
+    public function setSimulation(?SimulationInteractive $simulation): static { $this->simulation = $simulation; return $this; }
     public function __toString(): string { return $this->titre ?? ''; }
 }

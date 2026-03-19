@@ -1,0 +1,134 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}Modifier — {{ simulation.titre }}{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+
+    <div style="margin-bottom: var(--space-6);">
+        <a href="{{ path('admin_simulations_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux simulations
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding: var(--space-8);">
+            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-8);">
+                <i class="bi bi-pencil-square" style="color: var(--primary-600);"></i>
+                Modifier la simulation
+            </h2>
+
+            <form method="post">
+
+                <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">📋 Informations générales</h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" class="form-control" name="titre" required value="{{ simulation.titre }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2">{{ simulation.description }}</textarea>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Type *</label>
+                            <select class="form-control" name="type_simulation" required>
+                                {% for key, label in types %}
+                                    <option value="{{ key }}" {{ simulation.typeSimulation == key ? 'selected' }}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Difficulté</label>
+                            <select class="form-control" name="difficulte">
+                                <option value="facile" {{ simulation.difficulte == 'facile' ? 'selected' }}>Facile</option>
+                                <option value="moyen" {{ simulation.difficulte == 'moyen' ? 'selected' }}>Moyen</option>
+                                <option value="difficile" {{ simulation.difficulte == 'difficile' ? 'selected' }}>Difficile</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Durée (min)</label>
+                            <input type="number" class="form-control" name="duree_estimee" value="{{ simulation.dureeEstimee }}">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Points réussite</label>
+                            <input type="number" class="form-control" name="points_reussite" value="{{ simulation.pointsReussite }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Seuil réussite (%)</label>
+                            <input type="number" class="form-control" name="seuil_reussite" value="{{ simulation.seuilReussite }}">
+                        </div>
+                    </div>
+                </div>
+
+                {# Contenu selon type — pré-rempli #}
+                {% set c = simulation.contenuSimulation %}
+                {% if simulation.typeSimulation == 'GMAIL' %}
+                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">📧 Contenu Gmail</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                            <div class="form-group"><label class="form-label">Nom expéditeur</label><input type="text" class="form-control" name="gmail_expediteur_nom" value="{{ c.expediteur_nom ?? '' }}"></div>
+                            <div class="form-group"><label class="form-label">Email expéditeur</label><input type="text" class="form-control" name="gmail_expediteur_email" value="{{ c.expediteur_email ?? '' }}"></div>
+                        </div>
+                        <div class="form-group"><label class="form-label">Sujet</label><input type="text" class="form-control" name="gmail_sujet" value="{{ c.sujet ?? '' }}"></div>
+                        <div class="form-group"><label class="form-label">Corps HTML</label><textarea class="form-control" name="gmail_corps" rows="5">{{ c.corps ?? '' }}</textarea></div>
+                        <div class="form-group"><label class="form-label">Texte du lien piège</label><input type="text" class="form-control" name="gmail_lien_texte" value="{{ c.lien_piege_texte ?? '' }}"></div>
+                    </div>
+                {% elseif simulation.typeSimulation == 'MOT_DE_PASSE' %}
+                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🔒 Formulaire mot de passe</h3>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                            <div class="form-group"><label class="form-label">Nom du site</label><input type="text" class="form-control" name="mdp_site_nom" value="{{ c.site_nom ?? '' }}"></div>
+                            <div class="form-group"><label class="form-label">URL fausse</label><input type="text" class="form-control" name="mdp_site_url" value="{{ c.site_url_affiche ?? '' }}"></div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
+                            <div class="form-group"><label class="form-label">Emoji</label><input type="text" class="form-control" name="mdp_logo" value="{{ c.logo_emoji ?? '🏦' }}"></div>
+                            <div class="form-group"><label class="form-label">Message</label><input type="text" class="form-control" name="mdp_message" value="{{ c.message ?? '' }}"></div>
+                        </div>
+                    </div>
+                {% elseif simulation.typeSimulation == 'LIEN_SUSPECT' %}
+                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
+                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🔗 Liens suspects</h3>
+                        <div class="form-group"><label class="form-label">Liens (un par ligne)</label><textarea class="form-control" name="liens" rows="5">{{ c.liens is defined ? c.liens|join('\n') : '' }}</textarea></div>
+                        <div class="form-group"><label class="form-label">Index du lien piège</label><input type="text" class="form-control" name="lien_piege_index" value="{{ c.lien_piege_index ?? 0 }}"></div>
+                    </div>
+                {% endif %}
+
+                <div style="margin-bottom: var(--space-8);">
+                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🎯 Pédagogie</h3>
+                    <div class="form-group">
+                        <label class="form-label">Indices (un par ligne)</label>
+                        <textarea class="form-control" name="indices" rows="4">{{ c.indices is defined ? c.indices|join('\n') : '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Explication</label>
+                        <textarea class="form-control" name="explication" rows="3">{{ c.explication ?? '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
+                        <input type="checkbox" name="est_publie" {{ simulation.estPublie ? 'checked' }} style="width: 20px; height: 20px;">
+                        <div>
+                            <div style="font-weight: var(--font-semibold);">Publiée</div>
+                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Disponible pour être liée aux modules</div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: var(--space-4);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
+                        <i class="bi bi-check-circle"></i> Enregistrer
+                    </button>
+                    <a href="{{ path('admin_simulations_liste') }}" class="btn btn-secondary btn-lg">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
