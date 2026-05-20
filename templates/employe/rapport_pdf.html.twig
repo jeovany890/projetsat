@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Rapport - {{ employe.prenom }} {{ employe.nom }}</title>
+    <style>
+        body { font-family: 'DejaVu Sans', sans-serif; margin: 2cm; color: #1e293b; }
+        h1 { font-size: 24px; border-bottom: 2px solid #7C3AED; }
+        h2 { font-size: 18px; color: #7C3AED; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        th { background: #1e293b; color: white; padding: 8px; }
+        td { border: 1px solid #e2e8f0; padding: 6px; }
+        .kpi { background: #f8fafc; border-radius: 8px; padding: 12px; text-align: center; display: inline-block; width: 18%; margin: 0 1%; }
+        .risk-high { color: #ef4444; }
+        .risk-mid { color: #f97316; }
+        .risk-low { color: #10b981; }
+    </style>
+</head>
+<body>
+  <img src="{{ absolute_url(asset('images/logo.jpeg')) }}" alt="SAT Platform" style="height: 500px; margin-bottom: 30px;">
+    <h1>Rapport individuel</h1>
+    <p><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — {{ employe.poste }} · {{ employe.departement.nom|default('') }}</p>
+    <p>Email : {{ employe.email }} | Score de vigilance : {{ employe.scoreVigilance }}/100 ({{ employe.nombreEtoiles }}★)</p>
+
+    <h2>Comportement phishing</h2>
+    <table>
+        <tr><th>Emails reçus</th><td>{{ nbEnvoyes }}</td></tr>
+        <tr><th>Liens cliqués</th><td>{{ nbClics }} ({{ clickRate }}%)</td></tr>
+        <tr><th>Données soumises</th><td>{{ nbSoumissions }} ({{ submissionRate }}%)</td></tr>
+        <tr><th>Signalements</th><td>{{ nbSignalements }} ({{ reportRate }}%)</td></tr>
+    </table>
+
+    <h2>Formations</h2>
+    <p>Terminées: {{ formationsTerminees }} — En cours: {{ formationsEnCours }}</p>
+
+    <h2>Recommandations</h2>
+    <ul>
+        {% if clickRate >= 35 %}<li>Taux de clic élevé => sensibilisation urgente.</li>{% endif %}
+        {% if submissionRate >= 10 %}<li> Ne jamais saisir ses identifiants sur des pages non officielles.</li>{% endif %}
+        {% if reportRate < 20 %}<li> Signalez les emails suspects via le tableau de bord.</li>{% endif %}
+        {% if employe.scoreVigilance < 40 %}<li> Score critique : suivi personnalisé recommandé.</li>{% endif %}
+    </ul>
+
+    <footer>Généré par SAT Platform le {{ "now"|date("d/m/Y") }}</footer>
+</body>
+</html>

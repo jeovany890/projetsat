@@ -1,143 +1,422 @@
+{# templates/employe/dashboard.html.twig #}
 {% extends 'employe/layout.html.twig' %}
 
 {% block page_title %}Tableau de bord{% endblock %}
 
 {% block content %}
 
-{# ── HEADER BIENVENUE ── #}
-<div style="background: linear-gradient(135deg, #10B981, #059669); border-radius: var(--radius-xl); padding: var(--space-8); margin-bottom: var(--space-6); color: white; position: relative; overflow: hidden;">
-    <div style="position: absolute; top: -30px; right: -30px; width: 150px; height: 150px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
-    <div style="position: relative; z-index: 1;">
-        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); margin-bottom: var(--space-1);">
-            Bonjour, {{ app.user.prenom }} ! 👋
-        </h2>
-        <p style="opacity: 0.9; margin-bottom: var(--space-4);">{{ app.user.poste ?? 'Employé' }} — {{ app.user.departement ? app.user.departement.nom : 'Aucun département' }}</p>
-        <div style="display: flex; gap: var(--space-6); flex-wrap: wrap;">
-            <div>
-                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.scoreVigilance|round }}%</div>
-                <div style="opacity: 0.8; font-size: var(--text-sm);">Score vigilance</div>
+<div class="sat-dashboard">
+
+    {# --- Header / Section Bienvenue --- #}
+    <header class="sat-header-card">
+        <div class="sat-header-profile">
+            <div class="sat-avatar">
+                {{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}
             </div>
-            <div>
-                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.totalPoints }}</div>
-                <div style="opacity: 0.8; font-size: var(--text-sm);">Points</div>
-            </div>
-            <div>
-                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold);">{{ app.user.totalEtoiles }} ⭐</div>
-                <div style="opacity: 0.8; font-size: var(--text-sm);">Étoiles</div>
+            <div class="sat-welcome-text">
+                <h1>Ravie de vous revoir, {{ app.user.prenom }} !</h1>
             </div>
         </div>
-    </div>
-</div>
-
-{# ── STATS ── #}
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4); margin-bottom: var(--space-6);">
-    <div class="card" style="text-align: center; padding: var(--space-6);">
-        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-600);">{{ statsFormations.total }}</div>
-        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">Formations assignées</div>
-    </div>
-    <div class="card" style="text-align: center; padding: var(--space-6);">
-        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">{{ statsFormations.terminees }}</div>
-        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">Formations terminées</div>
-    </div>
-    <div class="card" style="text-align: center; padding: var(--space-6);">
-        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">{{ statsFormations.enCours }}</div>
-        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">En cours</div>
-    </div>
-    <div class="card" style="text-align: center; padding: var(--space-6);">
-        <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--danger);">{{ statsFormations.enRetard }}</div>
-        <div style="font-size: var(--text-sm); color: var(--gray-600); margin-top: var(--space-1);">En retard</div>
-    </div>
-</div>
-
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-6);">
-
-    {# ── FORMATIONS EN COURS ── #}
-    <div class="card">
-        <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100);">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900);">
-                <i class="bi bi-mortarboard-fill" style="color: var(--primary-600);"></i>
-                Mes formations en cours
-            </h3>
+        <div class="sat-header-summary">
+            <div class="sat-summary-item">
+                <span class="sat-summary-label">Points Totaux</span>
+                <span class="sat-summary-value">{{ app.user.totalPoints }}</span>
+            </div>
+            <div class="sat-summary-item">
+                <span class="sat-summary-label">Niveau Actuel</span>
+                <span class="sat-summary-value sat-stars">
+                    {% for i in 1..5 %}{{ i <= app.user.nombreEtoiles ? '★' : '☆' }}{% endfor %}
+                </span>
+            </div>
         </div>
-        <div style="padding: var(--space-6);">
-            {% if progressions is empty %}
-                <div style="text-align: center; padding: var(--space-8); color: var(--gray-500);">
-                    <i class="bi bi-inbox" style="font-size: 48px; display: block; margin-bottom: var(--space-3);"></i>
-                    Aucune formation assignée pour le moment
-                </div>
-            {% else %}
-                {% for progression in progressions %}
-                    <div style="padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2);">
-                            <div>
-                                <div style="font-weight: var(--font-semibold); color: var(--gray-900);">{{ progression.module.titre }}</div>
-                                <div style="font-size: var(--text-sm); color: var(--gray-500);">
-                                    {{ progression.module.chapitres|length }} chapitre(s)
-                                    {% if progression.module.quiz %} · Quiz disponible{% endif %}
+    </header>
+
+    {# --- Cartes statistiques KPI --- #}
+    <section class="sat-kpi-grid">
+        <div class="sat-kpi-card">
+            <div class="sat-kpi-icon"><i class="bi bi-book"></i></div>
+            <div>
+                <div class="sat-kpi-value">{{ statsFormations.total }}</div>
+                <div class="sat-kpi-label">Formations assignées</div>
+            </div>
+        </div>
+        <div class="sat-kpi-card sat-kpi-success">
+            <div class="sat-kpi-icon"><i class="bi bi-check-circle"></i></div>
+            <div>
+                <div class="sat-kpi-value">{{ statsFormations.terminees }}</div>
+                <div class="sat-kpi-label">Terminées</div>
+            </div>
+        </div>
+        <div class="sat-kpi-card sat-kpi-warning">
+            <div class="sat-kpi-icon"><i class="bi bi-clock-history"></i></div>
+            <div>
+                <div class="sat-kpi-value">{{ statsFormations.enCours }}</div>
+                <div class="sat-kpi-label">En cours</div>
+            </div>
+        </div>
+        <div class="sat-kpi-card sat-kpi-danger">
+            <div class="sat-kpi-icon"><i class="bi bi-exclamation-triangle"></i></div>
+            <div>
+                <div class="sat-kpi-value">{{ statsFormations.enRetard }}</div>
+                <div class="sat-kpi-label">En retard</div>
+            </div>
+        </div>
+    </section>
+
+    {# --- Grille principale (Contenu + Sidebar) --- #}
+    <div class="sat-main-grid">
+        
+        {# --- Colonne gauche : formations en cours --- #}
+        <section class="sat-content-area sat-card">
+            <div class="sat-card-header">
+                <h2 class="sat-card-title">
+                    <i class="bi bi-mortarboard sat-icon-primary"></i> Mes formations actives
+                </h2>
+                <a href="{{ path('employe_formations') }}" class="sat-link-sm">Voir tout <i class="bi bi-arrow-right"></i></a>
+            </div>
+            
+            <div class="sat-card-body">
+                {% if progressions is empty %}
+                    <div class="sat-empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>Félicitations ! Vous n'avez aucune formation en attente.</p>
+                        <span class="sat-subtext">Revenez plus tard pour de nouveaux modules.</span>
+                    </div>
+                {% else %}
+                    <div class="sat-formation-list">
+                    {% for progression in progressions %}
+                        <div class="sat-formation-item">
+                            <div class="sat-formation-info">
+                                <div>
+                                    <h3 class="sat-formation-title">{{ progression.module.titre }}</h3>
+                                    <p class="sat-formation-meta">
+                                        {{ progression.module.chapitres|length }} chapitre(s)
+                                        {% if progression.module.chapitres|filter(c => c.quiz is not null)|length > 0 %}
+                                            <span class="sep">•</span> <i class="bi bi-patch-check"></i> Quiz inclus
+                                        {% endif %}
+                                    </p>
                                 </div>
+                                <span class="sat-badge sat-badge-{{ progression.statut == 'TERMINE' ? 'success' : (progression.statut == 'EN_COURS' ? 'warning' : 'secondary') }}">
+                                    {{ progression.statut|replace({'_': ' '})|capitalize }}
+                                </span>
                             </div>
-                            <span class="badge badge-{{ progression.statut == 'TERMINE' ? 'success' : (progression.statut == 'EN_COURS' ? 'warning' : 'secondary') }}">
-                                {{ progression.statut|replace({'_': ' '}) }}
-                            </span>
+                            
+                            <div class="sat-progress-container">
+                                <div class="sat-progress-bar">
+                                    <div class="sat-progress-fill" style="width: {{ progression.pourcentageProgression }}%;"></div>
+                                </div>
+                                <span class="sat-progress-text">{{ progression.pourcentageProgression }}% complété</span>
+                            </div>
+                            
+                            <div class="sat-formation-actions">
+                                <a href="{{ path('employe_formation_detail', {id: progression.module.id}) }}" class="sat-btn sat-btn-primary sat-btn-sm">
+                                    {{ progression.statut == 'NON_COMMENCE' ? 'Commencer' : (progression.statut == 'TERMINE' ? 'Revoir' : 'Continuer') }}
+                                    <i class="bi bi-arrow-right-short"></i>
+                                </a>
+                            </div>
                         </div>
-                        <div style="background: var(--gray-200); border-radius: var(--radius-full); height: 8px; margin-bottom: var(--space-3);">
-                            <div style="background: var(--primary-600); height: 8px; border-radius: var(--radius-full); width: {{ progression.pourcentageProgression }}%;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="font-size: var(--text-sm); color: var(--gray-600);">{{ progression.pourcentageProgression }}% complété</span>
-                            <a href="{{ path('employe_formation_detail', {id: progression.module.id}) }}" class="btn btn-sm btn-primary">
-                                {{ progression.statut == 'NON_COMMENCE' ? 'Commencer' : (progression.statut == 'TERMINE' ? 'Revoir' : 'Continuer') }}
-                                <i class="bi bi-arrow-right"></i>
-                            </a>
+                    {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+
+        {# --- Colonne droite : sidebar --- #}
+        <aside class="sat-sidebar">
+            
+            {# Carte vigilance (Donut SVG corrigé) #}
+            <div class="sat-card sat-vigilance-card text-center">
+                <div class="sat-card-body">
+                    <h3 class="sat-sidebar-title">Score de Vigilance</h3>
+
+                    {% set score = app.user.scoreVigilance|default(0)|number_format %}
+                    {% set score = score > 100 ? 100 : score %}
+
+                    <div class="sat-donut-container">
+                        <div class="sat-donut">
+                            <svg viewBox="0 0 120 120" class="sat-donut-svg">
+                                <circle cx="60" cy="60" r="54" fill="none" stroke="#E2E8F0" stroke-width="12" />
+                                <circle cx="60" cy="60" r="54" fill="none"
+                                        stroke="{% if score >= 70 %}#10B981{% elseif score >= 40 %}#F59E0B{% else %}#EF4444{% endif %}"
+                                        stroke-width="12"
+                                        stroke-dasharray="339.292"
+                                        stroke-dashoffset="{{ 339.292 * (1 - score / 100) }}"
+                                        stroke-linecap="round"
+                                        transform="rotate(-90 60 60)" />
+                            </svg>
+                            <div class="sat-donut-value">{{ score|round }}%</div>
                         </div>
                     </div>
-                {% endfor %}
-                <div style="text-align: center; margin-top: var(--space-4);">
-                    <a href="{{ path('employe_formations') }}" style="color: var(--primary-600); font-size: var(--text-sm);">
-                        Voir toutes mes formations →
-                    </a>
+
+                    <div class="sat-vigilance-level
+                        {% if score >= 70 %}text-success{% elseif score >= 40 %}text-warning{% else %}text-danger{% endif %}
+                    ">
+                        {{ app.user.niveauVigilance|default('Non défini') }}
+                    </div>
+
+                    <p class="sat-subtext">Continuez vos formations pour améliorer ce score.</p>
                 </div>
-            {% endif %}
-        </div>
+            </div>
+
+        </aside>
     </div>
-
-    {# ── COLONNE DROITE ── #}
-    <div style="display: flex; flex-direction: column; gap: var(--space-4);">
-
-        <div class="card" style="padding: var(--space-6);">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-4);">
-                <i class="bi bi-shield-fill-check" style="color: var(--success);"></i>
-                Niveau de vigilance
-            </h3>
-            {% set score = app.user.scoreVigilance|round %}
-            {% set couleur = score >= 80 ? '#10B981' : (score >= 60 ? '#3B82F6' : (score >= 40 ? '#F59E0B' : '#EF4444')) %}
-            <div style="text-align: center; margin-bottom: var(--space-4);">
-                <div style="font-size: var(--text-5xl); font-weight: var(--font-bold); color: {{ couleur }};">{{ score }}%</div>
-                <div style="font-size: var(--text-lg); color: var(--gray-700); font-weight: var(--font-semibold);">{{ app.user.niveauVigilance }}</div>
-            </div>
-            <div style="background: var(--gray-200); border-radius: var(--radius-full); height: 12px;">
-                <div style="background: {{ couleur }}; height: 12px; border-radius: var(--radius-full); width: {{ score }}%;"></div>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">
-                <span>À risque</span><span>Expert</span>
-            </div>
-        </div>
-
-        <div class="card" style="padding: var(--space-6);">
-            <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-4);">
-                <i class="bi bi-bug-fill" style="color: var(--danger);"></i>
-                Simulations
-            </h3>
-            <p style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-4);">
-                Entraînez-vous à détecter les attaques avant qu'elles arrivent vraiment.
-            </p>
-            <a href="{{ path('employe_simulations') }}" class="btn btn-danger" style="width: 100%;">
-                <i class="bi bi-play-fill"></i> Lancer une simulation
-            </a>
-        </div>
-
-    </div>
-
 </div>
 
+
+
+<style>
+/* ===== VARIABLES & RESET ===== */
+:root {
+    --sat-primary: #10B981;
+    --sat-primary-dark: #059669;
+    --sat-bg-main: #F1F5F9;
+    --sat-card-bg: #FFFFFF;
+    --sat-text-main: #1E293B;
+    --sat-text-muted: #475569;
+    --sat-text-light: #64748B;
+    --sat-border: #E2E8F0;
+    --sat-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --sat-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --sat-radius: 12px;
+}
+
+.sat-dashboard * { box-sizing: border-box; }
+.sat-dashboard h1, .sat-dashboard h2, .sat-dashboard h3 { margin: 0; font-weight: 700; color: var(--sat-text-main); }
+.sat-dashboard p { margin: 0; color: var(--sat-text-muted); }
+.sep { margin: 0 0.5rem; color: var(--sat-text-light); }
+.text-center { text-align: center; }
+.mt-3 { margin-top: 1rem; }
+.text-success { color: #10B981 !important; }
+.text-warning { color: #F59E0B !important; }
+.text-danger { color: #EF4444 !important; }
+
+.sat-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    color: var(--sat-text-main);
+}
+
+/* Carte de base */
+.sat-card {
+    background: var(--sat-card-bg);
+    border-radius: var(--sat-radius);
+    border: 1px solid var(--sat-border);
+    box-shadow: var(--sat-shadow-sm);
+    overflow: hidden;
+}
+.sat-card-body { padding: 1.5rem; }
+
+/* ===== HEADER ===== */
+.sat-header-card {
+    background: linear-gradient(135deg, #064e3b 0%, #059669 100%);
+    color: white;
+    border-radius: var(--sat-radius);
+    padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    box-shadow: var(--sat-shadow-md);
+}
+.sat-header-profile {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.sat-avatar {
+    width: 64px;
+    height: 64px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+}
+.sat-welcome-text h1 { color: white; font-size: 1.75rem; margin-bottom: 0.5rem; }
+.sat-user-meta { color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; display: flex; align-items: center; }
+.sat-header-summary {
+    display: flex;
+    gap: 1.5rem;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: var(--sat-radius);
+}
+.sat-summary-item { text-align: right; }
+.sat-summary-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255, 255, 255, 0.7); margin-bottom: 0.25rem;}
+.sat-summary-value { font-size: 1.5rem; font-weight: 800; }
+.sat-stars { color: #F59E0B; }
+
+/* ===== KPI GRID ===== */
+.sat-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+}
+.sat-kpi-card {
+    background: var(--sat-card-bg);
+    padding: 1.25rem;
+    border-radius: var(--sat-radius);
+    border: 1px solid var(--sat-border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--sat-shadow-sm);
+}
+.sat-kpi-icon {
+    font-size: 1.5rem;
+    color: var(--sat-text-light);
+    background: var(--sat-bg-main);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.sat-kpi-card.sat-kpi-success .sat-kpi-icon { color: #10B981; background: #ECFDF5; }
+.sat-kpi-card.sat-kpi-warning .sat-kpi-icon { color: #F59E0B; background: #FFFBEB; }
+.sat-kpi-card.sat-kpi-danger .sat-kpi-icon { color: #EF4444; background: #FEF2F2; }
+.sat-kpi-value { font-size: 1.7rem; font-weight: 500; line-height: 1.1; }
+.sat-kpi-label { font-size: 0.7rem; color: var(--sat-text-muted); font-weight: 500; }
+
+/* ===== MAIN GRID ===== */
+.sat-main-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+.sat-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+/* ===== FORMATIONS ===== */
+.sat-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--sat-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.sat-card-title { font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.sat-icon-primary { color: var(--sat-primary); }
+.sat-formation-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.sat-formation-item {
+    background: #FFFFFF;
+    border: 1px solid var(--sat-border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    transition: box-shadow 0.2s ease;
+}
+.sat-formation-item:hover { box-shadow: var(--sat-shadow-md); }
+.sat-formation-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.sat-formation-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem; }
+.sat-formation-meta { font-size: 0.75rem; color: var(--sat-text-light); display: flex; align-items: center; }
+.sat-progress-container { margin-bottom: 1rem; }
+.sat-progress-bar {
+    height: 8px;
+    background: var(--sat-bg-main);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+.sat-progress-fill {
+    height: 100%;
+    background: var(--sat-primary);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+.sat-progress-text { font-size: 0.7rem; color: var(--sat-text-muted); font-weight: 500; }
+.sat-formation-actions { text-align: right; }
+.sat-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.sat-badge-success { background: #DCFCE7; color: #166534; }
+.sat-badge-warning { background: #FEF9C3; color: #CA8A04; }
+.sat-badge-secondary { background: #F1F5F9; color: #475569; }
+.sat-empty-state { text-align: center; padding: 3rem 1rem; color: var(--sat-text-light); }
+.sat-empty-state i { font-size: 3rem; margin-bottom: 1rem; display: block; color: var(--sat-border); }
+.sat-empty-state p { font-weight: 600; color: var(--sat-text-muted); margin-bottom: 0.25rem; }
+.sat-subtext { font-size: 0.8rem; color: var(--sat-text-light); }
+
+/* ===== SIDEBAR ===== */
+.sat-sidebar-title { font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--sat-text-muted); margin-bottom: 1rem; }
+.sat-donut-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+.sat-donut {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+.sat-donut-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(0deg);
+}
+.sat-donut-value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--sat-text-main);
+}
+.sat-vigilance-level { font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+    .sat-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+    .sat-main-grid { grid-template-columns: 1fr; }
+    .sat-sidebar { margin-top: 0; }
+}
+@media (max-width: 768px) {
+    .sat-header-card { text-align: center; justify-content: center; }
+    .sat-header-profile { flex-direction: column; gap: 1rem; }
+    .sat-header-summary { text-align: center; flex-direction: column; gap: 0.75rem; }
+    .sat-formation-info { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+}
+@media (max-width: 640px) {
+    .sat-kpi-grid { grid-template-columns: 1fr; }
+    .sat-summary-value { font-size: 1.25rem; }
+    .sat-donut {
+        width: 100px;
+        height: 100px;
+    }
+    .sat-donut-value { font-size: 1.2rem; }
+    .sat-card-body { padding: 1rem; }
+    .sat-vigilance-level { font-size: 0.9rem; }
+    .sat-sidebar-title { font-size: 0.8rem; margin-bottom: 0.75rem; }
+}
+</style>
 {% endblock %}

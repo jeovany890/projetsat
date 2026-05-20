@@ -25,29 +25,31 @@ class GabaritPhishing
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
+    // categorie reste en varchar pour l'instant — migration vers FK Categorie en Phase 2
     #[ORM\Column(type: 'string', length: 100)]
     private ?string $categorie = null;
 
     #[ORM\Column(type: 'string', length: 20)]
     private ?string $difficulte = null;
 
-    #[ORM\Column(type: 'string', length: 100)]
+    /**
+     * Clé du compte Gmail utilisé pour envoyer les emails phishing.
+     * Ex: 'MAILER_PHISHING_BOA', 'MAILER_PHISHING_SBEE', 'MAILER_PHISHING_UNICEF'
+     * Utilisée dans EmailService::envoyerEmailPhishing() pour choisir les credentials.
+     */
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $compteEmailDsn = null;
-
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $nomExpediteur = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $emailExpediteur = null;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $sujetEmail = null;
 
-    #[ORM\Column(type: 'text')]
-    private ?string $contenuHtml = null;
-
     #[ORM\Column(type: 'text', nullable: true)]
-    private ?string $contenuTexte = null;
+    private ?string $contenuHtml = null;
 
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $indicesPieges = null;
@@ -71,45 +73,56 @@ class GabaritPhishing
     public function __construct()
     {
         $this->dateCreation = new \DateTime();
-        $this->campagnes = new ArrayCollection();
+        $this->campagnes    = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
+
     public function getTitre(): ?string { return $this->titre; }
     public function setTitre(string $titre): static { $this->titre = $titre; return $this; }
+
     public function getSlug(): ?string { return $this->slug; }
     public function setSlug(string $slug): static { $this->slug = $slug; return $this; }
+
     public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $description): static { $this->description = $description; return $this; }
+    public function setDescription(?string $d): static { $this->description = $d; return $this; }
+
     public function getCategorie(): ?string { return $this->categorie; }
     public function setCategorie(string $categorie): static { $this->categorie = $categorie; return $this; }
+
     public function getDifficulte(): ?string { return $this->difficulte; }
     public function setDifficulte(string $difficulte): static { $this->difficulte = $difficulte; return $this; }
+
     public function getCompteEmailDsn(): ?string { return $this->compteEmailDsn; }
-    public function setCompteEmailDsn(string $compteEmailDsn): static { $this->compteEmailDsn = $compteEmailDsn; return $this; }
+    public function setCompteEmailDsn(?string $dsn): static { $this->compteEmailDsn = $dsn; return $this; }
+
     public function getNomExpediteur(): ?string { return $this->nomExpediteur; }
-    public function setNomExpediteur(string $nomExpediteur): static { $this->nomExpediteur = $nomExpediteur; return $this; }
+    public function setNomExpediteur(?string $n): static { $this->nomExpediteur = $n; return $this; }
+
     public function getEmailExpediteur(): ?string { return $this->emailExpediteur; }
-    public function setEmailExpediteur(string $emailExpediteur): static { $this->emailExpediteur = $emailExpediteur; return $this; }
+    public function setEmailExpediteur(?string $e): static { $this->emailExpediteur = $e; return $this; }
+
     public function getSujetEmail(): ?string { return $this->sujetEmail; }
-    public function setSujetEmail(string $sujetEmail): static { $this->sujetEmail = $sujetEmail; return $this; }
+    public function setSujetEmail(?string $s): static { $this->sujetEmail = $s; return $this; }
+
     public function getContenuHtml(): ?string { return $this->contenuHtml; }
-    public function setContenuHtml(string $contenuHtml): static { $this->contenuHtml = $contenuHtml; return $this; }
-    public function getContenuTexte(): ?string { return $this->contenuTexte; }
-    public function setContenuTexte(?string $contenuTexte): static { $this->contenuTexte = $contenuTexte; return $this; }
+    public function setContenuHtml(?string $c): static { $this->contenuHtml = $c; return $this; }
+
     public function getIndicesPieges(): ?array { return $this->indicesPieges; }
-    public function setIndicesPieges(?array $indicesPieges): static { $this->indicesPieges = $indicesPieges; return $this; }
+    public function setIndicesPieges(?array $i): static { $this->indicesPieges = $i; return $this; }
+
     public function isEstActif(): bool { return $this->estActif; }
     public function setEstActif(bool $estActif): static { $this->estActif = $estActif; return $this; }
+
     public function getNombreUtilisations(): int { return $this->nombreUtilisations; }
-    public function setNombreUtilisations(int $nombreUtilisations): static { $this->nombreUtilisations = $nombreUtilisations; return $this; }
     public function incrementerUtilisations(): static { $this->nombreUtilisations++; return $this; }
+
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+
     public function getAdministrateur(): ?Administrateur { return $this->administrateur; }
-    public function setAdministrateur(?Administrateur $administrateur): static { $this->administrateur = $administrateur; return $this; }
+    public function setAdministrateur(?Administrateur $a): static { $this->administrateur = $a; return $this; }
+
     public function getCampagnes(): Collection { return $this->campagnes; }
-    public function addCampagne(CampagnePhishing $campagne): static { if (!$this->campagnes->contains($campagne)) { $this->campagnes->add($campagne); $campagne->setGabarit($this); } return $this; }
-    public function removeCampagne(CampagnePhishing $campagne): static { if ($this->campagnes->removeElement($campagne)) { if ($campagne->getGabarit() === $this) { $campagne->setGabarit(null); } } return $this; }
+
     public function __toString(): string { return $this->titre ?? ''; }
 }

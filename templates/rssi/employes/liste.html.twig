@@ -3,67 +3,64 @@
 {% block page_title %}Employés{% endblock %}
 
 {% block topbar_actions %}
-    <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost">
-        <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
-    </a>
-    <a href="{{ path('rssi_employes_nouveau') }}" class="r-btn r-btn-primary">
+    <a href="{{ path('rssi_employes_nouveau') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> Nouvel employé
     </a>
 {% endblock %}
 
 {% block content %}
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
-    <div class="r-card" style="padding:16px;text-align:center;">
-        <div style="font-size:26px;font-weight:800;color:#0F172A;">{{ employes|length }}</div>
-        <div style="font-size:12px;color:#64748B;">Total employés</div>
+{# ── Statistiques globales ── #}
+<div class="stats-grid stats-grid-4">
+    <div class="stat-card">
+        <div class="stat-value">{{ employes|length }}</div>
+        <div class="stat-label">Total employés</div>
     </div>
-    <div class="r-card" style="padding:16px;text-align:center;">
-        <div style="font-size:26px;font-weight:800;color:#166534;">{{ employes|filter(e => e.estActif)|length }}</div>
-        <div style="font-size:12px;color:#64748B;">Actifs</div>
+    <div class="stat-card">
+        <div class="stat-value text-green">{{ employes|filter(e => e.estActif)|length }}</div>
+        <div class="stat-label">Actifs</div>
     </div>
-    <div class="r-card" style="padding:16px;text-align:center;">
-        <div style="font-size:26px;font-weight:800;color:#B91C1C;">{{ employes|filter(e => not e.estActif)|length }}</div>
-        <div style="font-size:12px;color:#64748B;">Inactifs</div>
+    <div class="stat-card">
+        <div class="stat-value text-red">{{ employes|filter(e => not e.estActif)|length }}</div>
+        <div class="stat-label">Inactifs</div>
     </div>
-    <div class="r-card" style="padding:16px;text-align:center;">
-        <div style="font-size:26px;font-weight:800;color:#0891B2;">
+    <div class="stat-card">
+        <div class="stat-value text-blue">
             {% if employes|length > 0 %}
                 {% set total = 0 %}
                 {% for e in employes %}{% set total = total + e.scoreVigilance %}{% endfor %}
                 {{ (total / employes|length)|round(1) }}%
             {% else %}0%{% endif %}
         </div>
-        <div style="font-size:12px;color:#64748B;">Score moyen</div>
+        <div class="stat-label">Score moyen</div>
     </div>
 </div>
 
 {% if employes|length == 0 %}
 <div class="r-card">
     <div class="r-card-body">
-        <div class="r-empty">
+        <div class="empty-state">
             <i class="bi bi-people"></i>
-            <p>Aucun employé. Commencez par créer des départements puis ajoutez vos employés.</p>
-            <div style="display:flex;gap:10px;justify-content:center;">
-                <a href="{{ path('rssi_employes_nouveau') }}" class="r-btn r-btn-primary"><i class="bi bi-plus-lg"></i> Ajouter manuellement</a>
-                <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost"><i class="bi bi-file-earmark-arrow-up"></i> Importer CSV</a>
+            <p>Aucun employé. Créez d’abord des départements puis ajoutez vos employés.</p>
+            <div class="empty-actions">
+                <a href="{{ path('rssi_employes_nouveau') }}" class="btn btn-primary">Ajouter manuellement</a>
             </div>
         </div>
     </div>
 </div>
 {% else %}
 
-<div class="r-card" style="margin-bottom:16px;padding:16px;">
-    <div style="display:flex;gap:12px;align-items:center;">
-        <input type="text" id="searchInput" placeholder="Rechercher un employé..."
-               style="flex:1;padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
-        <select id="filterDept" style="padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
+{# ── Filtres ── #}
+<div class="filters-card">
+    <div class="filters-row">
+        <input type="text" id="searchInput" placeholder="Rechercher un employé..." class="filter-input">
+        <select id="filterDept" class="filter-select">
             <option value="">Tous les départements</option>
             {% for dept in departements %}
                 <option value="{{ dept.nom }}">{{ dept.nom }}</option>
             {% endfor %}
         </select>
-        <select id="filterStatut" style="padding:8px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:13px;">
+        <select id="filterStatut" class="filter-select">
             <option value="">Tous les statuts</option>
             <option value="actif">Actifs</option>
             <option value="inactif">Inactifs</option>
@@ -71,101 +68,393 @@
     </div>
 </div>
 
+{# ── Tableau ── #}
 <div class="r-card">
-    <table class="r-table" id="tableEmployes">
-        <thead>
-            <tr>
-                <th>Employé</th>
-                <th>Département</th>
-                <th>Poste</th>
-                <th>Score vigilance</th>
-                <th>Étoiles / Points</th>
-                <th>Statut</th>
-                <th>Actions</th>
+    <div class="table-responsive">
+        <table class="r-table" id="tableEmployes">
+            <thead>
+                <tr>
+                    <th>Employé</th>
+                    <th>Département</th>
+                    <th>Poste</th>
+                    <th>Score vigilance</th>
+                    <th>Étoiles / Points</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for e in employes %}
+            <tr data-nom="{{ (e.prenom ~ ' ' ~ e.nom)|lower }}"
+                data-dept="{{ e.departement ? e.departement.nom : '' }}"
+                data-statut="{{ e.estActif ? 'actif' : 'inactif' }}">
+                
+                <td class="employee-cell">
+                    <div class="employee-avatar">{{ e.prenom|slice(0,1)|upper }}{{ e.nom|slice(0,1)|upper }}</div>
+                    <div class="employee-info">
+                        <div class="employee-name">{{ e.prenom }} {{ e.nom }}</div>
+                        <div class="employee-email">{{ e.email }}</div>
+                    </div>
+                </td>
+                <td class="dept-cell">{{ e.departement ? e.departement.nom : '—' }}</td>
+                <td class="poste-cell">{{ e.poste ?? '—' }}</td>
+                <td class="score-cell">
+                        <span class="score-value">{{ e.scoreVigilance }}%</span>
+                        <span class="score-level">{{ e.niveauVigilance }}</span>
+                   
+                </td>
+                <td class="points-cell">
+                    <span class="stars-count">{{ e.nombreEtoiles }}/5 ★</span>
+                    <span class="points-count">{{ e.totalPoints }} pts</span>
+                </td>
+                <td class="status-cell">
+                    {% if e.estActif %}
+                        <span class="badge badge-green">Actif</span>
+                    {% else %}
+                        <span class="badge badge-red">Inactif</span>
+                    {% endif %}
+                </td>
+                <td class="actions-cell">
+                    <div class="action-buttons-crud">
+                        {# Voir le détail #}
+                        <a href="{{ path('rssi_employes_detail', {id: e.id}) }}" class="btn-icon" title="Voir le détail">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                        {# Modifier #}
+                        <a href="{{ path('rssi_employes_modifier', {id: e.id}) }}" class="btn-icon btn-icon-edit" title="Modifier">
+                            <i class="bi bi-pencil-square"></i>
+                        </a>
+                        {# Activer / Désactiver #}
+                        <form method="post" action="{{ path('rssi_employes_activer', {id: e.id}) }}" style="display: inline-block;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('activer_' ~ e.id) }}">
+                            <button type="submit" class="btn-icon {% if e.estActif %}btn-icon-warning{% else %}btn-icon-success{% endif %}"
+                                    title="{{ e.estActif ? 'Désactiver' : 'Activer' }}">
+                                <i class="bi bi-{% if e.estActif %}pause-circle{% else %}play-circle{% endif %}"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-        {% for e in employes %}
-        <tr data-nom="{{ (e.prenom ~ ' ' ~ e.nom)|lower }}"
-            data-dept="{{ e.departement ? e.departement.nom : '' }}"
-            data-statut="{{ e.estActif ? 'actif' : 'inactif' }}">
-            <td>
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#06B6D4,#0284C7);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;">
-                        {{ e.prenom|slice(0,1)|upper }}{{ e.nom|slice(0,1)|upper }}
-                    </div>
-                    <div>
-                        <div style="font-weight:600;color:#1E293B;">{{ e.prenom }} {{ e.nom }}</div>
-                        <div style="font-size:11px;color:#94A3B8;">{{ e.email }}</div>
-                    </div>
-                </div>
-            </td>
-            <td>{{ e.departement ? e.departement.nom : '—' }}</td>
-            <td>{{ e.poste ?? '—' }}</td>
-            <td>
-                {% if e.totalPoints == 0 %}
-                    <span style="font-size:12px;color:#CBD5E1;font-style:italic;">Pas encore de quiz</span>
-                {% else %}
-                    <div style="display:flex;align-items:center;gap:8px;">
-                        <div style="width:70px;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
-                            <div style="height:100%;width:{{ e.scoreVigilance }}%;background:{% if e.scoreVigilance >= 60 %}#34D399{% elseif e.scoreVigilance >= 40 %}#FBBF24{% else %}#F87171{% endif %};border-radius:99px;"></div>
-                        </div>
-                        <span style="font-size:12px;font-weight:700;color:#475569;">{{ e.scoreVigilance }}%</span>
-                    </div>
-                    <div style="font-size:10px;color:#94A3B8;margin-top:2px;">{{ e.niveauVigilance }}</div>
-                {% endif %}
-            </td>
-            <td>
-                <span style="color:#F59E0B;font-weight:600;">★ {{ e.totalEtoiles }}</span>
-                <span style="color:#94A3B8;font-size:11px;margin-left:4px;">{{ e.totalPoints }} pts</span>
-            </td>
-            <td>
-                {% if e.estActif %}
-                    <span class="r-badge r-badge-green">Actif</span>
-                {% else %}
-                    <span class="r-badge r-badge-red">Inactif</span>
-                {% endif %}
-            </td>
-            <td>
-                <div style="display:flex;gap:5px;">
-                    <a href="{{ path('rssi_employes_detail', {id: e.id}) }}" class="r-btn r-btn-ghost" style="padding:6px 10px;" title="Voir">
-                        <i class="bi bi-eye"></i>
-                    </a>
-                    <a href="{{ path('rssi_employes_modifier', {id: e.id}) }}" class="r-btn r-btn-ghost" style="padding:6px 10px;" title="Modifier">
-                        <i class="bi bi-pencil"></i>
-                    </a>
-                    <form method="post" action="{{ path('rssi_employes_activer', {id: e.id}) }}" style="display:inline;">
-                        <input type="hidden" name="_token" value="{{ csrf_token('activer_' ~ e.id) }}">
-                        <button type="submit" class="r-btn {% if e.estActif %}r-btn-danger{% else %}r-btn-ghost{% endif %}" style="padding:6px 10px;"
-                                title="{{ e.estActif ? 'Désactiver' : 'Activer' }}">
-                            <i class="bi bi-{% if e.estActif %}pause-circle{% else %}play-circle{% endif %}"></i>
-                        </button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <script>
-function filtrer() {
-    const s = document.getElementById('searchInput').value.toLowerCase();
-    const d = document.getElementById('filterDept').value;
-    const t = document.getElementById('filterStatut').value;
-    document.querySelectorAll('#tableEmployes tbody tr').forEach(row => {
-        row.style.display = (
-            row.dataset.nom.includes(s) &&
-            (!d || row.dataset.dept === d) &&
-            (!t || row.dataset.statut === t)
-        ) ? '' : 'none';
-    });
-}
-document.getElementById('searchInput').addEventListener('input', filtrer);
-document.getElementById('filterDept').addEventListener('change', filtrer);
-document.getElementById('filterStatut').addEventListener('change', filtrer);
+    function filtrer() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const dept = document.getElementById('filterDept').value;
+        const statut = document.getElementById('filterStatut').value;
+        const rows = document.querySelectorAll('#tableEmployes tbody tr');
+        rows.forEach(row => {
+            const matchSearch = row.dataset.nom.includes(search);
+            const matchDept = !dept || row.dataset.dept === dept;
+            const matchStatut = !statut || row.dataset.statut === statut;
+            row.style.display = (matchSearch && matchDept && matchStatut) ? '' : 'none';
+        });
+    }
+    document.getElementById('searchInput').addEventListener('input', filtrer);
+    document.getElementById('filterDept').addEventListener('change', filtrer);
+    document.getElementById('filterStatut').addEventListener('change', filtrer);
 </script>
 
 {% endif %}
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTEM ÉPURÉ ===== */
+    :root {
+        --bg: #F8FAFC;
+        --surface: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-light: #EFF6FF;
+        --danger: #EF4444;
+        --danger-light: #FEF2F2;
+        --warning: #F59E0B;
+        --warning-light: #FFFBEB;
+        --success: #10B981;
+        --success-light: #F0FDF4;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .stats-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 1024px) { .stats-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .stats-grid-4 { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+    }
+    .text-green { color: #166534; }
+    .text-red { color: #991B1B; }
+    .text-blue { color: #1D4ED8; }
+    html.dark .stat-card { background: #1E293B; border-color: #334155; }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Filtres */
+    .filters-card {
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        padding: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+    .filters-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .filter-input, .filter-select {
+        flex: 1;
+        min-width: 140px;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        background: var(--surface);
+    }
+    .filter-input:focus, .filter-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+    }
+    html.dark .filters-card { background: #1E293B; border-color: #334155; }
+    html.dark .filter-input, html.dark .filter-select { background: #0F172A; border-color: #475569; color: #F1F5F9; }
+
+    /* Tableau */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .r-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+        min-width: 780px;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+    }
+    .r-table th, .r-table td {
+        padding: 0.75rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border);
+    }
+    .r-table th {
+        background-color: #F8FAFC;
+        color: var(--text-secondary);
+        font-weight: 600;
+        text-align: left;
+    }
+    .r-table tr:last-child td { border-bottom: none; }
+    html.dark .r-table th { background-color: #1E293B; color: #94A3B8; border-bottom-color: #334155; }
+    html.dark .r-table td { border-bottom-color: #334155; }
+
+    /* Cellule employé */
+    .employee-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .employee-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, var(--accent), #2563EB);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: white;
+        flex-shrink: 0;
+    }
+    .employee-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    .employee-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .employee-email {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+    }
+    html.dark .employee-name { color: #F1F5F9; }
+
+    /* Score vigilance */
+    .score-cell {
+        white-space: nowrap;
+    }
+    .score-value {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: inline-block;
+        margin-right: 0.25rem;
+    }
+    .score-level {
+        font-size: 0.6rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        display: inline-block;
+        background: #F1F5F9;
+        padding: 0.15rem 0.4rem;
+        border-radius: 20px;
+        margin-left: 0.25rem;
+        white-space: nowrap;
+    }
+    html.dark .score-value { color: #F1F5F9; }
+    html.dark .score-level { background: #334155; color: #94A3B8; }
+
+    /* Étoiles / points */
+    .stars-count { color: #F59E0B; font-weight: 600; white-space: nowrap; }
+    .points-count { color: var(--text-muted); font-size: 0.65rem; margin-left: 0.25rem; white-space: nowrap; }
+
+    /* Badges statut */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-green { background: var(--success-light); color: #166534; }
+    .badge-red { background: var(--danger-light); color: #991B1B; }
+    html.dark .badge-green { background: #14532D; color: #4ADE80; }
+    html.dark .badge-red { background: #7F1D1D; color: #FCA5A5; }
+
+    /* Actions : icônes uniquement */
+    .action-buttons-crud {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 1rem;
+        transition: all 0.15s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-icon:hover {
+        background: var(--bg);
+        border-color: var(--text-muted);
+        color: var(--text-primary);
+    }
+    .btn-icon-edit:hover {
+        background: var(--warning-light);
+        border-color: var(--warning);
+        color: var(--warning);
+    }
+    .btn-icon-warning:hover {
+        background: var(--warning-light);
+        border-color: var(--warning);
+        color: var(--warning);
+    }
+    .btn-icon-success:hover {
+        background: var(--success-light);
+        border-color: var(--success);
+        color: var(--success);
+    }
+    html.dark .btn-icon {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-icon:hover {
+        background: #1E293B;
+        border-color: #64748B;
+        color: #F1F5F9;
+    }
+    html.dark .btn-icon-edit:hover {
+        background: #713F12;
+        border-color: #F59E0B;
+        color: #FBBF24;
+    }
+    html.dark .btn-icon-warning:hover {
+        background: #713F12;
+        border-color: #F59E0B;
+        color: #FBBF24;
+    }
+    html.dark .btn-icon-success:hover {
+        background: #14532D;
+        border-color: #10B981;
+        color: #4ADE80;
+    }
+
+    /* Bouton principal */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-primary:hover {
+        background-color: #2563EB;
+        transform: translateY(-1px);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .filters-row { flex-direction: column; }
+        .filter-input, .filter-select { width: 100%; }
+        .r-table th, .r-table td { padding: 0.5rem; }
+        .btn-icon { width: 28px; height: 28px; font-size: 0.875rem; }
+        .action-buttons-crud { gap: 0.3rem; }
+        .score-level { font-size: 0.55rem; padding: 0.1rem 0.3rem; }
+        .score-value { font-size: 0.8rem; }
+    }
+    @media (max-width: 640px) {
+        .action-buttons-crud { flex-wrap: wrap; }
+    }
+</style>
 {% endblock %}

@@ -42,11 +42,7 @@
 
             <div class="a-nav-sep"><span class="a-nav-sep-text">Contenus</span></div>
 
-            <a href="{{ path('admin_categories_liste') }}"
-               class="a-nav-link {% if 'admin_categories' in app.request.attributes.get('_route') %}active{% endif %}">
-                <span class="a-nav-icon"><i class="bi bi-folder-fill"></i></span>
-                <span class="a-nav-label">Catégories</span>
-            </a>
+          
 
             <a href="{{ path('admin_modules_liste') }}"
                class="a-nav-link {% if 'admin_modules' in app.request.attributes.get('_route') %}active{% endif %}">
@@ -114,16 +110,16 @@
 
         <div class="a-flashes">
             {% for msg in app.flashes('success') %}
-            <div class="a-flash a-flash-success"><i class="bi bi-check-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
+            <div class="a-flash a-flash-success flash-message"><i class="bi bi-check-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
             {% for msg in app.flashes('error') %}
-            <div class="a-flash a-flash-error"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
+            <div class="a-flash a-flash-error flash-message"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
             {% for msg in app.flashes('danger') %}
-            <div class="a-flash a-flash-error"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
+            <div class="a-flash a-flash-error flash-message"><i class="bi bi-x-circle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
             {% for msg in app.flashes('warning') %}
-            <div class="a-flash a-flash-warning"><i class="bi bi-exclamation-triangle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
+            <div class="a-flash a-flash-warning flash-message"><i class="bi bi-exclamation-triangle-fill"></i><span>{{ msg }}</span><button onclick="this.closest('.a-flash').remove()"><i class="bi bi-x"></i></button></div>
             {% endfor %}
         </div>
 
@@ -173,12 +169,13 @@
 .a-topbar-badge{display:flex;align-items:center;gap:6px;background:#FEF2F2;border:1px solid #FECACA;color:#B91C1C;font-size:12px;font-weight:600;padding:5px 12px;border-radius:20px;white-space:nowrap}
 .a-flashes{padding:16px 24px 0;display:flex;flex-direction:column;gap:8px}
 .a-flashes:empty{padding:0}
-.a-flash{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;font-size:13.5px;font-weight:500}
+.a-flash{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;font-size:13.5px;font-weight:500;animation:flashShake 0.5s ease-in-out}
 .a-flash button{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;opacity:0.5;font-size:16px;padding:0 4px}
 .a-flash button:hover{opacity:1}
 .a-flash-success{background:#DCFCE7;color:#166534;border:1px solid #BBF7D0}
 .a-flash-error{background:#FEE2E2;color:#991B1B;border:1px solid #FECACA}
 .a-flash-warning{background:#FFFBEB;color:#92400E;border:1px solid #FDE68A}
+@keyframes flashShake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-5px)}20%,40%,60%,80%{transform:translateX(5px)}}
 .a-content{padding:24px;flex:1}
 </style>
 
@@ -221,6 +218,20 @@
         if(!mob()){ sbClose(); }
     });
 })();
+
+document.addEventListener('DOMContentLoaded', function() {
+    const flashMessages = document.querySelectorAll('.flash-message');
+    flashMessages.forEach(function(message) {
+        setTimeout(function() {
+            message.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            message.style.opacity = '0';
+            message.style.transform = 'translateX(-100%)';
+            setTimeout(function() {
+                message.remove();
+            }, 500);
+        }, 3000);
+    });
+});
 </script>
 
 {% endblock %}

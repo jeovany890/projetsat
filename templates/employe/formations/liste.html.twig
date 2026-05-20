@@ -1,0 +1,75 @@
+{% extends 'employe/layout.html.twig' %}
+{% block page_title %}Mes formations{% endblock %}
+
+{% block content %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div>
+        <h1 style="font-size:22px;font-weight:800;color:var(--gray-900);margin:0;">Mes formations</h1>
+        <p style="font-size:14px;color:var(--gray-500);margin:4px 0 0;">{{ progressions|length }} module(s) assigné(s)</p>
+    </div>
+</div>
+
+{% if progressions is empty %}
+<div class="card" style="text-align:center;padding:60px 24px;">
+    <div style="font-size:48px;margin-bottom:16px;"></div>
+    <h3 style="font-size:18px;font-weight:700;color:var(--gray-700);margin-bottom:8px;">Aucune formation assignée</h3>
+    <p style="color:var(--gray-500);">Votre RSSI n'a pas encore assigné de formations à votre compte.</p>
+</div>
+{% else %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;">
+{% for progression in progressions %}
+{% set module = progression.module %}
+{% set statut = progression.statut %}
+<div class="card" style="padding:0;overflow:hidden;transition:transform .15s,box-shadow .15s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.1)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+    {# Barre de statut en haut #}
+    <div style="height:4px;background:{% if statut == 'TERMINE' %}#10B981{% elseif statut == 'EN_COURS' %}#3B82F6{% elseif progression.isEstEnRetard() %}#EF4444{% else %}#E2E8F0{% endif %};"></div>
+    <div style="padding:20px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:12px;">
+            <div>
+                <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:{% if statut == 'TERMINE' %}#059669{% elseif statut == 'EN_COURS' %}#2563EB{% elseif progression.isEstEnRetard() %}#DC2626{% else %}#94A3B8{% endif %};">
+                    {% if statut == 'TERMINE' %}Terminé{% elseif statut == 'EN_COURS' %}En cours{% elseif progression.isEstEnRetard() %} En retard{% else %} Non commencé{% endif %}
+                </span>
+                <h3 style="font-size:16px;font-weight:700;color:var(--gray-900);margin:6px 0 0;line-height:1.3;">{{ module.titre }}</h3>
+            </div>
+            <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:{% if module.difficulte == 'facile' %}#DCFCE7;color:#166534{% elseif module.difficulte == 'moyen' %}#DBEAFE;color:#1E40AF{% else %}#FEE2E2;color:#991B1B{% endif %};font-weight:600;white-space:nowrap;flex-shrink:0;">
+                {{ module.difficulte|capitalize }}
+            </span>
+        </div>
+
+        {% if module.description %}
+        <p style="font-size:13px;color:var(--gray-600);margin-bottom:14px;line-height:1.5;">{{ module.description|slice(0,100) }}{% if module.description|length > 100 %}...{% endif %}</p>
+        {% endif %}
+
+        {# Barre de progression #}
+        <div style="margin-bottom:14px;">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                <span style="font-size:12px;color:var(--gray-500);">Progression</span>
+                <span style="font-size:12px;font-weight:700;color:var(--gray-700);">{{ progression.pourcentageProgression }}%</span>
+            </div>
+            <div style="height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;">
+                <div style="height:100%;width:{{ progression.pourcentageProgression }}%;background:{% if statut == 'TERMINE' %}#10B981{% elseif progression.isEstEnRetard() %}#EF4444{% else %}#3B82F6{% endif %};border-radius:3px;transition:width .3s;"></div>
+            </div>
+        </div>
+
+        {# Infos #}
+        <div style="display:flex;gap:16px;margin-bottom:16px;font-size:12px;color:var(--gray-500);">
+            <span><i class="bi bi-collection"></i> {{ module.chapitres|length }} chapitre(s)</span>
+            {# CORRECTION : Vérifier si un chapitre possède un quiz #}
+            {% set hasQuiz = module.chapitres|filter(c => c.quiz is not null)|length > 0 %}
+            {% if hasQuiz %}<span><i class="bi bi-question-circle"></i> Quiz inclus</span>{% endif %}
+            {% if module.dureeEstimee %}<span><i class="bi bi-clock"></i> {{ module.dureeEstimee }} min</span>{% endif %}
+        </div>
+
+        {# Quiz score si disponible #}
+    
+
+        <a href="{{ path('employe_formation_detail', {id: module.id}) }}"
+           class="btn btn-primary" style="width:100%;text-align:center;display:block;">
+            {% if statut == 'TERMINE' %}Revoir la formation{% elseif statut == 'EN_COURS' %}Continuer{% else %}Commencer{% endif %}
+        </a>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}

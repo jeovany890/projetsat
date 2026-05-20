@@ -2,120 +2,202 @@
 
 {% block page_title %}Quiz de formation{% endblock %}
 
-{% block content %}
-
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-    <div>
-        <p style="color: var(--gray-600); margin: 0;">{{ quiz|length }} quiz créés</p>
-    </div>
-    <a href="{{ path('admin_quiz_nouveau') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Créer un quiz
+{% block topbar_actions %}
+    
+    <a href="{{ path('admin_quiz_nouveau') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg"></i> Nouveau quiz
     </a>
-</div>
+{% endblock %}
 
-{# Stats #}
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
-    <div class="card" style="border-left: 4px solid var(--success);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Total quiz</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">{{ quiz|length }}</div>
-        </div>
-    </div>
-    <div class="card" style="border-left: 4px solid var(--primary);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Total questions</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary);">
-                {% set total = 0 %}{% for q in quiz %}{% set total = total + q.questions|length %}{% endfor %}{{ total }}
+{% block content %}
+<div class="quiz-list-container">
+
+
+
+    {# ── Statistiques ── #}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="bi bi-journal-bookmark-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ quiz|filter(q => q.chapitre is not null)|length }}</div>
+                <div class="stat-label">Quiz de chapitres</div>
             </div>
         </div>
-    </div>
-    <div class="card" style="border-left: 4px solid var(--warning);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Quiz sans questions</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">
-                {{ quiz|filter(q => q.questions|length == 0)|length }}
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Liste #}
-<div style="display: grid; gap: var(--space-4);">
-    {% for q in quiz %}
-    <div class="card">
-        <div class="card-body" style="padding: var(--space-6);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <div style="flex: 1;">
-
-                    <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
-                        <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-                            {{ q.titre }}
-                        </h3>
-                        {% if q.questions|length == 0 %}
-                            <span class="badge" style="background: var(--warning); color: white;">Sans questions</span>
-                        {% else %}
-                            <span class="badge badge-success">{{ q.questions|length }} question{{ q.questions|length > 1 ? 's' : '' }}</span>
-                        {% endif %}
-                    </div>
-
-                    <p style="color: var(--gray-500); font-size: var(--text-sm); margin-bottom: var(--space-3);">
-                        <i class="bi bi-book"></i>
-                        Module : <strong>{{ q.module.titre }}</strong>
-                        &nbsp;·&nbsp;
-                        <i class="bi bi-folder"></i> {{ q.module.categorie.titre }}
-                    </p>
-
-                    <div style="display: flex; gap: var(--space-6); font-size: var(--text-sm); color: var(--gray-600); flex-wrap: wrap;">
-                        <span><i class="bi bi-patch-check"></i> Score min. : <strong>{{ q.scoreMinimum }}%</strong></span>
-                        <span><i class="bi bi-arrow-repeat"></i> {{ q.nombreTentativesMax }} tentative{{ q.nombreTentativesMax > 1 ? 's' : '' }} max</span>
-                        {% if q.tempsLimite %}
-                            <span><i class="bi bi-stopwatch"></i> {{ q.tempsLimite }} min</span>
-                        {% else %}
-                            <span style="color: var(--gray-400);"><i class="bi bi-stopwatch"></i> Pas de limite</span>
-                        {% endif %}
-                        <span>
-                            <i class="bi bi-shuffle"></i>
-                            {% if q.isMelangerQuestions %}Questions mélangées{% else %}Ordre fixe{% endif %}
-                        </span>
-                        {% if q.questions|length > 0 %}
-                            {% set totalPts = 0 %}{% for qu in q.questions %}{% set totalPts = totalPts + qu.points %}{% endfor %}
-                            <span><i class="bi bi-trophy"></i> {{ totalPts }} pts total</span>
-                        {% endif %}
-                    </div>
-
+        <div class="stat-card">
+            <div class="stat-icon primary"><i class="bi bi-question-circle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">
+                    {% set total = 0 %}{% for q in quiz %}{% set total = total + q.questions|length %}{% endfor %}{{ total }}
                 </div>
+                <div class="stat-label">Total questions</div>
             </div>
-
-            <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200); margin-top: var(--space-4);">
-                <a href="{{ path('admin_quiz_questions', {id: q.id}) }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-list-check"></i> Gérer les questions
-                </a>
-                <a href="{{ path('admin_quiz_modifier', {id: q.id}) }}" class="btn btn-ghost btn-sm">
-                    <i class="bi bi-pencil"></i> Paramètres
-                </a>
-                <form method="post" action="{{ path('admin_quiz_supprimer', {id: q.id}) }}" style="display: inline; margin-left: auto;">
-                    <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);"
-                        onclick="return confirm('Supprimer ce quiz et toutes ses questions ?')">
-                        <i class="bi bi-trash"></i> Supprimer
-                    </button>
-                </form>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ quiz|filter(q => q.questions|length == 0)|length }}</div>
+                <div class="stat-label">Quiz sans questions</div>
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="card" style="text-align: center; padding: var(--space-16);">
-        <i class="bi bi-patch-question" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
-        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
-            Aucun quiz créé
-        </h3>
-        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">
-            Créez un quiz pour chaque module de formation
-        </p>
-        <a href="{{ path('admin_quiz_nouveau') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Créer un quiz
-        </a>
-    </div>
-    {% endfor %}
-</div>
 
+    {# ── Liste des quiz (sauf quiz initial) ── #}
+    {% set quizFiltres = quiz|filter(q => not (q.module is null and q.chapitre is null)) %}
+    {% if quizFiltres|length == 0 %}
+        <div class="empty-state">
+            <i class="bi bi-patch-question"></i>
+            <h3>Aucun quiz de chapitre</h3>
+            <p>Les quiz de chapitres se créent depuis la page de détail d'un module.</p>
+            <a href="{{ path('admin_modules_liste') }}" class="btn btn-primary btn-md">
+                <i class="bi bi-book-half"></i> Aller aux modules
+            </a>
+        </div>
+    {% else %}
+        <div class="quiz-list">
+            {% for q in quizFiltres %}
+                <div class="quiz-card">
+                    <div class="quiz-card-body">
+                        <div class="quiz-header">
+                            <div>
+                                <h3>{{ q.titre }}</h3>
+                                <div class="quiz-meta">
+                                    {% if q.chapitre is not null %}
+                                        <span><i class="bi bi-journal-text"></i> Chapitre : <strong>{{ q.chapitre.titre }}</strong></span>
+                                        <span><i class="bi bi-book"></i> {{ q.chapitre.module.titre }}</span>
+                                    {% elseif q.module is not null %}
+                                        <span><i class="bi bi-book"></i> Module : <strong>{{ q.module.titre }}</strong></span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="quiz-badges">
+                                {% if q.questions|length == 0 %}
+                                    <span class="badge badge-danger">Sans questions</span>
+                                {% elseif q.questions|length < 3 %}
+                                    <span class="badge badge-warning">{{ q.questions|length }} question(s)</span>
+                                {% else %}
+                                    <span class="badge badge-success">{{ q.questions|length }} questions</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="quiz-params">
+                            <span><i class="bi bi-patch-check"></i> Score min. : <strong>{{ q.scoreMinimum }}%</strong></span>
+                            <span><i class="bi bi-arrow-repeat"></i> {{ q.nombreTentativesMax }} tentative(s)</span>
+                            <span><i class="bi bi-shuffle"></i> Questions aléatoires</span>
+                        </div>
+                        <div class="quiz-actions">
+                            {% if q.chapitre is not null %}
+                                <a href="{{ path('admin_chapitre_quiz', {moduleId: q.chapitre.module.id, id: q.chapitre.id}) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-list-check"></i> Gérer les questions
+                                </a>
+                            {% else %}
+                                <a href="{{ path('admin_quiz_questions', {id: q.id}) }}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-list-check"></i> Gérer les questions
+                                </a>
+                            {% endif %}
+                            {% if q.questions|length > 0 %}
+                                <a href="{{ path('admin_quiz_questions_modifier_toutes', {id: q.id}) }}" class="btn btn-ghost btn-sm">
+                                    <i class="bi bi-pencil-square"></i> Modifier questions
+                                </a>
+                            {% endif %}
+                            <a href="{{ path('admin_quiz_modifier', {id: q.id}) }}" class="btn btn-ghost btn-sm">
+                                <i class="bi bi-pencil"></i> Paramètres
+                            </a>
+                            <form method="post" action="{{ path('admin_quiz_supprimer', {id: q.id}) }}" id="form-supp-quiz-{{ q.id }}" class="inline-form">
+                                <button type="submit" class="btn btn-ghost btn-sm btn-danger"
+                                        data-confirm="Supprimer ce quiz et toutes ses questions ?"
+                                        data-form="form-supp-quiz-{{ q.id }}">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* mêmes styles que précédemment (je les garde intacts) */
+    .quiz-list-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .quiz-initial-card { background: linear-gradient(135deg, #EDE9FE, #F5F3FF); border: 1px solid #DDD6FE; border-radius: 1rem; padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .quiz-initial-content { display: flex; align-items: center; gap: 1rem; }
+    .quiz-initial-icon { font-size: 2rem; color: #7C3AED; }
+    .quiz-initial-title { font-size: 0.875rem; font-weight: 700; color: #4C1D95; }
+    .quiz-initial-desc { font-size: 0.75rem; color: #6D28D9; margin-top: 0.25rem; }
+    .quiz-initial-warning { font-size: 0.7rem; color: #DC2626; font-weight: 600; margin-top: 0.25rem; }
+    .quiz-initial-actions { display: flex; gap: 0.5rem; }
+    .quiz-initial-empty { background: #FFF7ED; border: 1px solid #FED7AA; border-radius: 1rem; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .quiz-initial-empty-content { display: flex; align-items: center; gap: 1rem; }
+    .quiz-initial-empty-content i { font-size: 1.75rem; color: #D97706; }
+    .quiz-initial-empty-title { font-size: 0.875rem; font-weight: 700; color: #92400E; }
+    .quiz-initial-empty-desc { font-size: 0.75rem; color: #B45309; margin-top: 0.25rem; }
+    html.dark .quiz-initial-card { background: linear-gradient(135deg, #1E1B4B, #2E1065); border-color: #5B21B6; }
+    html.dark .quiz-initial-title { color: #C4B5FD; }
+    html.dark .quiz-initial-desc { color: #A78BFA; }
+    html.dark .quiz-initial-empty { background: #78350F; border-color: #B45309; }
+    html.dark .quiz-initial-empty-title { color: #FDE68A; }
+    html.dark .quiz-initial-empty-desc { color: #FCD34D; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
+    .stat-card { background: white; border-radius: 0.75rem; border: 1px solid #E2E8F0; padding: 0.875rem; display: flex; align-items: center; gap: 0.875rem; }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; background: #F1F5F9; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+    .stat-icon.success { background: #DCFCE7; color: #166534; }
+    .stat-icon.primary { background: #DBEAFE; color: #1D4ED8; }
+    .stat-icon.warning { background: #FEF9C3; color: #D97706; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: #0F172A; line-height: 1.2; }
+    .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #64748B; margin-top: 0.2rem; }
+    html.dark .stat-card { background: #1E293B; border-color: #334155; }
+    html.dark .stat-value { color: #F1F5F9; }
+    .quiz-list { display: flex; flex-direction: column; gap: 1rem; }
+    .quiz-card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; transition: all 0.2s; }
+    .quiz-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-color: #CBD5E1; }
+    .quiz-card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; }
+    html.dark .quiz-card { background: #1E293B; border-color: #334155; }
+    .quiz-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; }
+    .quiz-header h3 { font-size: 1.125rem; font-weight: 700; color: #0F172A; margin: 0; }
+    .quiz-meta { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.7rem; color: #64748B; margin-top: 0.25rem; }
+    .quiz-meta i { margin-right: 0.25rem; }
+    .quiz-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-warning { background: #FEF9C3; color: #854D0E; }
+    .badge-danger { background: #FEE2E2; color: #991B1B; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-warning { background: #78350F; color: #FDE047; }
+    html.dark .badge-danger { background: #7F1D1D; color: #FCA5A5; }
+    .quiz-params { display: flex; flex-wrap: wrap; gap: 1rem; font-size: 0.7rem; color: #64748B; border-top: 1px solid #E2E8F0; padding-top: 0.75rem; margin-top: 0.25rem; }
+    .quiz-params i { margin-right: 0.25rem; }
+    .quiz-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 0.75rem; margin-top: 0.25rem; }
+    .inline-form { display: inline; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+    .btn-primary { background: #E53E3E; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .btn-primary:hover { background: #C53030; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #1E293B; }
+    .btn-danger { color: #DC2626; border-color: #FECACA; }
+    .btn-danger:hover { background: #FEE2E2; border-color: #FECACA; color: #991B1B; }
+    html.dark .btn-ghost { border-color: #334155; color: #94A3B8; }
+    html.dark .btn-ghost:hover { background: #1E293B; border-color: #475569; color: #F1F5F9; }
+    .empty-state { text-align: center; padding: 3rem 1.5rem; background: white; border-radius: 1rem; border: 1px solid #E2E8F0; }
+    .empty-state i { font-size: 3rem; color: #CBD5E1; margin-bottom: 1rem; display: inline-block; }
+    .empty-state h3 { font-size: 1rem; font-weight: 700; color: #0F172A; margin-bottom: 0.5rem; }
+    .empty-state p { color: #64748B; font-size: 0.8125rem; margin-bottom: 1.5rem; }
+    html.dark .empty-state { background: #1E293B; border-color: #334155; }
+    html.dark .empty-state h3 { color: #F1F5F9; }
+    @media (max-width: 640px) {
+        .quiz-header { flex-direction: column; align-items: stretch; }
+        .quiz-actions { flex-direction: column; align-items: stretch; }
+        .quiz-actions .btn { justify-content: center; }
+        .inline-form { display: block; }
+        .quiz-initial-card, .quiz-initial-empty { flex-direction: column; align-items: stretch; }
+        .quiz-initial-actions { justify-content: flex-start; }
+        .quiz-initial-empty-content { flex-wrap: wrap; }
+    }
+</style>
 {% endblock %}

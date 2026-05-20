@@ -1,0 +1,371 @@
+{# templates/employe/simulations.html.twig #}
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Simulations interactives{% endblock %}
+
+{% block content %}
+
+<div class="simulations-header">
+    <h1>Simulations interactives</h1>
+    <p>Entraînez-vous à détecter les tentatives de phishing</p>
+</div>
+
+{% if simulations is empty %}
+    <div class="r-card empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-shield-shaded"></i>
+        </div>
+        <h3>Aucune simulation disponible</h3>
+        <p>Revenez plus tard, de nouvelles simulations seront bientôt disponibles.</p>
+    </div>
+{% else %}
+    <div class="simulations-grid">
+        {% for sim in simulations %}
+            {% set fait = simulationsFaites[sim.id] ?? null %}
+            {% set typeClass = sim.typeSimulation|lower %}
+            <div class="simulation-card r-card">
+                <div class="simulation-card-header" data-type="{{ typeClass }}">
+                    <div class="simulation-icon">
+                        <i class="bi {{ sim.typeSimulation == 'GMAIL' ? 'bi-envelope-fill' : (sim.typeSimulation == 'SMS' ? 'bi-chat-dots-fill' : 'bi-whatsapp') }}"></i>
+                    </div>
+                    <div class="simulation-info">
+                        <div class="simulation-type">{{ sim.typeSimulation == 'GMAIL' ? 'Email (Phishing)' : (sim.typeSimulation == 'SMS' ? 'SMS (Smishing)' : 'WhatsApp') }}</div>
+                        <h3 class="simulation-title">{{ sim.titre }}</h3>
+                    </div>
+                    {% if fait %}
+                        <span class="badge badge-{{ fait.aReussi ? 'success' : 'danger' }}">
+                            {{ fait.aReussi ? 'Réussi' : 'Échoué' }}
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if sim.description %}
+                    <p class="simulation-description">{{ sim.description|slice(0, 100) }}{% if sim.description|length > 100 %}...{% endif %}</p>
+                {% endif %}
+
+                <div class="simulation-meta">
+                    <span class="meta-item">
+                        <i class="bi bi-clock"></i> {{ sim.dureeEstimee }} min
+                    </span>
+                    <span class="meta-item badge-difficulte {{ sim.difficulte }}">
+                        {{ sim.difficulte|capitalize }}
+                    </span>
+                    <span class="meta-item">
+                        <i class="bi bi-star-fill"></i> {{ sim.pointsReussite }} pts
+                    </span>
+                </div>
+
+                {% if fait %}
+                    <div class="simulation-score">
+                        <span>Votre score</span>
+                        <strong class="{{ fait.aReussi ? 'text-success' : 'text-danger' }}">{{ fait.score }}%</strong>
+                    </div>
+                {% endif %}
+
+                <a href="{{ path('employe_simulation_jouer', {id: sim.id}) }}" class="btn btn-primary btn-block">
+                    {{ fait ? 'Rejouer' : 'Démarrer' }}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+/* Header */
+.simulations-header {
+    margin-bottom: 1.5rem;
+}
+.simulations-header h1 {
+    font-size: 1.375rem;
+    font-weight: 800;
+    color: var(--gray-900);
+    margin: 0 0 0.25rem 0;
+}
+.simulations-header p {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin: 0;
+}
+html.dark .simulations-header h1 {
+    color: var(--gray-100);
+}
+
+/* Grille responsive */
+.simulations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+/* Carte simulation */
+.simulation-card {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+.simulation-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+html.dark .simulation-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Bordure supérieure colorée selon type */
+.simulation-card-header {
+    padding: 1.25rem 1.25rem 0 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    border-top: 3px solid transparent;
+}
+.simulation-card-header[data-type="gmail"] {
+    border-top-color: #EA4335;
+}
+.simulation-card-header[data-type="sms"] {
+    border-top-color: #FF9F0A;
+}
+.simulation-card-header[data-type="whatsapp"] {
+    border-top-color: #25D366;
+}
+/* En dark mode, on assombrit légèrement */
+html.dark .simulation-card-header[data-type="gmail"] {
+    border-top-color: #C62828;
+}
+html.dark .simulation-card-header[data-type="sms"] {
+    border-top-color: #E67E22;
+}
+html.dark .simulation-card-header[data-type="whatsapp"] {
+    border-top-color: #1DA462;
+}
+
+.simulation-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.75rem;
+    background: rgba(16, 185, 129, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: var(--r-accent);
+    flex-shrink: 0;
+}
+.simulation-info {
+    flex: 1;
+}
+.simulation-type {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--r-accent);
+    margin-bottom: 0.25rem;
+}
+.simulation-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--gray-900);
+    margin: 0;
+    line-height: 1.3;
+}
+html.dark .simulation-title {
+    color: var(--gray-100);
+}
+
+/* Badge résultat */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-success {
+    background: #DCFCE7;
+    color: #166534;
+}
+.badge-danger {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+html.dark .badge-success {
+    background: #064E3B;
+    color: #6EE7B7;
+}
+html.dark .badge-danger {
+    background: #7F1D1D;
+    color: #FCA5A5;
+}
+
+/* Description */
+.simulation-description {
+    padding: 0 1.25rem;
+    font-size: 0.8125rem;
+    color: var(--gray-600);
+    line-height: 1.5;
+    margin: 0.75rem 0 0.5rem 0;
+}
+html.dark .simulation-description {
+    color: var(--gray-400);
+}
+
+/* Métadonnées */
+.simulation-meta {
+    padding: 0 1.25rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--gray-500);
+    margin-bottom: 1rem;
+}
+.meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+.badge-difficulte {
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+}
+.badge-difficulte.facile {
+    background: #DCFCE7;
+    color: #166534;
+}
+.badge-difficulte.moyen {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+.badge-difficulte.difficile {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+html.dark .badge-difficulte.facile {
+    background: #064E3B;
+    color: #6EE7B7;
+}
+html.dark .badge-difficulte.moyen {
+    background: #1E3A8A;
+    color: #93C5FD;
+}
+html.dark .badge-difficulte.difficile {
+    background: #7F1D1D;
+    color: #FCA5A5;
+}
+
+/* Score */
+.simulation-score {
+    margin: 0 1.25rem 1rem 1.25rem;
+    background: var(--gray-50);
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    display: flex;
+    justify-content: space-between;
+    color: var(--gray-600);
+}
+.text-success {
+    color: #059669;
+}
+.text-danger {
+    color: #DC2626;
+}
+html.dark .simulation-score {
+    background: var(--gray-800);
+}
+html.dark .text-success {
+    color: #34D399;
+}
+html.dark .text-danger {
+    color: #F87171;
+}
+
+/* Bouton */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    text-decoration: none;
+}
+.btn-primary {
+    background: var(--r-accent);
+    color: white;
+}
+.btn-primary:hover {
+    background: #059669;
+}
+.btn-block {
+    width: calc(100% - 2.5rem);
+    margin: 0 1.25rem 1.25rem 1.25rem;
+    display: block;
+    text-align: center;
+}
+
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+.empty-state-icon i {
+    font-size: 3rem;
+    color: var(--gray-300);
+    display: block;
+    margin-bottom: 1rem;
+}
+.empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--gray-800);
+    margin: 0 0 0.5rem 0;
+}
+.empty-state p {
+    font-size: 0.875rem;
+    color: var(--gray-500);
+    margin: 0;
+}
+html.dark .empty-state h3 {
+    color: var(--gray-200);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .simulations-grid {
+        grid-template-columns: 1fr;
+    }
+    .simulation-card-header {
+        flex-wrap: wrap;
+    }
+    .simulation-info {
+        flex: 1 1 100%;
+        order: 2;
+    }
+    .simulation-icon {
+        order: 1;
+    }
+    .badge {
+        order: 3;
+        align-self: flex-start;
+    }
+}
+</style>
+{% endblock %}

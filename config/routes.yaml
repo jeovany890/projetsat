@@ -7,5 +7,14 @@
 # To list all registered routes, run the following command:
 #   bin/console debug:router
 
+# config/routes.yaml
 controllers:
-    resource: routing.controllers
+    resource: ../src/Controller/
+    type: attribute
+test_manuel:
+    path: /test
+    controller: Symfony\Bundle\FrameworkBundle\Controller\TemplateController
+
+# Si vous utilisez des bundles (ex: EasyAdmin), ajoutez leurs imports ici
+# easy_admin_bundle:
+#     resource: '@EasyAdminBundle/Resources/config/routes.yaml'

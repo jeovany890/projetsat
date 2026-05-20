@@ -1,0 +1,322 @@
+{% extends 'employe/layout.html.twig' %}
+{% block page_title %}Quiz : {{ quiz.titre }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+.quiz-shell {
+    max-width: 780px;
+    margin: 0 auto;
+    font-family: 'Plus Jakarta Sans', var(--font-sans);
+}
+
+/* Barre de progression sticky */
+.quiz-progress-bar {
+    position: sticky;
+    top: 60px;
+    z-index: 40;
+    background: white;
+    border-bottom: 1px solid #E2E8F0;
+    padding: 12px 0 10px;
+    margin: -24px -24px 28px;
+    padding-left: 24px;
+    padding-right: 24px;
+}
+.quiz-progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748B;
+}
+.quiz-progress-track {
+    height: 6px;
+    background: #F1F5F9;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.quiz-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981, #059669);
+    border-radius: 99px;
+    transition: width .4s;
+    width: 0%;
+}
+
+/* En-tête quiz */
+.quiz-header {
+    background: linear-gradient(135deg, #1E293B 0%, #334155 100%);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    color: white;
+}
+.quiz-back {
+    font-size: 13px;
+    color: rgba(255,255,255,.6);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 14px;
+}
+.quiz-back:hover { color: white; }
+.quiz-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0 0 10px;
+}
+.quiz-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.quiz-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,.12);
+    color: rgba(255,255,255,.85);
+}
+.quiz-chip-ok { background: rgba(16,185,129,.2); color: #6EE7B7; }
+.quiz-chip-warn { background: rgba(245,158,11,.2); color: #FCD34D; }
+
+/* Questions */
+.q-card {
+    background: white;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 16px;
+    transition: border-color .2s, box-shadow .2s;
+}
+.q-card.answered { border-color: #A7F3D0; }
+.q-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 20px;
+}
+.q-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #F1F5F9;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.q-card.answered .q-num { background: #DCFCE7; color: #059669; }
+.q-text {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.55;
+}
+.q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+.q-option {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 13px 16px;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #334155;
+    background: white;
+}
+.q-option:hover {
+    border-color: #86EFAC;
+    background: #F0FDF4;
+    color: #065F46;
+}
+.q-option.selected {
+    border-color: #10B981;
+    background: #ECFDF5;
+    color: #065F46;
+    font-weight: 600;
+}
+.q-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #10B981;
+    cursor: pointer;
+}
+.q-option-letter {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    background: #F1F5F9;
+    color: #64748B;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+}
+.q-option.selected .q-option-letter { background: #10B981; color: white; }
+
+/* Footer */
+.quiz-footer {
+    background: white;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+.btn-quiz-submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 13px 28px;
+    background: linear-gradient(135deg, #10B981, #059669);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.btn-quiz-submit:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(16,185,129,.3); }
+.btn-quiz-submit:disabled { background: #94A3B8; cursor: not-allowed; }
+
+/* Dark mode */
+html.dark .quiz-progress-bar,
+html.dark .quiz-footer,
+html.dark .q-card {
+    background: #1E293B;
+    border-color: #334155;
+}
+html.dark .q-text,
+html.dark .q-option {
+    color: #CBD5E1;
+}
+html.dark .q-option { background: #1E293B; border-color: #475569; }
+html.dark .q-num { background: #334155; color: #94A3B8; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-shell">
+    <div class="quiz-progress-bar">
+        <div class="quiz-progress-meta">
+            <span id="progressLabel">0 / {{ questions|length }} répondu(s)</span>
+            <span id="progressPct">0%</span>
+        </div>
+        <div class="quiz-progress-track">
+            <div class="quiz-progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <div class="quiz-header">
+        <a href="{{ path('employe_formation_detail', {id: module.id}) }}" class="quiz-back">
+            <i class="bi bi-arrow-left"></i> Retour au module
+        </a>
+        <h1 class="quiz-title">{{ quiz.titre }}</h1>
+        <div class="quiz-chips">
+            <span class="quiz-chip"><i class="bi bi-question-circle"></i> {{ questions|length }} questions</span>
+            {% if quiz.scoreMinimum > 0 %}
+            <span class="quiz-chip quiz-chip-warn"><i class="bi bi-trophy"></i> Score min : {{ quiz.scoreMinimum }}%</span>
+            {% endif %}
+            {% if tentative %}
+            <span class="quiz-chip {% if tentative.aReussi %}quiz-chip-ok{% else %}quiz-chip-warn{% endif %}">
+                <i class="bi bi-clock-history"></i> Dernière tentative : {{ tentative.score }}/{{ tentative.totalQuestions }} ({{ tentative.aReussi ? 'Réussi' : 'Échoué' }})
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="post" id="quizForm">
+        {% set letters = ['A','B','C','D','E','F'] %}
+        {% for question in questions %}
+        <div class="q-card" id="qcard-{{ loop.index }}">
+            <div class="q-header">
+                <div class="q-num">{{ loop.index }}</div>
+                <div class="q-text">{{ question.question }}</div>
+            </div>
+            <div class="q-options">
+                {% for option in question.options %}
+                <label class="q-option" onclick="selectOption({{ loop.parent.loop.index }}, this)">
+                    {# Utilisation de l'index de la question (base 0) pour le name #}
+                    <input type="radio" name="reponses[{{ loop.parent.loop.index0 }}]" value="{{ option }}" required>
+                    <span class="q-option-letter">{{ letters[loop.index0] ?? loop.index }}</span>
+                    <span>{{ option }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="quiz-footer">
+            <div><strong id="footerAnswered">0</strong> / {{ questions|length }} répondues</div>
+            <button type="submit" class="btn-quiz-submit" id="btnSubmit">
+                <i class="bi bi-send-fill"></i> Valider le quiz
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+const TOTAL = {{ questions|length }};
+let answered = new Set();
+
+function selectOption(qIndex, labelEl) {
+    const card = document.getElementById('qcard-' + qIndex);
+    card.querySelectorAll('.q-option').forEach(opt => opt.classList.remove('selected'));
+    labelEl.classList.add('selected');
+    labelEl.querySelector('input').checked = true;
+    answered.add(qIndex);
+    card.classList.add('answered');
+    updateProgress();
+}
+
+function updateProgress() {
+    const count = answered.size;
+    const pct = Math.round((count / TOTAL) * 100);
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressLabel').innerHTML = count + ' / ' + TOTAL + ' répondu(s)';
+    document.getElementById('progressPct').innerText = pct + '%';
+    document.getElementById('footerAnswered').innerText = count;
+}
+
+document.getElementById('quizForm').addEventListener('submit', function(e) {
+    if (answered.size < TOTAL) {
+        e.preventDefault();
+        for (let i = 1; i <= TOTAL; i++) {
+            if (!answered.has(i)) {
+                document.getElementById('qcard-' + i).scrollIntoView({ behavior: 'smooth', block: 'center' });
+                document.getElementById('qcard-' + i).style.borderColor = '#EF4444';
+                setTimeout(() => { document.getElementById('qcard-' + i).style.borderColor = ''; }, 2000);
+                break;
+            }
+        }
+        return;
+    }
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Correction...';
+});
+</script>
+{% endblock %}

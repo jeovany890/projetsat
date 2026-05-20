@@ -1,0 +1,506 @@
+{% extends 'rssi/layout.html.twig' %}
+{% block page_title %}Rapports PDF{% endblock %}
+
+{% block content %}
+<div class="rapports-container">
+
+    {# ── Info ── #}
+    <div class="info-banner">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <div class="info-banner-title">Rapports de sensibilisation à la cybersécurité</div>
+            <div class="info-banner-text">
+                Exportez les rapports au format PDF pour vos présentations, audits ou réunions de direction.
+                Les données sont calculées en temps réel depuis la plateforme.
+            </div>
+        </div>
+    </div>
+
+    {# ── Rapport entreprise ── #}
+    <div class="rapport-card">
+        <div class="rapport-card-header rapport-header-entreprise">
+            <div class="rapport-icon">
+                <i class="fas fa-building"></i>
+            </div>
+            <div>
+                <div class="rapport-title">Rapport entreprise global</div>
+                <div class="rapport-subtitle">Vue d'ensemble complète de {{ entreprise ? entreprise.nom : 'l\'entreprise' }}</div>
+            </div>
+        </div>
+        <div class="rapport-card-body">
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ nbEmployes }}</div>
+                    <div class="stat-mini-label">Employés analysés</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ nbCampagnes }}</div>
+                    <div class="stat-mini-label">Campagnes phishing</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-value">{{ nbFormations }}</div>
+                    <div class="stat-mini-label">Modules de formation</div>
+                </div>
+            </div>
+            <div class="rapport-description">
+                <strong>Contenu du rapport :</strong>
+                Résumé exécutif · Profil de risque · Résultats campagnes phishing ·
+                Analyse par département · Programme de formation · Recommandations
+            </div>
+            <a href="{{ path('rssi_rapport_entreprise_pdf') }}" class="btn-rapport btn-rapport-entreprise">
+                <i class="fas fa-file-pdf"></i> Télécharger le rapport entreprise (PDF)
+            </a>
+        </div>
+    </div>
+
+    {# ── Rapports individuels ── #}
+    <div class="rapport-card">
+        <div class="rapport-card-header rapport-header-individuel">
+            <div class="rapport-icon">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <div class="rapport-title">Rapport individuel par employé</div>
+                <div class="rapport-subtitle">Fiche détaillée : score vigilance, phishing, formations, recommandations</div>
+            </div>
+        </div>
+        <div class="rapport-card-body">
+            <div class="rapport-description">
+                <strong>Contenu :</strong>
+                Profil de risque · Comportement phishing détaillé · Historique des formations ·
+                Recommandations personnalisées selon les benchmarks KnowBe4 / Proofpoint
+            </div>
+
+            {% if employes|length == 0 %}
+                <div class="empty-employes">
+                    <i class="fas fa-users"></i>
+                    <p>Aucun employé trouvé</p>
+                </div>
+            {% else %}
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchEmp" placeholder="Rechercher un employé..." class="search-input">
+                </div>
+                <div class="employes-list" id="empList">
+                    {% for emp in employes %}
+                    <div class="emp-item" data-name="{{ (emp.prenom ~ ' ' ~ emp.nom)|lower }}">
+                        <div class="emp-avatar">{{ emp.prenom|slice(0,1)|upper }}{{ emp.nom|slice(0,1)|upper }}</div>
+                        <div class="emp-info">
+                            <div class="emp-name">{{ emp.prenom }} {{ emp.nom }}</div>
+                            <div class="emp-meta">{{ emp.poste ?: 'Sans poste' }}{% if emp.departement %} · {{ emp.departement.nom }}{% endif %}</div>
+                        </div>
+                        <div class="emp-score">
+                            <span class="emp-score-value">{{ emp.scoreVigilance|round }}</span>
+                            <span class="emp-score-unit">/100</span>
+                        </div>
+                        <a href="{{ path('rssi_rapport_employe_pdf', {id: emp.id}) }}" class="btn-pdf" title="Télécharger rapport PDF">
+                            <i class="fas fa-file-pdf"></i> PDF
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function filtrerEmployes(q) {
+    const terme = q.toLowerCase().trim();
+    document.querySelectorAll('.emp-item').forEach(el => {
+        const nom = el.dataset.name || '';
+        el.style.display = terme === '' || nom.includes(terme) ? 'flex' : 'none';
+    });
+}
+document.getElementById('searchEmp')?.addEventListener('input', function(e) {
+    filtrerEmployes(e.target.value);
+});
+</script>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTÈME ÉPURÉ ===== */
+    :root {
+        --bg: #F8FAFC;
+        --surface: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-light: #EFF6FF;
+        --accent-dark: #1E293B;
+        --success: #10B981;
+        --warning: #F59E0B;
+        --danger: #EF4444;
+    }
+
+    .rapports-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Bannière info */
+    .info-banner {
+        background: var(--accent-light);
+        border: 1px solid #BFDBFE;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .info-banner i {
+        font-size: 1.25rem;
+        color: var(--accent);
+        flex-shrink: 0;
+    }
+    .info-banner-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1E40AF;
+        margin-bottom: 0.2rem;
+    }
+    .info-banner-text {
+        font-size: 0.75rem;
+        color: var(--accent);
+        line-height: 1.5;
+    }
+    html.dark .info-banner {
+        background: #1E3A8A;
+        border-color: #3B82F6;
+    }
+    html.dark .info-banner-title {
+        color: #93C5FD;
+    }
+    html.dark .info-banner-text {
+        color: #BFDBFE;
+    }
+
+    /* Cartes rapport */
+    .rapport-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .rapport-card-header {
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: white;
+    }
+    .rapport-header-entreprise {
+        background: var(--accent-dark);
+    }
+    .rapport-header-individuel {
+        background: var(--accent-dark);
+    }
+    .rapport-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .rapport-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.2rem;
+    }
+    .rapport-subtitle {
+        font-size: 0.75rem;
+        opacity: 0.75;
+    }
+    .rapport-card-body {
+        padding: 1.25rem 1.5rem;
+    }
+
+    /* Stats mini */
+    .stats-mini {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stat-mini {
+        background: var(--bg);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        text-align: center;
+        border: 1px solid var(--border);
+    }
+    .stat-mini-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    .stat-mini-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 0.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    html.dark .stat-mini {
+        background: #0F172A;
+    }
+
+    /* Description */
+    .rapport-description {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    /* Bouton rapport */
+    .btn-rapport {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.15s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-rapport-entreprise {
+        background: var(--accent-dark);
+        color: white;
+    }
+    .btn-rapport-entreprise:hover {
+        background: #2D3A4F;
+        transform: translateY(-1px);
+    }
+
+    /* Recherche */
+    .search-wrapper {
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    .search-icon {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .search-input {
+        width: 100%;
+        padding: 0.6rem 0.75rem 0.6rem 2.25rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        background: var(--surface);
+        color: var(--text-primary);
+        transition: all 0.15s;
+    }
+    .search-input:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+    }
+    html.dark .search-input {
+        background: #0F172A;
+        border-color: #334155;
+    }
+
+    /* Liste employés */
+    .employes-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    .emp-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        transition: all 0.15s;
+        background: var(--surface);
+    }
+    .emp-item:hover {
+        border-color: var(--accent);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .emp-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--accent-dark);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+    .emp-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .emp-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+    .emp-meta {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.1rem;
+    }
+    .emp-score {
+        text-align: right;
+        margin-right: 0.5rem;
+        flex-shrink: 0;
+    }
+    .emp-score-value {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--text-primary);
+    }
+    .emp-score-unit {
+        font-size: 0.65rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+    .btn-pdf {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.8rem;
+        background: var(--accent);
+        color: white;
+        border-radius: 0.5rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.15s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .btn-pdf:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+    }
+    html.dark .emp-name {
+        color: #F1F5F9;
+    }
+    html.dark .emp-score-value {
+        color: #F1F5F9;
+    }
+
+    /* Empty state */
+    .empty-employes {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+    .empty-employes i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .empty-employes p {
+        font-size: 0.8rem;
+        margin: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .rapport-card-header {
+            padding: 1rem;
+        }
+        .rapport-card-body {
+            padding: 1rem;
+        }
+        .stats-mini {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+        }
+        .stat-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.6rem 1rem;
+        }
+        .stat-mini-value {
+            font-size: 1.1rem;
+        }
+        .stat-mini-label {
+            margin-top: 0;
+        }
+        .emp-item {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .emp-info {
+            flex: 1 1 100%;
+            order: 1;
+        }
+        .emp-score {
+            order: 2;
+            margin-right: 0;
+        }
+        .btn-pdf {
+            order: 3;
+        }
+        .rapport-icon {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
+        .rapport-title {
+            font-size: 0.9rem;
+        }
+        .rapport-subtitle {
+            font-size: 0.7rem;
+        }
+    }
+    @media (max-width: 480px) {
+        .info-banner {
+            flex-direction: column;
+            text-align: center;
+        }
+        .btn-rapport {
+            width: 100%;
+            justify-content: center;
+        }
+        .btn-pdf {
+            width: 100%;
+            justify-content: center;
+        }
+        .emp-score {
+            text-align: left;
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}

@@ -2,106 +2,387 @@
 
 {% block page_title %}Toutes les entreprises{% endblock %}
 
-{% block content %}
+{% block topbar_actions %}
+ 
+{% endblock %}
 
-<div class="card" style="margin-bottom: var(--space-6);">
-    <div class="card-body" style="padding: var(--space-6);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); margin-bottom: var(--space-2);">
-                    {{ entreprises|length }} entreprises au total
-                </h3>
-                <p style="color: var(--gray-600); margin: 0;">Gérez toutes les entreprises inscrites sur la plateforme</p>
+{% block content %}
+<div class="entreprises-container">
+
+    {# Statistiques rapides #}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-building"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprises|length }}</div>
+                <div class="stat-label">Total entreprises</div>
             </div>
-            <div style="display: flex; gap: var(--space-3);">
-                <span class="badge badge-success">{{ entreprises|filter(e => e.statut == 'ACTIF')|length }} Actives</span>
-                <span class="badge badge-warning">{{ entreprises|filter(e => e.statut == 'EN_ATTENTE')|length }} En attente</span>
-                <span class="badge badge-danger">{{ entreprises|filter(e => e.statut == 'SUSPENDU')|length }} Suspendues</span>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprises|filter(e => e.statut == 'ACTIF')|length }}</div>
+                <div class="stat-label">Actives</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon warning"><i class="bi bi-clock-history"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprises|filter(e => e.statut == 'EN_ATTENTE')|length }}</div>
+                <div class="stat-label">En attente</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon danger"><i class="bi bi-pause-circle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprises|filter(e => e.statut == 'SUSPENDU')|length }}</div>
+                <div class="stat-label">Suspendues</div>
             </div>
         </div>
     </div>
-</div>
 
-<div class="card">
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <thead style="background: var(--gray-100); border-bottom: 2px solid var(--gray-300);">
-                <tr>
-                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Entreprise</th>
-                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">IFU</th>
-                    <th style="padding: var(--space-4); text-align: left; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Secteur</th>
-                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Employés</th>
-                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Statut</th>
-                    <th style="padding: var(--space-4); text-align: center; font-weight: var(--font-semibold); color: var(--gray-700); font-size: var(--text-sm);">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entreprise in entreprises %}
-                <tr style="border-bottom: 1px solid var(--gray-200); transition: background var(--transition-fast);" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='white'">
-                    <td style="padding: var(--space-4);">
-                        <div>
-                            <div style="font-weight: var(--font-semibold); color: var(--gray-900); margin-bottom: var(--space-1);">
-                                {{ entreprise.nom }}
-                            </div>
-                            <div style="font-size: var(--text-sm); color: var(--gray-500);">
-                                <i class="bi bi-envelope"></i> {{ entreprise.email }}
-                            </div>
-                        </div>
-                    </td>
-                    <td style="padding: var(--space-4); color: var(--gray-600); font-family: var(--font-mono); font-size: var(--text-sm);">
-                        {{ entreprise.ifu }}
-                    </td>
-                    <td style="padding: var(--space-4); color: var(--gray-600);">
-                        {{ entreprise.secteur }}
-                    </td>
-                    <td style="padding: var(--space-4); text-align: center;">
-                        <span style="display: inline-flex; align-items: center; gap: var(--space-1); background: var(--primary-100); color: var(--primary-700); padding: var(--space-1) var(--space-3); border-radius: var(--radius-full); font-weight: var(--font-semibold); font-size: var(--text-sm);">
-                            <i class="bi bi-people"></i>
-                            {{ entreprise.nombreEmployes }}
-                        </span>
-                    </td>
-                    <td style="padding: var(--space-4); text-align: center;">
-                        {% if entreprise.statut == 'ACTIF' %}
-                            <span class="badge badge-success">Actif</span>
-                        {% elseif entreprise.statut == 'EN_ATTENTE' %}
-                            <span class="badge badge-warning">En attente</span>
-                        {% elseif entreprise.statut == 'SUSPENDU' %}
-                            <span class="badge badge-danger">Suspendu</span>
-                        {% else %}
-                            <span class="badge">{{ entreprise.statut }}</span>
-                        {% endif %}
-                    </td>
-                    <td style="padding: var(--space-4); text-align: center;">
-                        <div style="display: flex; gap: var(--space-2); justify-content: center;">
-                            <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn btn-sm btn-ghost" title="Voir détails">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            {% if entreprise.statut == 'ACTIF' %}
-                                <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--warning);" onclick="return confirm('Suspendre cette entreprise ?')" title="Suspendre">
-                                        <i class="bi bi-pause-circle"></i>
-                                    </button>
-                                </form>
-                            {% elseif entreprise.statut == 'SUSPENDU' %}
-                                <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--success);" onclick="return confirm('Réactiver cette entreprise ?')" title="Réactiver">
-                                        <i class="bi bi-play-circle"></i>
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6" style="padding: var(--space-16); text-align: center; color: var(--gray-500);">
-                        Aucune entreprise inscrite
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="bi bi-building" style="color: #E53E3E;"></i> Liste des entreprises</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="entreprises-table">
+                <thead>
+                    <tr>
+                        <th>Entreprise</th>
+                        <th>IFU</th>
+                        <th>Secteur</th>
+                        <th class="text-center">Employés</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entreprise in entreprises %}
+                        <tr>
+                            <td>
+                                <div class="entreprise-name">{{ entreprise.nom }}</div>
+                                <div class="entreprise-email"><i class="bi bi-envelope"></i> {{ entreprise.email }}</div>
+                            </td>
+                            <td class="entreprise-ifu">{{ entreprise.ifu }}</td>
+                            <td>{{ entreprise.secteur }}</td>
+                            <td class="text-center">
+                                <span class="employes-badge">
+                                    <i class="bi bi-people"></i> {{ entreprise.nombreEmployes }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if entreprise.statut == 'ACTIF' %}
+                                    <span class="badge badge-success">Actif</span>
+                                {% elseif entreprise.statut == 'EN_ATTENTE' %}
+                                    <span class="badge badge-warning">En attente</span>
+                                {% elseif entreprise.statut == 'SUSPENDU' %}
+                                    <span class="badge badge-danger">Suspendu</span>
+                                {% else %}
+                                    <span class="badge badge-gray">{{ entreprise.statut }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <div class="action-buttons">
+                                    <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn-icon" title="Voir détails">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if entreprise.statut == 'ACTIF' %}
+                                        <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" class="action-form">
+                                            <button type="submit" class="btn-icon btn-warning-icon" onclick="return confirm('Suspendre cette entreprise ?')" title="Suspendre">
+                                                <i class="bi bi-pause-circle"></i>
+                                            </button>
+                                        </form>
+                                    {% elseif entreprise.statut == 'SUSPENDU' %}
+                                        <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" class="action-form">
+                                            <button type="submit" class="btn-icon btn-success-icon" onclick="return confirm('Réactiver cette entreprise ?')" title="Réactiver">
+                                                <i class="bi bi-play-circle"></i>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="empty-table">
+                                <i class="bi bi-building"></i>
+                                <p>Aucune entreprise inscrite</p>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .entreprises-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 900px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 550px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #F1F5F9;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .stat-icon.success { background: #DCFCE7; color: #166534; }
+    .stat-icon.warning { background: #FEF9C3; color: #D97706; }
+    .stat-icon.danger { background: #FEE2E2; color: #DC2626; }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+    html.dark .stat-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Carte tableau */
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        background: #F8FAFC;
+    }
+    .card-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    html.dark .card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .card-header h3 {
+        color: #F1F5F9;
+    }
+
+    /* Tableau responsive */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .entreprises-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+    }
+    .entreprises-table th {
+        text-align: left;
+        padding: 0.75rem 1rem;
+        background: #F8FAFC;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .entreprises-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #E2E8F0;
+        vertical-align: middle;
+    }
+    .entreprises-table tr:hover td {
+        background: #F8FAFC;
+    }
+    html.dark .entreprises-table th {
+        background: #1E293B;
+        color: #94A3B8;
+        border-bottom-color: #334155;
+    }
+    html.dark .entreprises-table td {
+        border-bottom-color: #334155;
+    }
+    html.dark .entreprises-table tr:hover td {
+        background: #0F172A;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .entreprise-name {
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 0.2rem;
+    }
+    .entreprise-email {
+        font-size: 0.7rem;
+        color: #64748B;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .entreprise-ifu {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: #475569;
+    }
+    .employes-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        background: #EFF6FF;
+        color: #1D4ED8;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    html.dark .employes-badge {
+        background: #1E3A8A;
+        color: #60A5FA;
+    }
+
+    /* Badges statut */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-warning { background: #FEF9C3; color: #854D0E; }
+    .badge-danger  { background: #FEE2E2; color: #991B1B; }
+    .badge-gray    { background: #F1F5F9; color: #475569; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-warning { background: #78350F; color: #FDE047; }
+    html.dark .badge-danger  { background: #7F1D1D; color: #FCA5A5; }
+    html.dark .badge-gray    { background: #1E293B; color: #94A3B8; }
+
+    /* Actions */
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    .action-form {
+        display: inline;
+    }
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        color: #64748B;
+        transition: all 0.15s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-icon:hover {
+        background: #F1F5F9;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    .btn-warning-icon:hover {
+        background: #FEF9C3;
+        border-color: #FDE68A;
+        color: #D97706;
+    }
+    .btn-success-icon:hover {
+        background: #DCFCE7;
+        border-color: #BBF7D0;
+        color: #166534;
+    }
+    html.dark .btn-icon {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-icon:hover {
+        background: #1E293B;
+        color: #F1F5F9;
+    }
+
+    /* Empty state */
+    .empty-table {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #94A3B8;
+    }
+    .empty-table i {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .action-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+        .btn-icon {
+            width: 28px;
+            height: 28px;
+        }
+        .entreprise-name {
+            font-size: 0.875rem;
+        }
+    }
+</style>
 {% endblock %}

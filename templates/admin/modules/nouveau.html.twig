@@ -1,144 +1,304 @@
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 {% extends 'admin/layout.html.twig' %}
+{% extends 'admin/layout.html.twig' %}
 
-{% block page_title %}Créer un module{% endblock %}
+{% block page_title %}Nouveau module{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
 
 {% block content %}
-
-<div style="max-width: 900px; margin: 0 auto;">
-    
-    <div style="margin-bottom: var(--space-6);">
-        <a href="{{ path('admin_modules_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
-            <i class="bi bi-arrow-left"></i> Retour aux modules
-        </a>
-    </div>
-
+<div class="form-container">
     <div class="card">
-        <div class="card-body" style="padding: var(--space-10);">
-            
-            <div style="text-align: center; margin-bottom: var(--space-8);">
-                <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); margin-bottom: var(--space-4);">
-                    <i class="bi bi-book" style="font-size: var(--text-4xl); color: white;"></i>
-                </div>
-                <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
-                    Nouveau module de formation
-                </h2>
-                <p style="color: var(--gray-600);">Créez un module théorique ou pratique pour former vos employés</p>
-            </div>
-
+        <div class="card-header">
+            <h2>
+                <i class="bi bi-plus-circle" style="color: #E53E3E;"></i>
+                Créer un module de formation
+            </h2>
+        </div>
+        <div class="card-body">
             <form method="post">
-                
-                {# Informations de base #}
-                <div style="margin-bottom: var(--space-8);">
-                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
-                        📝 Informations générales
-                    </h3>
 
+                {# Informations générales #}
+                <div class="form-section">
+                    <h3 class="section-title">Informations générales</h3>
                     <div class="form-group">
-                        <label class="form-label" for="titre">
-                            <i class="bi bi-type"></i> Titre du module *
-                        </label>
-                        <input type="text" class="form-control" id="titre" name="titre" required placeholder="Ex: Introduction au phishing">
+                        <label class="form-label">Titre du module *</label>
+                        <input type="text" class="form-control" name="titre" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label" for="description">
-                            <i class="bi bi-text-paragraph"></i> Description *
-                        </label>
-                        <textarea class="form-control" id="description" name="description" rows="4" required placeholder="Décrivez le contenu et les objectifs de ce module..."></textarea>
+                        <label class="form-label">Description *</label>
+                        <textarea class="form-control" name="description" rows="4" required></textarea>
                     </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
-                        <div class="form-group">
-                            <label class="form-label" for="categorie_id">
-                                <i class="bi bi-folder"></i> Catégorie *
-                            </label>
-                            <select class="form-control" id="categorie_id" name="categorie_id" required>
-                                <option value="">Sélectionnez...</option>
-                                {% for categorie in categories %}
-                                    <option value="{{ categorie.id }}">{{ categorie.titre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="type_module">
-                                <i class="bi bi-clipboard-check"></i> Type de module
-                            </label>
-                            <select class="form-control" id="type_module" name="type_module">
-                                <option value="theorique">Théorique</option>
-                                <option value="pratique">Pratique</option>
-                                <option value="mixte">Mixte</option>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">Catégorie *</label>
+                        <input type="text" class="form-control" name="categorie_nom" placeholder="Ex: CyberSécurité, RGPD, Phishing..." required>
+                        <small class="form-hint">Saisissez le nom de la catégorie (libre).</small>
                     </div>
                 </div>
 
                 {# Paramètres #}
-                <div style="margin-bottom: var(--space-8);">
-                    <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6); padding-bottom: var(--space-3); border-bottom: 2px solid var(--gray-200);">
-                        ⚙️ Paramètres
-                    </h3>
-
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-6);">
+                <div class="form-section">
+                    <h3 class="section-title">Paramètres</h3>
+                    <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label" for="difficulte">
-                                <i class="bi bi-signal"></i> Difficulté
-                            </label>
-                            <select class="form-control" id="difficulte" name="difficulte">
+                            <label class="form-label">Difficulté</label>
+                            <select class="form-control" name="difficulte">
                                 <option value="debutant">Débutant</option>
                                 <option value="intermediaire">Intermédiaire</option>
                                 <option value="avance">Avancé</option>
                             </select>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label" for="duree_estimee">
-                                <i class="bi bi-clock"></i> Durée estimée (minutes)
-                            </label>
-                            <input type="number" class="form-control" id="duree_estimee" name="duree_estimee" value="30" min="5" max="300">
+                            <label class="form-label">Durée estimée (minutes)</label>
+                            <input type="number" class="form-control" name="duree_estimee" value="30" min="5" max="300">
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label" for="points_reussite">
-                                <i class="bi bi-trophy"></i> Points à la réussite
-                            </label>
-                            <input type="number" class="form-control" id="points_reussite" name="points_reussite" value="100" min="0">
+                            <label class="form-label">Points à la réussite</label>
+                            <input type="number" class="form-control" name="points_reussite" value="100" min="0">
                         </div>
-
-                        <div class="form-group">
-                            <label class="form-label" for="etoiles_reussite">
-                                <i class="bi bi-star-fill"></i> Étoiles à la réussite
-                            </label>
-                            <input type="number" class="form-control" id="etoiles_reussite" name="etoiles_reussite" value="2" min="0" max="5">
-                        </div>
+                    
                     </div>
                 </div>
 
                 {# Publication #}
-                <div style="margin-bottom: var(--space-8);">
-                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200); transition: all var(--transition-fast);" onmouseover="this.style.borderColor='var(--primary-500)'" onmouseout="this.style.borderColor='var(--gray-200)'">
-                        <input type="checkbox" name="est_publie" style="width: 20px; height: 20px;">
-                        <div>
-                            <div style="font-weight: var(--font-semibold); color: var(--gray-900);">Publier immédiatement</div>
-                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Le module sera visible par les RSSI et disponible pour les campagnes</div>
-                        </div>
+                <div class="form-section">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="est_publie" checked>
+                        <span>
+                            <strong>Module publié</strong><br>
+                            <small>Le module est visible et disponible pour les campagnes</small>
+                        </span>
                     </label>
                 </div>
 
-                <div style="display: flex; gap: var(--space-4);">
-                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
-                        <i class="bi bi-check-circle"></i> Créer le module
+                {# Actions #}
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Créer le module
                     </button>
-                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-secondary btn-lg">
-                        Annuler
+                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost">
+                        <i class="bi bi-x-lg"></i> Annuler
                     </a>
                 </div>
 
             </form>
-
         </div>
     </div>
-
 </div>
+{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* (Les styles sont identiques à ceux du template modifier, vous pouvez les copier depuis le fichier modifier) */
+     .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header {
+        padding: 1.5rem 1.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        background: #F8FAFC;
+    }
+    html.dark .card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    .card-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .card-subtitle {
+        font-size: 0.75rem;
+        color: #64748B;
+        margin: 0;
+    }
+    html.dark .card-header h2 {
+        color: #F1F5F9;
+    }
+    .card-body {
+        padding: 1.75rem;
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    html.dark .form-section {
+        border-color: #334155;
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .section-title:before {
+        content: '';
+        width: 4px;
+        height: 18px;
+        background: #E53E3E;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    html.dark .section-title {
+        color: #F1F5F9;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+    .form-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.4rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background: white;
+        color: #0F172A;
+        transition: all 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #E53E3E;
+        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+    }
+    textarea.form-control {
+        resize: vertical;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    .checkbox-label {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        cursor: pointer;
+        padding: 0.75rem;
+        background: #F8FAFC;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+    }
+    .checkbox-label input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: #E53E3E;
+    }
+    .checkbox-label strong {
+        font-size: 0.875rem;
+        color: #0F172A;
+    }
+    .checkbox-label small {
+        font-size: 0.7rem;
+        color: #64748B;
+    }
+    html.dark .checkbox-label {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .checkbox-label strong {
+        color: #F1F5F9;
+    }
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    @media (max-width: 480px) {
+        .card-body {
+            padding: 1rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
 {% endblock %}

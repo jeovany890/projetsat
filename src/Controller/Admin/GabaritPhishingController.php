@@ -2,8 +2,10 @@
 
 namespace App\Controller\Admin;
 
+use App\Entity\CampagnePhishing;
 use App\Entity\GabaritPhishing;
 use App\Entity\Administrateur;
+use App\Entity\ModuleFormation;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,10 +22,39 @@ class GabaritPhishingController extends AbstractController
     public function liste(EntityManagerInterface $em): Response
     {
         $gabarits = $em->getRepository(GabaritPhishing::class)->findBy([], ['dateCreation' => 'DESC']);
-        
+
         return $this->render('admin/gabarits/liste.html.twig', [
             'gabarits' => $gabarits,
         ]);
+    }
+
+    // ══════════════════════════════════════════
+    // Récupère les catégories distinctes des
+    // modules de formation publiés.
+    // Ces catégories servent à alimenter le
+    // select "Catégorie" du gabarit phishing.
+    // Ainsi gabarit.categorie == module.categorie
+    // → liaison automatique dans ScoringMoteurService
+    // ══════════════════════════════════════════
+    private function getCategoriesModules(EntityManagerInterface $em): array
+    {
+        $modules = $em->getRepository(ModuleFormation::class)->findBy(
+            ['estPublie' => true],
+            ['categorie' => 'ASC']
+        );
+
+        $categories = [];
+        foreach ($modules as $module) {
+            $cat = $module->getCategorie();
+            if ($cat && !in_array($cat, array_column($categories, 'valeur'))) {
+                $categories[] = [
+                    'valeur' => $cat,
+                    'label'  => ucwords(str_replace('_', ' ', $cat)),
+                ];
+            }
+        }
+
+        return $categories;
     }
 
     #[Route('/nouveau', name: 'admin_gabarit_nouveau')]
@@ -35,48 +66,44 @@ class GabaritPhishingController extends AbstractController
         if ($request->isMethod('POST')) {
             $errors = [];
 
-            $titre = $request->request->get('titre');
-            $description = $request->request->get('description');
-            $categorie = $request->request->get('categorie');
-            $difficulte = $request->request->get('difficulte');
-            $compteEmailDsn = $request->request->get('compte_email_dsn');
-            $nomExpediteur = $request->request->get('nom_expediteur');
+            $titre           = $request->request->get('titre');
+            $description     = $request->request->get('description');
+            $categorie       = $request->request->get('categorie');
+            $difficulte      = $request->request->get('difficulte', 'moyen');
+            $nomExpediteur   = $request->request->get('nom_expediteur');
             $emailExpediteur = $request->request->get('email_expediteur');
-            $sujetEmail = $request->request->get('sujet_email');
-            $contenuHtml = $request->request->get('contenu_html');
-            $contenuTexte = $request->request->get('contenu_texte');
-            $indicesPieges = $request->request->get('indices_pieges');
-            $estActif = $request->request->get('est_actif') ? true : false;
+            $sujetEmail      = $request->request->get('sujet_email');
+            $contenuHtml     = $request->request->get('contenu_html');
+            $compteEmailDsn  = $request->request->get('compte_email_dsn');
+            $indicesPieges   = $request->request->get('indices_pieges');
+            $estActif        = $request->request->get('est_actif') ? true : false;
 
-            // Validations
-            if (empty($titre) || empty($categorie) || empty($sujetEmail) || empty($contenuHtml)) {
-                $errors[] = 'Tous les champs obligatoires doivent être remplis.';
+            if (empty($titre) || empty($categorie)) {
+                $errors[] = 'Le titre et la catégorie sont obligatoires.';
+            }
+            if (empty($contenuHtml)) {
+                $errors[] = 'Le contenu HTML est obligatoire.';
             }
 
             if (empty($errors)) {
                 $gabarit = new GabaritPhishing();
-                $gabarit->setTitre($titre);
-                $gabarit->setSlug($slugger->slug($titre)->lower());
-                $gabarit->setDescription($description);
-                $gabarit->setCategorie($categorie);
-                $gabarit->setDifficulte($difficulte ?? 'moyen');
-                $gabarit->setCompteEmailDsn($compteEmailDsn);
-                $gabarit->setNomExpediteur($nomExpediteur);
-                $gabarit->setEmailExpediteur($emailExpediteur);
-                $gabarit->setSujetEmail($sujetEmail);
-                $gabarit->setContenuHtml($contenuHtml);
-                $gabarit->setContenuTexte($contenuTexte);
-                
-                // Convertir les indices en array JSON
+                $gabarit->setTitre($titre)
+                    ->setSlug($slugger->slug($titre)->lower())
+                    ->setDescription($description)
+                    ->setCategorie($categorie)
+                    ->setDifficulte($difficulte)
+                    ->setCompteEmailDsn($compteEmailDsn ?: null)
+                    ->setNomExpediteur($nomExpediteur)
+                    ->setEmailExpediteur($emailExpediteur)
+                    ->setSujetEmail($sujetEmail)
+                    ->setContenuHtml($contenuHtml ?? '')
+                    ->setEstActif($estActif);
+
                 if ($indicesPieges) {
-                    $indices = array_map('trim', explode("\n", $indicesPieges));
-                    $indices = array_filter($indices);
-                    $gabarit->setIndicesPieges($indices);
+                    $indices = array_filter(array_map('trim', explode("\n", $indicesPieges)));
+                    $gabarit->setIndicesPieges(array_values($indices));
                 }
-                
-                $gabarit->setEstActif($estActif);
-                
-                // Associer à l'admin connecté
+
                 $admin = $this->getUser();
                 if ($admin instanceof Administrateur) {
                     $gabarit->setAdministrateur($admin);
@@ -85,7 +112,7 @@ class GabaritPhishingController extends AbstractController
                 $em->persist($gabarit);
                 $em->flush();
 
-                $this->addFlash('success', '✅ Gabarit phishing créé avec succès !');
+                $this->addFlash('success', ' Gabarit créé avec succès !');
                 return $this->redirectToRoute('admin_gabarits_liste');
             }
 
@@ -94,7 +121,10 @@ class GabaritPhishingController extends AbstractController
             }
         }
 
-        return $this->render('admin/gabarits/nouveau.html.twig');
+        return $this->render('admin/gabarits/nouveau.html.twig', [
+            // Catégories des modules publiés → select dynamique
+            'categoriesModules' => $this->getCategoriesModules($em),
+        ]);
     }
 
     #[Route('/{id}/modifier', name: 'admin_gabarit_modifier')]
@@ -107,47 +137,46 @@ class GabaritPhishingController extends AbstractController
         if ($request->isMethod('POST')) {
             $errors = [];
 
-            $titre = $request->request->get('titre');
-            $description = $request->request->get('description');
-            $categorie = $request->request->get('categorie');
-            $difficulte = $request->request->get('difficulte');
-            $compteEmailDsn = $request->request->get('compte_email_dsn');
-            $nomExpediteur = $request->request->get('nom_expediteur');
+            $titre           = $request->request->get('titre');
+            $description     = $request->request->get('description');
+            $categorie       = $request->request->get('categorie');
+            $difficulte      = $request->request->get('difficulte', 'moyen');
+            $nomExpediteur   = $request->request->get('nom_expediteur');
             $emailExpediteur = $request->request->get('email_expediteur');
-            $sujetEmail = $request->request->get('sujet_email');
-            $contenuHtml = $request->request->get('contenu_html');
-            $contenuTexte = $request->request->get('contenu_texte');
-            $indicesPieges = $request->request->get('indices_pieges');
-            $estActif = $request->request->get('est_actif') ? true : false;
+            $sujetEmail      = $request->request->get('sujet_email');
+            $contenuHtml     = $request->request->get('contenu_html');
+            $compteEmailDsn  = $request->request->get('compte_email_dsn');
+            $indicesPieges   = $request->request->get('indices_pieges');
+            $estActif        = $request->request->get('est_actif') ? true : false;
 
-            if (empty($titre) || empty($categorie) || empty($sujetEmail) || empty($contenuHtml)) {
-                $errors[] = 'Tous les champs obligatoires doivent être remplis.';
+            if (empty($titre) || empty($categorie)) {
+                $errors[] = 'Le titre et la catégorie sont obligatoires.';
+            }
+            if (empty($contenuHtml)) {
+                $errors[] = 'Le contenu HTML est obligatoire.';
             }
 
             if (empty($errors)) {
-                $gabarit->setTitre($titre);
-                $gabarit->setSlug($slugger->slug($titre)->lower());
-                $gabarit->setDescription($description);
-                $gabarit->setCategorie($categorie);
-                $gabarit->setDifficulte($difficulte);
-                $gabarit->setCompteEmailDsn($compteEmailDsn);
-                $gabarit->setNomExpediteur($nomExpediteur);
-                $gabarit->setEmailExpediteur($emailExpediteur);
-                $gabarit->setSujetEmail($sujetEmail);
-                $gabarit->setContenuHtml($contenuHtml);
-                $gabarit->setContenuTexte($contenuTexte);
-                
+                $gabarit->setTitre($titre)
+                    ->setSlug($slugger->slug($titre)->lower())
+                    ->setDescription($description)
+                    ->setCategorie($categorie)
+                    ->setDifficulte($difficulte)
+                    ->setCompteEmailDsn($compteEmailDsn ?: null)
+                    ->setNomExpediteur($nomExpediteur)
+                    ->setEmailExpediteur($emailExpediteur)
+                    ->setSujetEmail($sujetEmail)
+                    ->setContenuHtml($contenuHtml ?? '')
+                    ->setEstActif($estActif);
+
                 if ($indicesPieges) {
-                    $indices = array_map('trim', explode("\n", $indicesPieges));
-                    $indices = array_filter($indices);
-                    $gabarit->setIndicesPieges($indices);
+                    $indices = array_filter(array_map('trim', explode("\n", $indicesPieges)));
+                    $gabarit->setIndicesPieges(array_values($indices));
                 }
-                
-                $gabarit->setEstActif($estActif);
 
                 $em->flush();
 
-                $this->addFlash('success', '✅ Gabarit modifié avec succès !');
+                $this->addFlash('success', ' Gabarit modifié avec succès !');
                 return $this->redirectToRoute('admin_gabarits_liste');
             }
 
@@ -157,17 +186,24 @@ class GabaritPhishingController extends AbstractController
         }
 
         return $this->render('admin/gabarits/modifier.html.twig', [
-            'gabarit' => $gabarit,
+            'gabarit'           => $gabarit,
+            // Catégories des modules publiés → select dynamique
+            'categoriesModules' => $this->getCategoriesModules($em),
         ]);
     }
 
     #[Route('/{id}/supprimer', name: 'admin_gabarit_supprimer', methods: ['POST'])]
     public function supprimer(GabaritPhishing $gabarit, EntityManagerInterface $em): Response
     {
+        $campagnes = $em->getRepository(CampagnePhishing::class)->findBy(['gabarit' => $gabarit]);
+        if (count($campagnes) > 0) {
+            $this->addFlash('danger', 'Impossible de supprimer ce gabarit car il est utilisé par ' . count($campagnes) . ' campagne(s). Supprimez d\'abord les campagnes concernées.');
+            return $this->redirectToRoute('admin_gabarits_liste');
+        }
+
         $em->remove($gabarit);
         $em->flush();
-
-        $this->addFlash('success', '✅ Gabarit supprimé avec succès !');
+        $this->addFlash('success', 'Gabarit supprimé !');
         return $this->redirectToRoute('admin_gabarits_liste');
     }
 
@@ -178,8 +214,7 @@ class GabaritPhishingController extends AbstractController
         $em->flush();
 
         $status = $gabarit->isEstActif() ? 'activé' : 'désactivé';
-        $this->addFlash('success', "✅ Gabarit {$status} avec succès !");
-        
+        $this->addFlash('success', "Gabarit {$status} !");
         return $this->redirectToRoute('admin_gabarits_liste');
     }
 

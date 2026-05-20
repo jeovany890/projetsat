@@ -4,9 +4,15 @@ namespace App\Controller\RSSI;
 
 use App\Entity\Departement;
 use App\Entity\Employe;
+use App\Entity\ProgressionModule;
+use App\Entity\ResultatPhishing;
+use App\Entity\ResultatSimulation;
 use App\Entity\RSSI;
+use App\Entity\SignalementPhishing;
+use App\Entity\TentativeQuiz;
 use App\Service\EmailService;
 use App\Service\EmailTemplateService;
+use App\Service\RapportPdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -118,11 +124,11 @@ class EmployeController extends AbstractController
                 return $this->render('rssi/employes/importer.html.twig', ['departements' => $departements]);
             }
 
-            $departementId   = $request->request->get('departement_defaut');
+            $departementId    = $request->request->get('departement_defaut');
             $departementDefaut = $departementId ? $em->getRepository(Departement::class)->find($departementId) : null;
 
             $contenu = file_get_contents($fichier->getPathname());
-            $contenu = ltrim($contenu, "\xEF\xBB\xBF"); // Supprimer BOM UTF-8
+            $contenu = ltrim($contenu, "\xEF\xBB\xBF");
             $lignes  = array_filter(explode("\n", str_replace("\r\n", "\n", $contenu)));
 
             $crees = 0; $ignores = 0; $erreurs = [];
@@ -131,63 +137,36 @@ class EmployeController extends AbstractController
             foreach ($lignes as $numLigne => $ligne) {
                 $ligne = trim($ligne);
                 if (empty($ligne)) continue;
-
                 if (!$premiereIgnoree) { $premiereIgnoree = true; continue; }
 
                 $cols = array_map('trim', str_contains($ligne, ';') ? explode(';', $ligne) : explode(',', $ligne));
-
-                if (count($cols) < 3) {
-                    $erreurs[] = "Ligne {$numLigne} : format invalide.";
-                    $ignores++; continue;
-                }
+                if (count($cols) < 3) { $erreurs[] = "Ligne {$numLigne} : format invalide."; $ignores++; continue; }
 
                 [$prenom, $nom, $email] = [$cols[0], $cols[1], $cols[2]];
                 $telephone = $cols[3] ?? '';
                 $poste     = $cols[4] ?? '';
-
-                // Département depuis colonne 5 ou défaut
                 $dept = $departementDefaut;
                 if (!empty($cols[5])) {
-                    $deptNom = $em->getRepository(Departement::class)->findOneBy([
-                        'nom' => $cols[5], 'entreprise' => $this->getEntreprise(),
-                    ]);
+                    $deptNom = $em->getRepository(Departement::class)->findOneBy(['nom' => $cols[5], 'entreprise' => $this->getEntreprise()]);
                     if ($deptNom) $dept = $deptNom;
                 }
 
-                if (empty($prenom) || empty($nom) || empty($email)) {
-                    $erreurs[] = "Ligne {$numLigne} : prénom, nom ou email manquant.";
-                    $ignores++; continue;
-                }
-                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                    $erreurs[] = "Ligne {$numLigne} : email invalide ({$email}).";
-                    $ignores++; continue;
-                }
-                if ($em->getRepository(\App\Entity\Utilisateur::class)->findOneBy(['email' => $email])) {
-                    $erreurs[] = "Ligne {$numLigne} : {$email} déjà utilisé.";
-                    $ignores++; continue;
-                }
-                if (!$dept) {
-                    $erreurs[] = "Ligne {$numLigne} : aucun département pour {$email}.";
-                    $ignores++; continue;
-                }
+                if (empty($prenom) || empty($nom) || empty($email)) { $erreurs[] = "Ligne {$numLigne} : prénom, nom ou email manquant."; $ignores++; continue; }
+                if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { $erreurs[] = "Ligne {$numLigne} : email invalide ({$email})."; $ignores++; continue; }
+                if ($em->getRepository(\App\Entity\Utilisateur::class)->findOneBy(['email' => $email])) { $erreurs[] = "Ligne {$numLigne} : {$email} déjà utilisé."; $ignores++; continue; }
+                if (!$dept) { $erreurs[] = "Ligne {$numLigne} : aucun département pour {$email}."; $ignores++; continue; }
 
                 $tempPassword = $this->genererMotDePasse();
                 $employe = $this->creerEmploye($prenom, $nom, $email, $telephone, $poste, $dept, $tempPassword, $hasher, $em);
                 $crees++;
-
-                // ⏱️ Latence 2s entre chaque email pour éviter blocage Gmail
-                if ($crees > 1) {
-                    sleep(4);
-                }
+                if ($crees > 1) sleep(4);
                 $this->envoyerEmailBienvenue($emailService, $employe, $tempPassword);
             }
 
             $em->flush();
-
-            if ($crees > 0) $this->addFlash('success', "{$crees} employé(s) importé(s) avec succès.");
+            if ($crees > 0)   $this->addFlash('success', "{$crees} employé(s) importé(s) avec succès.");
             if ($ignores > 0) $this->addFlash('warning', "{$ignores} ligne(s) ignorée(s).");
             foreach (array_slice($erreurs, 0, 5) as $err) $this->addFlash('warning', $err);
-
             return $this->redirectToRoute('rssi_employes_liste');
         }
 
@@ -250,9 +229,146 @@ class EmployeController extends AbstractController
         return $this->redirectToRoute('rssi_employes_liste');
     }
 
-    // ============================================================
+    // ═══════════════════════════════════════════════
+    // RAPPORT PDF — NOUVELLE FONCTIONNALITÉ
+    // ═══════════════════════════════════════════════
+
+    #[Route('/{id}/rapport-pdf', name: 'rssi_employes_rapport_pdf', requirements: ['id' => '\d+'])]
+    public function rapportPdf(
+        Employe $employe,
+        EntityManagerInterface $em,
+        RapportPdfService $rapportPdfService
+    ): Response {
+        $this->verifierAcces($employe);
+
+        // 1. Résultats phishing
+        $resultatsPhishing = $em->getRepository(ResultatPhishing::class)
+            ->findBy(['employe' => $employe], ['dateEnvoi' => 'DESC']);
+
+        $nbClics = 0;
+        foreach ($resultatsPhishing as $r) {
+            if ($r->isLienClique()) $nbClics++;
+        }
+
+        // 2. Formations / progressions
+        $progressions = $em->getRepository(ProgressionModule::class)
+            ->findBy(['employe' => $employe], ['dateDebut' => 'DESC']);
+
+        $modulesTermines = count(array_filter(
+            $progressions,
+            fn($p) => $p->getStatut() === 'TERMINE'
+        ));
+
+        // 3. Tentatives quiz
+        $tentativesQuiz = $em->getRepository(TentativeQuiz::class)
+            ->findBy(['employe' => $employe], ['dateTermine' => 'DESC']);
+
+        $scoreQuizMoyen = 0;
+        if (count($tentativesQuiz) > 0) {
+            $scoreQuizMoyen = array_sum(array_map(fn($t) => $t->getScore(), $tentativesQuiz)) / count($tentativesQuiz);
+        }
+
+        // 4. Simulations
+        $simulations = $em->getRepository(ResultatSimulation::class)
+            ->findBy(['employe' => $employe], ['dateTermine' => 'DESC']);
+
+        // 5. Signalements manuels
+        $signalements = $em->getRepository(SignalementPhishing::class)
+            ->findBy(['employe' => $employe], ['dateSignalement' => 'DESC']);
+
+        $nbSignalements = count($signalements);
+
+        // 6. Score global
+        $scoreVigilance = $employe->getScoreVigilance();
+
+        // 7. Niveau de risque
+        if ($scoreVigilance >= 75) {
+            $niveauRisque  = 'faible';
+            $niveauLabel   = 'Risque faible';
+        } elseif ($scoreVigilance >= 50) {
+            $niveauRisque  = 'moyen';
+            $niveauLabel   = 'Risque moyen';
+        } else {
+            $niveauRisque  = 'eleve';
+            $niveauLabel   = 'Risque élevé';
+        }
+
+        // 8. Analyse comportementale
+        $analyses = [];
+        if ($nbClics > 2) {
+            $analyses[] = "L'employé a cliqué à plusieurs reprises ({$nbClics} fois) sur des liens de phishing — comportement à risque élevé.";
+        } elseif ($nbClics === 1) {
+            $analyses[] = "L'employé a cliqué une fois sur un lien de phishing — vigilance insuffisante.";
+        } else {
+            $analyses[] = "Aucun clic sur un lien de phishing détecté — bon signe de vigilance passive.";
+        }
+
+        if ($nbSignalements === 0) {
+            $analyses[] = "Aucune tentative de signalement observée. L'employé ne signale pas activement les menaces.";
+        } else {
+            $analyses[] = "L'employé a effectué {$nbSignalements} signalement(s) — comportement proactif face aux menaces.";
+        }
+
+        if ($modulesTermines >= 3) {
+            $analyses[] = "Bonne assiduité en formation : {$modulesTermines} module(s) complété(s).";
+        } elseif ($modulesTermines === 0) {
+            $analyses[] = "Aucune formation complétée. Une montée en compétence est fortement recommandée.";
+        }
+
+        // 9. Recommandations
+        $recommandations = [];
+        if ($nbClics > 0) {
+            $recommandations[] = "Suivre une formation spécifique sur la détection du phishing par email.";
+            $recommandations[] = "Sensibilisation aux techniques d'ingénierie sociale (urgence, autorité, imitation de marques).";
+        }
+        if ($nbSignalements === 0) {
+            $recommandations[] = "Encourager l'utilisation de l'outil de signalement pour toute menace suspecte.";
+        }
+        if ($modulesTermines < 2) {
+            $recommandations[] = "Compléter au moins 2 modules de formation sur la cybersécurité.";
+            $recommandations[] = "Prioriser les modules : Phishing, Mots de passe et Ingénierie sociale.";
+        }
+        if ($scoreVigilance < 50) {
+            $recommandations[] = "Envisager une session de sensibilisation individuelle avec le RSSI.";
+        }
+        if (empty($recommandations)) {
+            $recommandations[] = "Maintenir les bonnes pratiques actuelles de cybersécurité.";
+            $recommandations[] = "Continuer les formations pour rester informé des nouvelles menaces.";
+        }
+
+        // 10. Conclusion
+        if ($niveauRisque === 'faible') {
+            $conclusion = "L'employé présente un excellent niveau de vigilance face aux cybermenaces. Son comportement reflète une bonne assimilation des pratiques de sécurité. Il est recommandé de maintenir cet engagement par une formation continue.";
+        } elseif ($niveauRisque === 'moyen') {
+            $conclusion = "L'employé présente un niveau de vigilance moyen. Des lacunes ont été identifiées, notamment en matière de détection des emails de phishing. Une formation complémentaire est recommandée afin de réduire les risques liés aux attaques.";
+        } else {
+            $conclusion = "L'employé présente un niveau de risque élevé. Des comportements à risque ont été observés lors des simulations. Une action corrective immédiate est fortement recommandée : formation obligatoire et suivi renforcé par le RSSI.";
+        }
+
+        return $rapportPdfService->generer([
+            'employe'           => $employe,
+            'dateRapport'       => new \DateTime(),
+            'scoreVigilance'    => $scoreVigilance,
+            'niveauRisque'      => $niveauRisque,
+            'niveauLabel'       => $niveauLabel,
+            'nbCampagnes'       => count($resultatsPhishing),
+            'nbClics'           => $nbClics,
+            'nbSignalements'    => $nbSignalements,
+            'resultatsPhishing' => $resultatsPhishing,
+            'progressions'      => $progressions,
+            'modulesTermines'   => $modulesTermines,
+            'tentativesQuiz'    => $tentativesQuiz,
+            'scoreQuizMoyen'    => round($scoreQuizMoyen),
+            'simulations'       => $simulations,
+            'analyses'          => $analyses,
+            'recommandations'   => $recommandations,
+            'conclusion'        => $conclusion,
+        ]);
+    }
+
+    // ═══════════════════════════════════════════════
     // HELPERS PRIVÉS
-    // ============================================================
+    // ═══════════════════════════════════════════════
 
     private function verifierAcces(Employe $employe): void
     {
@@ -284,7 +400,6 @@ class EmployeController extends AbstractController
             ->setTelephone($telephone ?: null)->setPoste($poste ?: null)
             ->setDepartement($departement)->setEstActif(true)
             ->setEstVerifie(true)->setEstPremiereConnexion(true)
-            ->setRoles(['ROLE_EMPLOYE'])
             ->setMotDePasse($hasher->hashPassword($employe, $tempPassword));
         $em->persist($employe);
         return $employe;

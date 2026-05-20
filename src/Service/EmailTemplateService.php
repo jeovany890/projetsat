@@ -296,17 +296,31 @@ class EmailTemplateService
     }
 
     /**
-     * Email de rejet d'inscription
+     * Email de rejet d'inscription (avec motif optionnel)
      */
     public static function inscriptionRejetee(
         string $entrepriseNom,
-        string $emailContact
+        string $emailContact,
+        ?string $motif = null
     ): string {
+        $motifHtml = '';
+        if (!empty($motif)) {
+            $motifHtml = self::infoBox(
+                "<strong>Motif du rejet :</strong><br>" . nl2br(htmlspecialchars($motif)),
+                '#FEF2F2',
+                '#FECACA',
+                '#991B1B'
+            );
+        } else {
+            $motifHtml = self::p("Aucun motif spécifique n'a été renseigné. Vous pouvez nous contacter pour plus d'informations.", 'color:#64748B;');
+        }
+
         $contenu =
             self::badge('Demande non retenue', '#FEE2E2', '#B91C1C') .
             "<div style='margin:20px 0 4px;'>" . self::h1('Suite à votre demande d\'inscription') . "</div>" .
             self::p("Bonjour,") .
             self::p("Après examen de votre dossier, nous ne sommes pas en mesure de valider la demande d'inscription de <strong style='color:#1E293B;'>{$entrepriseNom}</strong> à ce stade.") .
+            $motifHtml .
             self::infoBox(
                 "Pour toute question ou pour soumettre un nouveau dossier, contactez-nous à <a href='mailto:support@satplatform.bj' style='color:#0369A1;font-weight:500;'>support@satplatform.bj</a>",
                 '#F0F9FF', '#BAE6FD', '#0369A1'
@@ -333,6 +347,38 @@ class EmailTemplateService
             self::signature();
 
         return self::wrap($contenu, 'Réinitialisation mot de passe', '#0EA5E9');
+    }
+
+    /**
+     * Email envoyé à un employé quand il est assigné à une nouvelle campagne de formation
+     */
+    public static function nouvelleFormationAssignee(
+        string $prenom,
+        string $nom,
+        string $campagneTitre,
+        string $campagneDescription,
+        string $dateDebut,
+        string $dateFin,
+        int $nbModules,
+        int $pointsPenalite,
+        string $urlFormations
+    ): string {
+        $contenu =
+            self::badge('Nouvelle formation', '#DBEAFE', '#e1e3e9') .
+            "<div style='margin:20px 0 4px;'>" . self::h1('Nouvelle campagne de formation') . "</div>" .
+            self::greeting($prenom, $nom) .
+            self::p("Vous avez été assigné à une nouvelle campagne de formation sur SAT Platform.") .
+            self::infoBox("
+               
+               <table role='presentation' width='100%' cellpadding='0' cellspacing='0'>
+                 <tr><td style='padding:4px 0;font-size:13px;'><strong>Période :</strong> {$dateDebut} au {$dateFin}</td></tr>
+               </table>
+            ", '#EFF6FF', '#BFDBFE', '#c0c2c7') .
+            self::p("Connectez-vous à votre espace employé pour accéder aux modules et suivre votre progression.") .
+            self::btn('Accéder à mes formations', $urlFormations, '#0EA5E9') .
+            self::signature();
+
+        return self::wrap($contenu, 'Nouvelle formation assignée', '#0EA5E9');
     }
 
     /**
@@ -373,5 +419,30 @@ class EmailTemplateService
             self::signature();
 
         return self::wrap($contenu, 'Bienvenue', '#0EA5E9');
+    }
+    public static function rappelFormationIndividuelle(
+        string $prenom,
+        string $nom,
+        string $moduleTitre,
+        int    $progression,
+        string $urlFormation
+    ): string {
+        $contenu =
+            self::badge('Rappel formation', '#FEF9C3', '#854D0E') .
+            "<div style='margin:20px 0 4px;'>" . self::h1('Votre formation vous attend') . "</div>" .
+            self::greeting($prenom, $nom) .
+            self::p("Votre responsable sécurité vous rappelle qu'une formation vous a été assignée suite à une simulation de phishing. Elle est disponible sur votre espace SAT Platform.") .
+            self::infoBox("
+              <strong style='display:block;margin-bottom:8px;color:#0369A1;'>Formation en attente</strong>
+              <div style='font-size:14px;font-weight:600;color:#0F172A;margin-bottom:6px;'>{$moduleTitre}</div>
+              <div style='font-size:13px;color:#0369A1;'>
+                Progression actuelle : <strong>{$progression}%</strong>
+              </div>
+            ") .
+            self::p("Terminer cette formation vous permettra d'améliorer votre <strong>score de vigilance</strong> et de mieux vous protéger contre les cyberattaques réelles.", "color:#475569;") .
+            self::btn('Reprendre ma formation', $urlFormation, '#7C3AED') .
+            self::signature();
+
+        return self::wrap($contenu, 'Rappel formation', '#7C3AED');
     }
 }

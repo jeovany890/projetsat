@@ -3,88 +3,398 @@
 {% block page_title %}Campagnes de formation{% endblock %}
 
 {% block topbar_actions %}
-    <a href="{{ path('rssi_formations_nouvelle') }}" class="r-btn r-btn-primary">
+    <a href="{{ path('rssi_formations_nouvelle') }}" class="btn btn-primary">
         <i class="bi bi-plus-lg"></i> Nouvelle campagne
     </a>
 {% endblock %}
 
 {% block content %}
 
+{# Statistiques #}
 {% set nbEnCours  = campagnes|filter(c => c.statut == 'EN_COURS')|length %}
 {% set nbPlanifie = campagnes|filter(c => c.statut == 'PLANIFIEE')|length %}
 {% set nbTermine  = campagnes|filter(c => c.statut == 'TERMINEE')|length %}
 
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:30px;font-weight:800;color:#0F172A;line-height:1;">{{ campagnes|length }}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:4px;">Total</div>
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-value">{{ campagnes|length }}</div>
+        <div class="stat-label">Total</div>
     </div>
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:30px;font-weight:800;color:#0891B2;line-height:1;">{{ nbEnCours }}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:4px;">En cours</div>
+    <div class="stat-card">
+        <div class="stat-value text-cyan">{{ nbEnCours }}</div>
+        <div class="stat-label">En cours</div>
     </div>
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:30px;font-weight:800;color:#D97706;line-height:1;">{{ nbPlanifie }}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:4px;">Planifiées</div>
+    <div class="stat-card">
+        <div class="stat-value text-amber">{{ nbPlanifie }}</div>
+        <div class="stat-label">Planifiées</div>
     </div>
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:30px;font-weight:800;color:#166534;line-height:1;">{{ nbTermine }}</div>
-        <div style="font-size:12px;color:#64748B;margin-top:4px;">Terminées</div>
+    <div class="stat-card">
+        <div class="stat-value text-green">{{ nbTermine }}</div>
+        <div class="stat-label">Terminées</div>
     </div>
 </div>
 
 {% if campagnes|length == 0 %}
-<div class="r-card"><div class="r-card-body"><div class="r-empty">
-    <i class="bi bi-mortarboard"></i>
-    <p>Aucune campagne. Créez-en une pour assigner des modules à vos employés.</p>
-    <a href="{{ path('rssi_formations_nouvelle') }}" class="r-btn r-btn-primary"><i class="bi bi-plus-lg"></i> Créer</a>
-</div></div></div>
+    <div class="empty-state">
+        <div class="empty-state-icon">
+            <i class="bi bi-mortarboard"></i>
+        </div>
+        <h3>Aucune campagne</h3>
+        <p>Créez-en une pour assigner des modules à vos employés.</p>
+        <a href="{{ path('rssi_formations_nouvelle') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Créer une campagne
+        </a>
+    </div>
 {% else %}
-<div style="display:flex;flex-direction:column;gap:12px;">
-{% for c in campagnes %}
-{% set pct = c.totalParticipants > 0 ? ((c.nombreTermines / c.totalParticipants) * 100)|round : 0 %}
-<div class="r-card" style="padding:20px;">
-    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
-        <div style="width:52px;height:52px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px;
-            {% if c.statut == 'EN_COURS' %}background:#CFFAFE;color:#0891B2;
-            {% elseif c.statut == 'PLANIFIEE' %}background:#FEF9C3;color:#CA8A04;
-            {% elseif c.statut == 'TERMINEE' %}background:#DCFCE7;color:#166534;
-            {% else %}background:#F1F5F9;color:#94A3B8;{% endif %}">
-            <i class="bi bi-{% if c.statut == 'EN_COURS' %}play-circle-fill{% elseif c.statut == 'PLANIFIEE' %}clock{% elseif c.statut == 'TERMINEE' %}check-circle-fill{% else %}x-circle{% endif %}"></i>
-        </div>
-        <div style="flex:1;min-width:200px;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:wrap;">
-                <span style="font-size:15px;font-weight:700;color:#0F172A;">{{ c.titre }}</span>
-                <span class="r-badge {% if c.statut == 'EN_COURS' %}r-badge-cyan{% elseif c.statut == 'PLANIFIEE' %}r-badge-orange{% elseif c.statut == 'TERMINEE' %}r-badge-green{% else %}r-badge-gray{% endif %}">
-                    {{ c.statut|replace({'_': ' '}) }}
-                </span>
-            </div>
-            <div style="font-size:12px;color:#64748B;margin-bottom:10px;">
-                T{{ c.trimestre }} {{ c.annee }} &nbsp;·&nbsp;
-                {{ c.dateDebut|date('d/m/Y') }} → {{ c.dateFin|date('d/m/Y') }} &nbsp;·&nbsp;
-                {{ c.modules|length }} module(s) &nbsp;·&nbsp; {{ c.totalParticipants }} participant(s)
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;">
-                <div style="flex:1;height:6px;background:#E2E8F0;border-radius:99px;overflow:hidden;">
-                    <div style="height:100%;width:{{ pct }}%;background:linear-gradient(90deg,#06B6D4,#0284C7);border-radius:99px;"></div>
-                </div>
-                <span style="font-size:12px;font-weight:700;color:#475569;">{{ pct }}%</span>
-                <span style="font-size:11px;color:#94A3B8;">{{ c.nombreTermines }}/{{ c.totalParticipants }} terminés</span>
-                {% if c.nombreEnRetard > 0 %}<span class="r-badge r-badge-red">{{ c.nombreEnRetard }} en retard</span>{% endif %}
-            </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-shrink:0;">
-            <a href="{{ path('rssi_formations_detail', {id: c.id}) }}" class="r-btn r-btn-ghost"><i class="bi bi-eye"></i> Voir</a>
-            {% if c.statut != 'EN_COURS' %}
-            <form method="post" action="{{ path('rssi_formations_supprimer', {id: c.id}) }}" onsubmit="return confirm('Supprimer ?')">
-                <input type="hidden" name="_token" value="{{ csrf_token('suppr_' ~ c.id) }}">
-                <button type="submit" class="r-btn r-btn-danger" style="padding:9px 12px;"><i class="bi bi-trash"></i></button>
-            </form>
-            {% endif %}
+    <div class="campaigns-list">
+        <div class="table-responsive-wrapper">
+            <table class="campaign-table">
+                <thead>
+                    <tr>
+                        <th>Campagne</th>
+                        <th>Date début</th>
+                        <th>Date fin</th>
+                        <th>Participants</th>
+                        <th>Terminés</th>
+                        <th>En retard</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for c in campagnes %}
+                    {% set nbParticipants = c.totalParticipants %}
+                    {% set nbTermines = c.nombreTermines %}
+                    {% set nbRetard = c.nombreEnRetard %}
+                    {% set pct = nbParticipants > 0 ? ((nbTermines / nbParticipants) * 100)|round : 0 %}
+
+                    <tr>
+                        <td class="campaign-title-cell">
+                            <div class="campaign-title">{{ c.titre }}</div>
+                            {% if c.description %}
+                                <div class="campaign-desc">{{ c.description|slice(0,60) }}{% if c.description|length > 60 %}…{% endif %}</div>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">{{ c.dateDebut ? c.dateDebut|date('d/m/Y') : '—' }}</td>
+                        <td class="text-center">{{ c.dateFin ? c.dateFin|date('d/m/Y') : '—' }}</td>
+                        <td class="text-center">{{ nbParticipants }}</td>
+                        <td class="text-center">
+                            <div class="completion-badge {% if pct >= 80 %}high{% elseif pct >= 50 %}mid{% else %}low{% endif %}">
+                                {{ nbTermines }}/{{ nbParticipants }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if nbRetard > 0 %}
+                                <span class="badge badge-red">{{ nbRetard }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if c.statut == 'EN_COURS' %}
+                                <span class="badge badge-en-cours">En cours</span>
+                            {% elseif c.statut == 'PLANIFIEE' %}
+                                <span class="badge badge-planifiee">Planifiée</span>
+                            {% elseif c.statut == 'TERMINEE' %}
+                                <span class="badge badge-terminee">Terminée</span>
+                            {% else %}
+                                <span class="badge badge-annulee">Annulée</span>
+                            {% endif %}
+                        </td>
+                        <td class="actions-cell">
+                            <div class="action-buttons-crud">
+                                {# Bouton Voir (icône œil) #}
+                                <a href="{{ path('rssi_formations_detail', {id: c.id}) }}" class="btn-icon" title="Voir le détail">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {# Bouton Supprimer (uniquement si campagne non en cours) #}
+                                {% if c.statut != 'EN_COURS' %}
+                                    <form method="post" action="{{ path('rssi_formations_supprimer', {id: c.id}) }}" style="display: inline-block;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('suppr_' ~ c.id) }}">
+                                        <button type="submit" class="btn-icon btn-icon-delete" onclick="return confirm('Supprimer cette campagne ?')" title="Supprimer">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <span class="btn-icon btn-icon-delete disabled" title="Impossible : campagne en cours">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-</div>
-{% endfor %}
-</div>
 {% endif %}
+
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTÈME ÉPURÉ ===== */
+    :root {
+        --bg: #F8FAFC;
+        --surface: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-light: #EFF6FF;
+        --danger: #EF4444;
+        --danger-light: #FEF2F2;
+        --warning: #F59E0B;
+        --warning-light: #FFFBEB;
+        --success: #10B981;
+        --success-light: #F0FDF4;
+        --cyan: #0891B2;
+        --cyan-light: #CFFAFE;
+        --amber: #D97706;
+        --amber-light: #FEF9C3;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.75rem;
+    }
+    @media (max-width: 1024px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .stats-grid { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .text-cyan { color: var(--cyan); }
+    .text-amber { color: var(--amber); }
+    .text-green { color: var(--success); }
+    html.dark .stat-card { background: #1E293B; border-color: #334155; }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Tableau */
+    .table-responsive-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .campaign-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+        min-width: 700px;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--surface);
+    }
+    .campaign-table th {
+        text-align: left;
+        padding: 0.875rem 1rem;
+        background-color: #F8FAFC;
+        color: var(--text-secondary);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+    }
+    .campaign-table td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    .campaign-table tr:last-child td { border-bottom: none; }
+    .text-center { text-align: center; }
+    html.dark .campaign-table th {
+        background-color: #1E293B;
+        color: #94A3B8;
+        border-bottom-color: #334155;
+    }
+    html.dark .campaign-table td { border-bottom-color: #334155; }
+    html.dark .campaign-table { background: #1E293B; }
+
+    /* Cellule campagne */
+    .campaign-title-cell .campaign-title {
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    .campaign-title-cell .campaign-desc {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        line-height: 1.4;
+    }
+    html.dark .campaign-title-cell .campaign-title { color: #F1F5F9; }
+
+    /* Badge de complétion */
+    .completion-badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+    .completion-badge.high { background: var(--success-light); color: #166534; }
+    .completion-badge.mid { background: var(--warning-light); color: #92400E; }
+    .completion-badge.low { background: var(--danger-light); color: #991B1B; }
+    html.dark .completion-badge.high { background: #14532D; color: #4ADE80; }
+    html.dark .completion-badge.mid { background: #78350F; color: #FDE047; }
+    html.dark .completion-badge.low { background: #7F1D1D; color: #FCA5A5; }
+
+    /* Badges statut */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-en-cours { background: var(--cyan-light); color: var(--cyan); }
+    .badge-planifiee { background: var(--amber-light); color: var(--amber); }
+    .badge-terminee { background: var(--success-light); color: #166534; }
+    .badge-annulee { background: #F1F5F9; color: #475569; }
+    .badge-red { background: var(--danger-light); color: #991B1B; }
+    html.dark .badge-en-cours { background: #164E63; color: #22D3EE; }
+    html.dark .badge-planifiee { background: #78350F; color: #FDE047; }
+    html.dark .badge-terminee { background: #14532D; color: #4ADE80; }
+    html.dark .badge-annulee { background: #1E293B; color: #94A3B8; }
+    html.dark .badge-red { background: #7F1D1D; color: #FCA5A5; }
+
+    /* Actions : icônes uniquement */
+    .action-buttons-crud {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+    .btn-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+        font-size: 1rem;
+        transition: all 0.15s;
+        cursor: pointer;
+        text-decoration: none;
+    }
+    .btn-icon:hover {
+        background: var(--bg);
+        border-color: var(--text-muted);
+        color: var(--text-primary);
+    }
+    .btn-icon-delete:hover {
+        background: var(--danger-light);
+        border-color: var(--danger);
+        color: var(--danger);
+    }
+    .btn-icon.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    html.dark .btn-icon {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-icon:hover {
+        background: #1E293B;
+        border-color: #64748B;
+        color: #F1F5F9;
+    }
+    html.dark .btn-icon-delete:hover {
+        background: #7F1D1D;
+        border-color: #EF4444;
+        color: #FCA5A5;
+    }
+
+    /* Bouton principal */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .btn-primary:hover {
+        background-color: #2563EB;
+        transform: translateY(-1px);
+    }
+
+    /* Text muted */
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--surface);
+        border-radius: 1rem;
+        border: 1px solid var(--border);
+    }
+    .empty-state-icon i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 1rem;
+    }
+    .empty-state h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 1.5rem;
+    }
+    html.dark .empty-state { background: #1E293B; border-color: #334155; }
+    html.dark .empty-state h3 { color: #F1F5F9; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .btn-icon { width: 28px; height: 28px; font-size: 0.875rem; }
+        .action-buttons-crud { gap: 0.3rem; }
+    }
+</style>
 {% endblock %}

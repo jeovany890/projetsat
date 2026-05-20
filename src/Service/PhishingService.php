@@ -36,12 +36,16 @@ class PhishingService
         $gabarit  = $campagne->getGabarit();
         $employe  = $envoi->getEmploye();
 
-        // Tracking par clic uniquement — le pixel est bloqué par Gmail
-        $urlClic = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+        // URLs phishings
+        $urlSignalement = $this->urlGenerator->generate('phishing_signal', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+        $urlFakePage    = $this->urlGenerator->generate('phishing_fake_page', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+        $urlClic        = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
         $contenu = $this->personnaliserContenu(
             $gabarit->getContenuHtml(),
             $employe,
+            $urlSignalement,
+            $urlFakePage,
             $urlClic,
             $token
         );
@@ -52,42 +56,91 @@ class PhishingService
             contenuHtml:     $contenu,
             nomExpediteur:   $gabarit->getNomExpediteur(),
             emailExpediteur: $gabarit->getEmailExpediteur(),
-            compteEmailDsn:  $gabarit->getCompteEmailDsn()
+            compteEmailDsn:  $gabarit->getCompteEmailDsn(),
         );
 
         $envoi->marquerCommeEnvoye();
         $resultat->setEmailEnvoye(true)->setDateEnvoi(new \DateTime());
-        $campagne->incrementerEmailsEnvoyes();
 
         return true;
+    }
+
+    public function lancerCampagne(CampagnePhishing $campagne): array
+    {
+        $campagne->setStatut('EN_COURS');
+        if (!$campagne->getDateDebut()) {
+            $campagne->setDateDebut(new \DateTime());
+        }
+
+        $envois = $this->em->getRepository(EnvoiPhishing::class)->findBy([
+            'campagne' => $campagne,
+            'statut'   => EnvoiPhishing::STATUT_PLANIFIE,
+        ]);
+
+        $envoyes = 0;
+        $echoues = 0;
+        $erreurs = [];
+
+        foreach ($envois as $envoi) {
+            try {
+                $this->envoyerPourEnvoi($envoi);
+                $this->em->flush();
+                $envoyes++;
+            } catch (\Throwable $e) {
+                $envoi->marquerCommeEchoue($e->getMessage());
+                $this->em->flush();
+                $echoues++;
+                $erreurs[] = $e->getMessage();
+            }
+        }
+
+        return ['envoyes' => $envoyes, 'echoues' => $echoues, 'erreurs' => $erreurs];
     }
 
     private function personnaliserContenu(
         string $contenu,
         \App\Entity\Employe $employe,
+        string $urlSignalement,
+        string $urlFakePage,
         string $urlClic,
         string $token
     ): string {
+        $now   = new \DateTime();
+        $entreprise = $employe->getEntreprise() ? $employe->getEntreprise()->getNom() : 'SAT Platform';
+
         return str_replace(
             [
-                '{LIEN_PIEGE}',    '{{LIEN_PIEGE}}',
-                '{TOKEN}',         '{{TOKEN}}',
-                '{PRENOM}',        '{{PRENOM_EMPLOYE}}',
-                '{NOM}',           '{{NOM_EMPLOYE}}',
-                '{NOM_COMPLET}',   '{{NOM_COMPLET}}',
-                '{EMAIL}',         '{{EMAIL_EMPLOYE}}',
-                '{POSTE}',         '{{POSTE_EMPLOYE}}',
+                '{{LIEN_SIGNALEMENT}}', '{LIEN_SIGNALEMENT}',
+                '{{LIEN_PIEGE}}',       '{LIEN_PIEGE}',
+                '{{PRENOM_EMPLOYE}}',   '{PRENOM_EMPLOYE}', '{PRENOM}',
+                '{{NOM_EMPLOYE}}',      '{NOM_EMPLOYE}',    '{NOM}',
+                '{{NOM_COMPLET}}',      '{NOM_COMPLET}',
+                '{{EMAIL_EMPLOYE}}',    '{EMAIL_EMPLOYE}', '{EMAIL}',
+                '{{POSTE_EMPLOYE}}',    '{POSTE_EMPLOYE}', '{POSTE}',
+                '{{TOKEN}}',            '{TOKEN}',
+                '{{DATE_ACTUELLE}}',    '{DATE_ACTUELLE}',
+                '{{HEURE_ACTUELLE}}',   '{HEURE_ACTUELLE}',
+                '{{ENTREPRISE}}',       '{ENTREPRISE}',
+                '{{ "now"|date("YmdHi") }}',
+                '{{ "now"|date("dm") }}',
+                '{{ "now"|date_modify("+24 hours")|date("d/m/Y à H:i") }}',
             ],
             [
-                $urlClic,          $urlClic,
-                $token,            $token,
-                $employe->getPrenom(), $employe->getPrenom(),
-                $employe->getNom(),    $employe->getNom(),
+                $urlSignalement, $urlSignalement,
+                $urlFakePage,    $urlFakePage,
+                $employe->getPrenom(), $employe->getPrenom(), $employe->getPrenom(),
+                $employe->getNom(),    $employe->getNom(),    $employe->getNom(),
                 $employe->getPrenom() . ' ' . $employe->getNom(),
                 $employe->getPrenom() . ' ' . $employe->getNom(),
                 $employe->getEmail(),  $employe->getEmail(),
-                $employe->getPoste() ?? 'Employé',
-                $employe->getPoste() ?? 'Employé',
+                $employe->getPoste() ?? 'Employé', $employe->getPoste() ?? 'Employé', $employe->getPoste() ?? 'Employé',
+                $token,            $token,
+                $now->format('d/m/Y'), $now->format('d/m/Y'),
+                $now->format('H:i'),  $now->format('H:i'),
+                $entreprise, $entreprise,
+                $now->format('YmdHi'),
+                $now->format('dm'),
+                (clone $now)->modify('+24 hours')->format('d/m/Y à H:i'),
             ],
             $contenu
         );

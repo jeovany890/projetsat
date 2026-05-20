@@ -1,0 +1,224 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Modifier toutes les questions — {{ quiz.titre }}{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('admin_quiz_questions', {id: quiz.id}) }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour aux questions
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="questions-edit-container">
+    <div class="info-card">
+        <div class="info-content">
+            <h2><i class="bi bi-pencil-square" style="color:#E53E3E;"></i> Modifier toutes les questions</h2>
+            <p>Quiz : <strong>{{ quiz.titre }}</strong> — {{ questions|length }} question{{ questions|length > 1 ? 's' : '' }}</p>
+        </div>
+    </div>
+
+    {% if questions is empty %}
+        <div class="empty-state">
+            <i class="bi bi-patch-question"></i>
+            <h3>Aucune question à modifier</h3>
+            <p>Ce quiz ne contient aucune question.</p>
+            <a href="{{ path('admin_quiz_questions', {id: quiz.id}) }}" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Ajouter des questions
+            </a>
+        </div>
+    {% else %}
+        <form method="post" id="editAllQuestionsForm">
+            <div class="questions-stack">
+                {% for question in questions %}
+                    <div class="question-edit-card">
+                        <div class="question-edit-header">
+                            <span class="question-num">Question {{ loop.index }}</span>
+                            <span class="question-type-badge">{{ question.type_question }}</span>
+                        </div>
+
+                        {% if quiz.estInitial() %}
+                            <div class="form-group">
+                                <label class="form-label">Catégorie</label>
+                                <select name="questions[{{ loop.index0 }}][categorie]" class="form-control">
+                                    <option value="phishing" {{ question.categorie == 'phishing' ? 'selected' : '' }}>🎣 Phishing (email)</option>
+                                    <option value="smishing" {{ question.categorie == 'smishing' ? 'selected' : '' }}>📱 Smishing (SMS / WhatsApp)</option>
+                                    <option value="bonnes_pratiques" {{ question.categorie == 'bonnes_pratiques' ? 'selected' : '' }}>🛡️ Bonnes pratiques en entreprise</option>
+                                </select>
+                            </div>
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label class="form-label">Type de question</label>
+                            <select name="questions[{{ loop.index0 }}][type_question]" class="form-control" onchange="updateQuestionFormType(this, {{ loop.index0 }})">
+                                <option value="QCM_UNIQUE" {{ question.type_question == 'QCM_UNIQUE' ? 'selected' : '' }}>QCM — 1 seule réponse</option>
+                                <option value="QCM_MULTIPLE" {{ question.type_question == 'QCM_MULTIPLE' ? 'selected' : '' }}>QCM — Plusieurs réponses</option>
+                                <option value="VRAI_FAUX" {{ question.type_question == 'VRAI_FAUX' ? 'selected' : '' }}>Vrai / Faux</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Question</label>
+                            <textarea name="questions[{{ loop.index0 }}][question]" class="form-control" rows="2" required>{{ question.question }}</textarea>
+                        </div>
+
+                        <div id="optionsSection_{{ loop.index0 }}" class="form-group">
+                            <label class="form-label">Réponses proposées</label>
+                            <div class="options-list-editor">
+                                {% for option in question.options ?? [] %}
+                                    <div class="option-row">
+                                        <input type="checkbox" name="questions[{{ loop.parent.loop.index0 }}][reponses_correctes][]" value="{{ option }}" class="option-check" {{ option in (question.reponses_correctes ?? []) ? 'checked' : '' }} title="Cocher si bonne réponse">
+                                        <input type="text" name="questions[{{ loop.parent.loop.index0 }}][options][]" class="form-control form-control-sm option-text" value="{{ option }}" placeholder="Option {{ loop.index }}" oninput="syncCheckValue(this)">
+                                        {% if loop.index > 2 %}
+                                            <button type="button" class="btn-icon" onclick="this.closest('.option-row').remove()" style="color:#DC2626;flex-shrink:0;">×</button>
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    <div class="option-row">
+                                        <input type="checkbox" name="questions[{{ loop.parent.loop.index0 }}][reponses_correctes][]" value="" class="option-check" title="Cocher si bonne réponse">
+                                        <input type="text" name="questions[{{ loop.parent.loop.index0 }}][options][]" class="form-control form-control-sm option-text" placeholder="Option A" oninput="syncCheckValue(this)">
+                                    </div>
+                                    <div class="option-row">
+                                        <input type="checkbox" name="questions[{{ loop.parent.loop.index0 }}][reponses_correctes][]" value="" class="option-check" title="Cocher si bonne réponse">
+                                        <input type="text" name="questions[{{ loop.parent.loop.index0 }}][options][]" class="form-control form-control-sm option-text" placeholder="Option B" oninput="syncCheckValue(this)">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="addOption({{ loop.index0 }})">
+                                <i class="bi bi-plus"></i> Ajouter une option
+                            </button>
+                        </div>
+
+                        <div id="vraiFauxSection_{{ loop.index0 }}" class="form-group" style="display:{{ question.type_question == 'VRAI_FAUX' ? 'block' : 'none' }};">
+                            <label class="form-label">Bonne réponse</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="questions[{{ loop.index0 }}][reponses_correctes][]" value="Vrai" {{ 'Vrai' in (question.reponses_correctes ?? []) ? 'checked' : '' }}> Vrai</label>
+                                <label><input type="radio" name="questions[{{ loop.index0 }}][reponses_correctes][]" value="Faux" {{ 'Faux' in (question.reponses_correctes ?? []) ? 'checked' : '' }}> Faux</label>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Points</label>
+                                <input type="number" name="questions[{{ loop.index0 }}][points]" class="form-control" value="{{ question.points }}" min="1" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Explication (optionnel)</label>
+                                <input type="text" name="questions[{{ loop.index0 }}][explication]" class="form-control" value="{{ question.explication }}" placeholder="Pourquoi cette réponse ?">
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ path('admin_quiz_questions', {id: quiz.id}) }}" class="btn btn-ghost">
+                    <i class="bi bi-x-lg"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg"></i> Enregistrer toutes les modifications
+                </button>
+            </div>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .questions-edit-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .info-card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; padding: 1.25rem 1.5rem; }
+    .info-content h2 { font-size: 1.125rem; font-weight: 700; color: #0F172A; margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem; }
+    .info-content p { font-size: 0.8125rem; color: #64748B; margin: 0; }
+    html.dark .info-card { background: #1E293B; border-color: #334155; }
+    html.dark .info-content h2 { color: #F1F5F9; }
+    html.dark .info-content p { color: #94A3B8; }
+    .questions-stack { display: flex; flex-direction: column; gap: 1.25rem; }
+    .question-edit-card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; padding: 1.25rem; }
+    html.dark .question-edit-card { background: #1E293B; border-color: #334155; }
+    .question-edit-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #E2E8F0; }
+    html.dark .question-edit-header { border-color: #334155; }
+    .question-num { font-size: 0.875rem; font-weight: 700; color: #E53E3E; }
+    .question-type-badge { background: #F1F5F9; color: #475569; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    html.dark .question-type-badge { background: #334155; color: #94A3B8; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 0.4rem; }
+    .form-control { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E1; border-radius: 0.5rem; font-size: 0.875rem; background: white; color: #0F172A; transition: all 0.15s; }
+    .form-control:focus { outline: none; border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,0.2); }
+    html.dark .form-control { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    .form-control-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    textarea.form-control { resize: vertical; }
+    .option-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .option-check { width: 18px; height: 18px; accent-color: #E53E3E; }
+    .option-text { flex: 1; }
+    .radio-group { display: flex; gap: 1rem; align-items: center; }
+    .radio-group label { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+    .form-row { display: grid; grid-template-columns: 1fr 2fr; gap: 0.75rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: #E53E3E; color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .btn-primary:hover { background: #C53030; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #1E293B; }
+    .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+    .btn-icon { background: transparent; border: 1px solid #E2E8F0; border-radius: 6px; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #64748B; transition: all 0.15s; }
+    .btn-icon:hover { background: #F1F5F9; color: #1E293B; }
+    .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; padding: 1rem; background: white; border-radius: 1rem; border: 1px solid #E2E8F0; }
+    html.dark .form-actions { background: #1E293B; border-color: #334155; }
+    .empty-state { text-align: center; padding: 3rem 1.5rem; background: white; border-radius: 1rem; border: 1px solid #E2E8F0; }
+    .empty-state i { font-size: 3rem; color: #CBD5E1; margin-bottom: 1rem; display: inline-block; }
+    .empty-state h3 { font-size: 1rem; font-weight: 700; color: #0F172A; margin-bottom: 0.5rem; }
+    .empty-state p { color: #64748B; font-size: 0.8125rem; margin-bottom: 1.5rem; }
+    html.dark .empty-state { background: #1E293B; border-color: #334155; }
+    html.dark .empty-state h3 { color: #F1F5F9; }
+</style>
+<script>
+    function updateQuestionFormType(select, index) {
+        const optionsSection = document.getElementById('optionsSection_' + index);
+        const vfSection = document.getElementById('vraiFauxSection_' + index);
+        
+        if (select.value === 'VRAI_FAUX') {
+            optionsSection.style.display = 'none';
+            vfSection.style.display = 'block';
+        } else {
+            optionsSection.style.display = 'block';
+            vfSection.style.display = 'none';
+        }
+    }
+
+    function syncCheckValue(input) {
+        const row = input.closest('.option-row');
+        const cb = row.querySelector('.option-check');
+        if (cb) {
+            cb.value = input.value;
+        }
+    }
+
+    function addOption(index) {
+        const container = document.querySelector('#optionsSection_' + index + ' .options-list-editor');
+        const count = container.querySelectorAll('.option-row').length;
+        const labels = ['A','B','C','D','E','F'];
+        const letter = labels[count] || (count + 1);
+        const row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML = `
+            <input type="checkbox" name="questions[${index}][reponses_correctes][]" value="" class="option-check">
+            <input type="text" name="questions[${index}][options][]" class="form-control form-control-sm option-text"
+                   placeholder="Option ${letter}" oninput="syncCheckValue(this)">
+            <button type="button" class="btn-icon" onclick="this.closest('.option-row').remove()"
+                    style="color:#DC2626;flex-shrink:0;">×</button>
+        `;
+        container.appendChild(row);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        {% for question in questions %}
+            const select{{ loop.index0 }} = document.querySelector('select[name="questions[{{ loop.index0 }}][type_question]"]');
+            if (select{{ loop.index0 }}) {
+                updateQuestionFormType(select{{ loop.index0 }}, {{ loop.index0 }});
+            }
+            document.querySelectorAll('#optionsSection_{{ loop.index0 }} .option-text').forEach(syncCheckValue);
+        {% endfor %}
+    });
+</script>
+{% endblock %}

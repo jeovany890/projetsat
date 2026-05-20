@@ -1,99 +1,420 @@
 {% extends 'admin/layout.html.twig' %}
+
 {% block page_title %}Simulations interactives{% endblock %}
 
-{% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-    <div>
-        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900);">Simulations interactives</h2>
-        <p style="color: var(--gray-600); font-size: var(--text-sm);">Créez des scénarios réalistes pour former les employés</p>
-    </div>
-    <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Nouvelle simulation
-    </a>
-</div>
-
-{% if simulations is empty %}
-    <div class="card" style="text-align: center; padding: var(--space-12);">
-        <i class="bi bi-joystick" style="font-size: 80px; color: var(--gray-300); display: block; margin-bottom: var(--space-4);"></i>
-        <h3 style="font-size: var(--text-xl); font-weight: var(--font-bold); color: var(--gray-700); margin-bottom: var(--space-3);">
-            Aucune simulation créée
-        </h3>
-        <p style="color: var(--gray-500); margin-bottom: var(--space-6);">
-            Créez des simulations réalistes (fausse Gmail, faux formulaire, lien suspect...) 
-            que les employés devront analyser et identifier.
-        </p>
-        <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary btn-lg">
-            <i class="bi bi-plus-circle"></i> Créer la première simulation
+{% block topbar_actions %}
+    <div class="flex items-center gap-3">
+       
+        <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Nouvelle simulation
         </a>
     </div>
-{% else %}
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
-        {% for simulation in simulations %}
-            {% set typeLabel = types[simulation.typeSimulation] ?? simulation.typeSimulation %}
-            {% set typeIcon = {
-                'GMAIL': 'envelope-fill',
-                'MOT_DE_PASSE': 'lock-fill',
-                'FORMULAIRE': 'ui-checks',
-                'LIEN_SUSPECT': 'link-45deg',
-                'PIECE_JOINTE': 'paperclip'
-            }[simulation.typeSimulation] ?? 'bug' %}
-            {% set typeColor = {
-                'GMAIL': '#EA4335',
-                'MOT_DE_PASSE': '#F59E0B',
-                'FORMULAIRE': '#3B82F6',
-                'LIEN_SUSPECT': '#8B5CF6',
-                'PIECE_JOINTE': '#EF4444'
-            }[simulation.typeSimulation] ?? '#6B7280' %}
+{% endblock %}
 
-            <div class="card" style="border-top: 4px solid {{ typeColor }};">
-                <div style="padding: var(--space-6);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
-                        <div style="width: 48px; height: 48px; background: {{ typeColor }}20; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-{{ typeIcon }}" style="font-size: 22px; color: {{ typeColor }};"></i>
+{% block content %}
+<div class="simulations-container">
+
+    {# Statistiques rapides #}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-joystick"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ simulations|length }}</div>
+                <div class="stat-label">Total simulations</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ simulations|filter(s => s.estPublie)|length }}</div>
+                <div class="stat-label">Publiées</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon warning"><i class="bi bi-pencil-square"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ simulations|filter(s => not s.estPublie)|length }}</div>
+                <div class="stat-label">Brouillons</div>
+            </div>
+        </div>
+    </div>
+
+    {% if simulations|length == 0 %}
+        <div class="empty-state">
+            <i class="bi bi-joystick"></i>
+            <h3>Aucune simulation créée</h3>
+            <p>Créez des simulations réalistes (fausse Gmail, faux formulaire, lien suspect...) que les employés devront analyser et identifier.</p>
+            <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary btn-md">
+                <i class="bi bi-plus-lg"></i> Créer la première simulation
+            </a>
+        </div>
+    {% else %}
+        <div class="simulations-list">
+            {% for simulation in simulations %}
+                {% set typeLabel = types[simulation.typeSimulation] ?? simulation.typeSimulation %}
+                {% set typeIcon = {
+                    'GMAIL': 'envelope-fill',
+                    'MOT_DE_PASSE': 'lock-fill',
+                    'FORMULAIRE': 'ui-checks',
+                    'LIEN_SUSPECT': 'link-45deg',
+                    'PIECE_JOINTE': 'paperclip'
+                }[simulation.typeSimulation] ?? 'bug' %}
+                {% set typeColor = {
+                    'GMAIL': '#EA4335',
+                    'MOT_DE_PASSE': '#F59E0B',
+                    'FORMULAIRE': '#3B82F6',
+                    'LIEN_SUSPECT': '#8B5CF6',
+                    'PIECE_JOINTE': '#EF4444'
+                }[simulation.typeSimulation] ?? '#6B7280' %}
+
+                <div class="sim-card" style="border-top-color: {{ typeColor }};">
+                    <div class="sim-card-body">
+                        <div class="sim-header">
+                            <div class="sim-icon" style="background: {{ typeColor }}20; color: {{ typeColor }};">
+                                <i class="bi bi-{{ typeIcon }}"></i>
+                            </div>
+                            <div class="sim-badge">
+                                {% if simulation.estPublie %}
+                                    <span class="badge badge-success">Publiée</span>
+                                {% else %}
+                                    <span class="badge badge-gray">Brouillon</span>
+                                {% endif %}
+                            </div>
                         </div>
-                        <span class="badge badge-{{ simulation.estPublie ? 'success' : 'secondary' }}">
-                            {{ simulation.estPublie ? 'Publiée' : 'Brouillon' }}
-                        </span>
-                    </div>
-
-                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
-                        {{ simulation.titre }}
-                    </h3>
-                    <p style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-3);">
-                        {{ simulation.description|slice(0, 80) }}{% if simulation.description|length > 80 %}...{% endif %}
-                    </p>
-
-                    <div style="display: flex; gap: var(--space-3); font-size: var(--text-xs); color: var(--gray-500); margin-bottom: var(--space-4);">
-                        <span><i class="bi bi-tag"></i> {{ typeLabel }}</span>
-                        <span><i class="bi bi-clock"></i> {{ simulation.dureeEstimee }} min</span>
-                        <span><i class="bi bi-trophy"></i> {{ simulation.pointsReussite }} pts</span>
-                    </div>
-
-                    {% if simulation.module %}
-                        <div style="background: var(--primary-50); border: 1px solid var(--primary-200); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); font-size: var(--text-xs); color: var(--primary-700); margin-bottom: var(--space-4);">
-                            <i class="bi bi-book"></i> Liée au module : {{ simulation.module.titre }}
+                        <h3 class="sim-title">{{ simulation.titre }}</h3>
+                        <p class="sim-description">{{ simulation.description|slice(0, 80) }}{% if simulation.description|length > 80 %}...{% endif %}</p>
+                        <div class="sim-meta">
+                            <span><i class="bi bi-tag"></i> {{ typeLabel }}</span>
+                            <span><i class="bi bi-clock"></i> {{ simulation.dureeEstimee }} min</span>
+                            <span><i class="bi bi-trophy"></i> {{ simulation.pointsReussite }} pts</span>
                         </div>
-                    {% endif %}
-
-                    <div style="display: flex; gap: var(--space-2);">
-                        <a href="{{ path('admin_simulation_modifier', {id: simulation.id}) }}" class="btn btn-sm btn-ghost">
-                            <i class="bi bi-pencil"></i> Modifier
-                        </a>
-                        <form method="post" action="{{ path('admin_simulation_toggle', {id: simulation.id}) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-sm btn-{{ simulation.estPublie ? 'warning' : 'success' }}">
-                                <i class="bi bi-{{ simulation.estPublie ? 'eye-slash' : 'eye' }}"></i>
-                                {{ simulation.estPublie ? 'Dépublier' : 'Publier' }}
-                            </button>
-                        </form>
-                        <form method="post" action="{{ path('admin_simulation_supprimer', {id: simulation.id}) }}" style="display: inline; margin-left: auto;" onsubmit="return confirm('Supprimer cette simulation ?')">
-                            <button type="submit" class="btn btn-sm btn-ghost" style="color: var(--danger);">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </form>
+                        {% if simulation.module %}
+                            <div class="sim-module-linked">
+                                <i class="bi bi-book"></i> Liée au module : {{ simulation.module.titre }}
+                            </div>
+                        {% endif %}
+                        <div class="sim-actions">
+                            <a href="{{ path('admin_simulation_modifier', {id: simulation.id}) }}" class="btn btn-ghost btn-sm" title="Modifier">
+                                <i class="bi bi-pencil"></i> Modifier
+                            </a>
+                            <form method="post" action="{{ path('admin_simulation_toggle', {id: simulation.id}) }}" class="action-form">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="{{ simulation.estPublie ? 'Dépublier' : 'Publier' }}">
+                                    <i class="bi bi-{{ simulation.estPublie ? 'eye-slash' : 'eye' }}"></i>
+                                    {{ simulation.estPublie ? 'Dépublier' : 'Publier' }}
+                                </button>
+                            </form>
+                            <form method="post" action="{{ path('admin_simulation_supprimer', {id: simulation.id}) }}" id="form-supp-sim-{{ simulation.id }}" class="action-form">
+                                <button type="submit" class="btn btn-ghost btn-sm btn-danger" title="Supprimer"
+                                        data-confirm="Supprimer cette simulation ?"
+                                        data-form="form-supp-sim-{{ simulation.id }}">
+                                    <i class="bi bi-trash"></i> Supprimer
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
-{% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .simulations-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #F1F5F9;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .stat-icon.success { background: #DCFCE7; color: #166534; }
+    .stat-icon.warning { background: #FEF9C3; color: #D97706; }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+    html.dark .stat-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Liste des simulations */
+    .simulations-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 900px) {
+        .simulations-list {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 640px) {
+        .simulations-list {
+            grid-template-columns: 1fr;
+        }
+    }
+    .sim-card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        border-top-width: 4px;
+        transition: all 0.2s;
+    }
+    .sim-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #CBD5E1;
+    }
+    .sim-card-body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    html.dark .sim-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .sim-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    .sim-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .sim-badge {
+        flex-shrink: 0;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-gray    { background: #F1F5F9; color: #475569; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-gray    { background: #1E293B; color: #94A3B8; }
+
+    .sim-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        line-height: 1.3;
+    }
+    .sim-description {
+        font-size: 0.75rem;
+        color: #475569;
+        margin: 0;
+        line-height: 1.4;
+    }
+    .sim-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        font-size: 0.65rem;
+        color: #64748B;
+    }
+    .sim-meta i {
+        margin-right: 0.25rem;
+    }
+    .sim-module-linked {
+        background: #F0F9FF;
+        border: 1px solid #BAE6FD;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.65rem;
+        color: #0369A1;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    html.dark .sim-module-linked {
+        background: #164E63;
+        border-color: #06B6D4;
+        color: #22D3EE;
+    }
+
+    /* Actions */
+    .sim-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        border-top: 1px solid #E2E8F0;
+        padding-top: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    .action-form {
+        display: inline;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        padding: 0.375rem 0.875rem;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    .btn-danger {
+        color: #DC2626;
+        border-color: #FECACA;
+    }
+    .btn-danger:hover {
+        background: #FEE2E2;
+        border-color: #FECACA;
+        color: #991B1B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        color: #CBD5E1;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+    .empty-state h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 0.5rem;
+    }
+    .empty-state p {
+        color: #64748B;
+        font-size: 0.8125rem;
+        margin-bottom: 1.5rem;
+    }
+    html.dark .empty-state {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .empty-state h3 {
+        color: #F1F5F9;
+    }
+
+    @media (max-width: 480px) {
+        .sim-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .sim-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .action-form {
+            display: block;
+            width: 100%;
+        }
+    }
+</style>
 {% endblock %}

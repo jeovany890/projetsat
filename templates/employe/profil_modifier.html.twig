@@ -1,0 +1,313 @@
+{# templates/employe/profil_modifier.html.twig #}
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Modifier mon mot de passe{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+
+    <div class="edit-profile-card">
+        <div class="edit-profile-header">
+            <div class="edit-profile-icon">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <div>
+                <h1>Sécurité du compte</h1>
+                <p>Modifiez votre mot de passe pour renforcer la sécurité de votre compte</p>
+            </div>
+        </div>
+
+        {# Informations personnelles (lecture seule) #}
+        <div class="info-section">
+            <h2 class="section-title">
+                <i class="bi bi-person-circle"></i> Vos informations
+            </h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nom complet</span>
+                    <span class="info-value">{{ employe.prenom }} {{ employe.nom }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <span class="info-value">{{ employe.email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Département</span>
+                    <span class="info-value">{{ employe.departement ? employe.departement.nom : 'Non défini' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Poste</span>
+                    <span class="info-value">{{ employe.poste ?? 'Non défini' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Téléphone</span>
+                    <span class="info-value">{{ employe.telephone ?? 'Non renseigné' }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# Formulaire de changement de mot de passe #}
+        <div class="password-section">
+            <h2 class="section-title">
+                <i class="bi bi-lock"></i> Changer de mot de passe
+            </h2>
+            <form method="post" id="editPasswordForm">
+                <div class="password-grid">
+                    <div class="form-group">
+                        <label for="mot_de_passe_actuel">Mot de passe actuel</label>
+                        <input type="password" id="mot_de_passe_actuel" name="mot_de_passe_actuel" class="form-control" autocomplete="current-password" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nouveau_mot_de_passe">Nouveau mot de passe</label>
+                        <input type="password" id="nouveau_mot_de_passe" name="nouveau_mot_de_passe" class="form-control" autocomplete="new-password" required>
+                        <small class="form-hint">Minimum 8 caractères, mélange lettres/chiffres/symboles</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmation_mot_de_passe">Confirmation</label>
+                        <input type="password" id="confirmation_mot_de_passe" name="confirmation_mot_de_passe" class="form-control" autocomplete="new-password" required>
+                    </div>
+                </div>
+
+                <div class="edit-profile-footer">
+                    <a href="{{ path('employe_profil') }}" class="btn btn-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg"></i> Mettre à jour le mot de passe
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* ===== DESIGN SYSTÈME ===== */
+    .edit-profile-container {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 1rem 0;
+    }
+
+    .edit-profile-card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        overflow: hidden;
+    }
+
+    .edit-profile-header {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 1.5rem 2rem;
+        background: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .edit-profile-icon {
+        width: 48px;
+        height: 48px;
+        background: linear-gradient(135deg, #10B981, #059669);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .edit-profile-header h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 0.2rem;
+        color: #0F172A;
+    }
+    .edit-profile-header p {
+        font-size: 0.8rem;
+        color: #64748B;
+        margin: 0;
+    }
+    html.dark .edit-profile-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .edit-profile-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .edit-profile-header h1 {
+        color: #F1F5F9;
+    }
+    html.dark .edit-profile-header p {
+        color: #94A3B8;
+    }
+
+    /* Sections */
+    .info-section, .password-section {
+        padding: 1.8rem 2rem;
+    }
+    .info-section {
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    html.dark .section-title {
+        color: #F1F5F9;
+        border-bottom-color: #334155;
+    }
+
+    /* Grille d'infos */
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 640px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        background: #F8FAFC;
+        padding: 0.8rem 1rem;
+        border-radius: 0.5rem;
+    }
+    .info-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #64748B;
+    }
+    .info-value {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #0F172A;
+    }
+    html.dark .info-item {
+        background: #0F172A;
+    }
+    html.dark .info-value {
+        color: #F1F5F9;
+    }
+
+    /* Formulaire mot de passe */
+    .password-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .form-group label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #475569;
+    }
+    .form-control {
+        padding: 0.6rem 1rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        transition: border-color 0.15s, box-shadow 0.15s;
+        background: white;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #10B981;
+        box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    }
+    html.dark .form-group label {
+        color: #94A3B8;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    .form-hint {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        margin-top: 0.2rem;
+    }
+
+    /* Footer boutons */
+    .edit-profile-footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.2rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        text-decoration: none;
+    }
+    .btn-primary {
+        background: #10B981;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    .btn-secondary {
+        background: #F1F5F9;
+        color: #1E293B;
+        border: 1px solid #E2E8F0;
+    }
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+    html.dark .btn-secondary {
+        background: #334155;
+        color: #E2E8F0;
+        border-color: #475569;
+    }
+    html.dark .btn-secondary:hover {
+        background: #475569;
+    }
+
+    @media (max-width: 480px) {
+        .info-section, .password-section, .edit-profile-header {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .edit-profile-footer {
+            flex-direction: column;
+        }
+        .edit-profile-footer .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}  

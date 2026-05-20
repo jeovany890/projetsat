@@ -11,6 +11,18 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Table(name: "module_formation")]
 class ModuleFormation
 {
+    /**
+     * Bonus de complétion de module par défaut : 20 points.
+     *
+     * Architecture module standard (100 pts totaux) :
+     *   9 quiz × 5 pts             = 45 pts  (Quiz.points)
+     *   simulation finale          = 35 pts  (SimulationInteractive.pointsReussite)
+     *   bonus complétion (ce champ) = 20 pts
+     *                              ─────────
+     *                              = 100 pts
+     */
+    const POINTS_BONUS_DEFAUT = 20;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -34,14 +46,20 @@ class ModuleFormation
     #[ORM\Column(type: 'integer')]
     private ?int $dureeEstimee = null;
 
-    #[ORM\Column(type: 'integer', options: ['default' => 100])]
-    private int $pointsReussite = 100;
+    /**
+     * Bonus de complétion attribué à l'employé quand il termine le module
+     * (tous chapitres validés + simulation réussie si présente).
+     *
+     * Ce champ remplace l'ancien "pointsReussite" pour clarifier sa sémantique :
+     * il s'agit d'un bonus de fin de module, pas du total des points du module.
+     *
+     * Anciennement : $pointsReussite (default 100) — valeur trop haute
+     * qui s'ajoutait en double aux points déjà octroyés par les quiz et simulation.
+     */
+    #[ORM\Column(type: 'integer', options: ['default' => 20])]
+    private int $pointsBonus = self::POINTS_BONUS_DEFAUT;
 
-    #[ORM\Column(type: 'integer', options: ['default' => 2])]
-    private int $etoilesReussite = 2;
 
-    #[ORM\Column(type: 'integer', options: ['default' => 0])]
-    private int $ordreAffichage = 0;
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $estPublie = false;
@@ -49,20 +67,14 @@ class ModuleFormation
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
 
-    #[ORM\ManyToOne(targetEntity: Categorie::class, inversedBy: 'modules')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Categorie $categorie = null;
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $categorie = null;
 
     #[ORM\OneToMany(targetEntity: Chapitre::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
-    #[ORM\OrderBy(["ordre" => "ASC"])]
     private Collection $chapitres;
 
-    // Gardé nullable pour compatibilité — les nouveaux modules n'ont plus de quiz ici
-    #[ORM\OneToOne(targetEntity: Quiz::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
-    private ?Quiz $quiz = null;
-
-    // ✅ NOUVEAU : Simulation réelle à la fin du module
-    #[ORM\OneToOne(targetEntity: SimulationInteractive::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: SimulationInteractive::class, inversedBy: 'module', cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(name: 'simulation_id', referencedColumnName: 'id', nullable: true)]
     private ?SimulationInteractive $simulation = null;
 
     public function __construct()
@@ -84,23 +96,51 @@ class ModuleFormation
     public function setDifficulte(string $difficulte): static { $this->difficulte = $difficulte; return $this; }
     public function getDureeEstimee(): ?int { return $this->dureeEstimee; }
     public function setDureeEstimee(int $dureeEstimee): static { $this->dureeEstimee = $dureeEstimee; return $this; }
-    public function getPointsReussite(): int { return $this->pointsReussite; }
-    public function setPointsReussite(int $pointsReussite): static { $this->pointsReussite = $pointsReussite; return $this; }
-    public function getEtoilesReussite(): int { return $this->etoilesReussite; }
-    public function setEtoilesReussite(int $etoilesReussite): static { $this->etoilesReussite = $etoilesReussite; return $this; }
-    public function getOrdreAffichage(): int { return $this->ordreAffichage; }
-    public function setOrdreAffichage(int $ordreAffichage): static { $this->ordreAffichage = $ordreAffichage; return $this; }
+
+    /**
+     * Bonus de complétion attribué à la fin du module (en points pédagogiques).
+     * Valeur cible : 20 pts pour un module standard de 100 pts.
+     */
+    public function getPointsBonus(): int { return $this->pointsBonus; }
+    public function setPointsBonus(int $pointsBonus): static { $this->pointsBonus = max(0, $pointsBonus); return $this; }
+
+    /**
+     * Alias de rétrocompatibilité pour getPointsBonus().
+     * @deprecated Utiliser getPointsBonus()
+     */
+    public function getPointsReussite(): int { return $this->pointsBonus; }
+
+    /**
+     * Alias de rétrocompatibilité pour setPointsBonus().
+     * @deprecated Utiliser setPointsBonus()
+     */
+
+
     public function isEstPublie(): bool { return $this->estPublie; }
     public function setEstPublie(bool $estPublie): static { $this->estPublie = $estPublie; return $this; }
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
-    public function getCategorie(): ?Categorie { return $this->categorie; }
-    public function setCategorie(?Categorie $categorie): static { $this->categorie = $categorie; return $this; }
+    public function getCategorie(): ?string { return $this->categorie; }
+    public function setCategorie(?string $categorie): static { $this->categorie = $categorie; return $this; }
+
     public function getChapitres(): Collection { return $this->chapitres; }
-    public function addChapitre(Chapitre $chapitre): static { if (!$this->chapitres->contains($chapitre)) { $this->chapitres->add($chapitre); $chapitre->setModule($this); } return $this; }
-    public function removeChapitre(Chapitre $chapitre): static { if ($this->chapitres->removeElement($chapitre)) { if ($chapitre->getModule() === $this) { $chapitre->setModule(null); } } return $this; }
-    public function getQuiz(): ?Quiz { return $this->quiz; }
-    public function setQuiz(?Quiz $quiz): static { if ($quiz === null && $this->quiz !== null) { $this->quiz->setModule(null); } if ($quiz !== null && $quiz->getModule() !== $this) { $quiz->setModule($this); } $this->quiz = $quiz; return $this; }
+    public function addChapitre(Chapitre $chapitre): static
+    {
+        if (!$this->chapitres->contains($chapitre)) {
+            $this->chapitres->add($chapitre);
+            $chapitre->setModule($this);
+        }
+        return $this;
+    }
+    public function removeChapitre(Chapitre $chapitre): static
+    {
+        if ($this->chapitres->removeElement($chapitre)) {
+            if ($chapitre->getModule() === $this) {
+                $chapitre->setModule(null);
+            }
+        }
+        return $this;
+    }
     public function getSimulation(): ?SimulationInteractive { return $this->simulation; }
     public function setSimulation(?SimulationInteractive $simulation): static { $this->simulation = $simulation; return $this; }
     public function __toString(): string { return $this->titre ?? ''; }

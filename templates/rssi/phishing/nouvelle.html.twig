@@ -1,17 +1,23 @@
 {% extends 'rssi/layout.html.twig' %}
 
-{% block page_title %}Nouvelle campagne phishing{% endblock %}
+{% block page_title %}Nouvelle campagne{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_phishing_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
 
 {% block content %}
-<div style="max-width:800px;display:flex;flex-direction:column;gap:20px;">
+<div class="campaign-form-container">
 
-    {# Avertissement éthique #}
-    <div style="background:linear-gradient(135deg,#FEF9C3,#FEF3C7);border:1px solid #FDE68A;border-radius:14px;padding:20px 24px;display:flex;gap:16px;align-items:flex-start;">
-        <div style="font-size:28px;flex-shrink:0;">⚠️</div>
+    {# Alerte éthique #}
+    <div class="alert-ethical">
+        <i class="bi bi-exclamation-triangle-fill"></i>
         <div>
-            <div style="font-weight:700;color:#92400E;font-size:15px;margin-bottom:6px;">Utilisation éthique et légale</div>
-            <div style="font-size:13px;color:#78350F;line-height:1.6;">
-                Les campagnes phishing simulées doivent être réalisées <strong>avec l'accord explicite de la direction</strong> de l'entreprise.
+            <div class="alert-title">Utilisation éthique et légale</div>
+            <div class="alert-text">
+                Les campagnes phishing/smishing simulées doivent être réalisées <strong>avec l'accord explicite de la direction</strong>.
                 Ces tests sont réservés aux fins de sensibilisation interne. Tout usage malveillant est strictement interdit.
             </div>
         </div>
@@ -19,197 +25,620 @@
 
     <form method="post">
 
-        {# Informations de base #}
-        <div class="r-card" style="margin-bottom:20px;">
+        {# ── Informations générales ── #}
+        <div class="r-card">
             <div class="r-card-header">
-                <div class="r-card-title"><i class="bi bi-info-circle"></i> Informations de la campagne</div>
+                <div class="r-card-title"><i class="bi bi-info-circle" style="color:#3B82F6;"></i> Informations de la campagne</div>
+                <div class="r-card-subtitle">Définissez le cadre de la campagne</div>
             </div>
             <div class="r-card-body">
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Titre de la campagne *</label>
-                    <input type="text" name="titre" required placeholder="ex: Test phishing BOA Décembre 2026"
-                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-group">
+                    <label class="form-label">Titre <span class="text-red">*</span></label>
+                    <input type="text" name="titre" required placeholder="ex: Test phishing BOA Décembre 2026" class="form-control">
                 </div>
-                <div style="margin-bottom:0;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Description <span style="color:#94A3B8;font-weight:400;">(optionnel)</span></label>
-                    <textarea name="description" rows="2" placeholder="Objectif de cette campagne..."
-                              style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;resize:vertical;"></textarea>
+                <div class="form-group">
+                    <label class="form-label">Description <span class="text-muted">(optionnel)</span></label>
+                    <textarea name="description" rows="2" placeholder="Objectif de cette campagne..." class="form-control"></textarea>
                 </div>
             </div>
         </div>
 
-        {# Choix du gabarit #}
-        <div class="r-card" style="margin-bottom:20px;">
+        {# ── Gabarit ── #}
+        <div class="r-card">
             <div class="r-card-header">
-                <div class="r-card-title"><i class="bi bi-envelope-fill"></i> Gabarit phishing</div>
+                <div class="r-card-title"><i class="bi bi-envelope-fill" style="color:#3B82F6;"></i> Gabarit phishing / smishing</div>
+                <div class="r-card-subtitle">Sélectionnez un gabarit existant</div>
             </div>
             <div class="r-card-body">
                 {% if gabarits|length == 0 %}
-                    <div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">
-                        <i class="bi bi-exclamation-triangle" style="font-size:24px;display:block;margin-bottom:8px;"></i>
-                        Aucun gabarit disponible. L'administrateur doit en créer.
+                    <div class="empty-state">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <p>Aucun gabarit disponible. L'administrateur doit en créer.</p>
                     </div>
                 {% else %}
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" id="gabaritsGrid">
-                    {% for g in gabarits %}
-                    <label style="cursor:pointer;">
-                        <input type="radio" name="gabarit" value="{{ g.id }}" required style="display:none;" class="gabarit-radio">
-                        <div class="gabarit-card" style="border:2px solid #E2E8F0;border-radius:12px;padding:16px;transition:all 0.2s;position:relative;">
-                            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                                <div style="font-weight:700;color:#1E293B;font-size:14px;">{{ g.titre }}</div>
-                                <span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;
-                                    {% if g.difficulte == 'FACILE' %}background:#DCFCE7;color:#166534;
-                                    {% elseif g.difficulte == 'MOYEN' %}background:#FEF9C3;color:#854D0E;
-                                    {% else %}background:#FEE2E2;color:#991B1B;{% endif %}">
-                                    {{ g.difficulte }}
-                                </span>
+                    <div class="gabarits-grid">
+                        {% for g in gabarits %}
+                        <label class="gabarit-item">
+                            <input type="radio" name="gabarit" value="{{ g.id }}" required class="gabarit-radio">
+                            <div class="gabarit-card">
+                                <div class="gabarit-header">
+                                    <div class="gabarit-title">{{ g.titre }}</div>
+                                    <div class="gabarit-badges">
+                                        <span class="badge badge-email"><i class="bi bi-envelope"></i> Email</span>
+                                        <span class="badge badge-difficulte-{{ g.difficulte|default('moyen') }}">
+                                            {{ g.difficulte|default('moyen')|capitalize }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="gabarit-categorie">{{ g.categorie }}</div>
+                                {% if g.description %}
+                                    <div class="gabarit-description">{{ g.description|slice(0,80) }}{% if g.description|length > 80 %}…{% endif %}</div>
+                                {% endif %}
+                                <div class="gabarit-footer">
+                                    <span><i class="bi bi-person-fill"></i> {{ g.nomExpediteur }}</span>
+                                </div>
+                                <div class="check-icon"><i class="bi bi-check-circle-fill"></i></div>
                             </div>
-                            <div style="font-size:11px;color:#64748B;margin-bottom:8px;">{{ g.categorie }}</div>
-                            {% if g.description %}
-                                <div style="font-size:12px;color:#94A3B8;line-height:1.4;">{{ g.description|slice(0,80) }}{% if g.description|length > 80 %}…{% endif %}</div>
-                            {% endif %}
-                            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #F1F5F9;font-size:11px;color:#94A3B8;">
-                                <i class="bi bi-person-fill"></i> {{ g.nomExpediteur }}
-                                &nbsp;&bull;&nbsp;
-                                <i class="bi bi-envelope"></i> {{ g.emailExpediteur }}
-                            </div>
-                            <div style="position:absolute;top:12px;right:12px;display:none;" class="check-icon">
-                                <i class="bi bi-check-circle-fill" style="color:#0891B2;font-size:18px;"></i>
-                            </div>
-                        </div>
-                    </label>
-                    {% endfor %}
+                        </label>
+                        {% endfor %}
                     </div>
                 {% endif %}
             </div>
         </div>
 
-        {# Sélection des cibles #}
-        <div class="r-card" style="margin-bottom:20px;">
+        {# ── Cibles ── #}
+        <div class="r-card">
             <div class="r-card-header">
-                <div class="r-card-title"><i class="bi bi-people-fill"></i> Cibles de la campagne</div>
+                <div class="r-card-title"><i class="bi bi-people-fill" style="color:#3B82F6;"></i> Cibles de la campagne</div>
+                <div class="r-card-subtitle">Sélectionnez les employés concernés</div>
             </div>
             <div class="r-card-body">
-                <div style="margin-bottom:14px;display:flex;gap:8px;">
-                    <button type="button" onclick="toutSelectionner()" class="r-btn r-btn-ghost" style="font-size:12px;padding:6px 12px;">
+                <div class="cibles-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="toutSelectionner()">
                         <i class="bi bi-check-all"></i> Tout sélectionner
                     </button>
-                    <button type="button" onclick="toutDeselectionner()" class="r-btn r-btn-ghost" style="font-size:12px;padding:6px 12px;">
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="toutDeselectionner()">
                         <i class="bi bi-x-circle"></i> Tout désélectionner
                     </button>
                 </div>
-
                 {% if departements|length == 0 %}
-                    <div style="text-align:center;padding:20px;color:#94A3B8;font-size:13px;">Aucun département trouvé.</div>
+                    <div class="empty-state">Aucun département trouvé.</div>
                 {% else %}
-                {% for dept in departements %}
-                    <div style="margin-bottom:16px;">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #F1F5F9;">
-                            <input type="checkbox" id="dept_{{ dept.id }}" name="cibles[]" value="dept_{{ dept.id }}"
-                                   onchange="toggleDept('{{ dept.id }}')"
-                                   style="width:16px;height:16px;accent-color:#0891B2;">
-                            <label for="dept_{{ dept.id }}" style="font-weight:700;color:#1E293B;font-size:14px;cursor:pointer;">
-                                <i class="bi bi-diagram-3-fill" style="color:#0891B2;margin-right:4px;"></i>
-                                {{ dept.nom }}
-                                <span style="font-weight:400;color:#94A3B8;font-size:12px;margin-left:6px;">({{ dept.employes|length }} employé(s))</span>
-                            </label>
+                    <div class="departements-list">
+                        {% for dept in departements %}
+                        <div class="departement-item">
+                            <div class="departement-header">
+                                <input type="checkbox" id="dept_{{ dept.id }}" name="cibles[]" value="dept_{{ dept.id }}"
+                                       class="dept-checkbox" onchange="toggleDept('{{ dept.id }}')">
+                                <label for="dept_{{ dept.id }}" class="departement-label">
+                                    <i class="bi bi-diagram-3-fill"></i> {{ dept.nom }}
+                                    <span class="departement-count">({{ dept.employes|length }} employé(s))</span>
+                                </label>
+                            </div>
+                            <div class="employes-list" id="employes-dept-{{ dept.id }}">
+                                {% for emp in dept.employes %}
+                                    {% if emp.estActif %}
+                                    <label class="employe-item">
+                                        <input type="checkbox" name="cibles[]" value="{{ emp.id }}" class="emp-check dept-{{ dept.id }}">
+                                        <span class="employe-name">{{ emp.prenom }} {{ emp.nom }}</span>
+                                        <span class="employe-contact">{{ emp.email }}{% if emp.telephone %} · {{ emp.telephone }}{% endif %}</span>
+                                    </label>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
-                        <div style="padding-left:24px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                        {% for emp in dept.employes %}
-                            {% if emp.estActif %}
-                            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#475569;">
-                                <input type="checkbox" name="cibles[]" value="{{ emp.id }}"
-                                       class="emp-check dept-{{ dept.id }}"
-                                       style="width:14px;height:14px;accent-color:#0891B2;">
-                                {{ emp.prenom }} {{ emp.nom }}
-                                <span style="font-size:11px;color:#CBD5E1;">{{ emp.email }}</span>
-                            </label>
-                            {% endif %}
                         {% endfor %}
-                        </div>
                     </div>
-                {% endfor %}
                 {% endif %}
             </div>
         </div>
 
-        {# Date planifiée #}
-        <div class="r-card" style="margin-bottom:20px;">
+        {# ── Autorisation ── #}
+        <div class="r-card card-authorisation">
             <div class="r-card-header">
-                <div class="r-card-title"><i class="bi bi-calendar-event"></i> Planification</div>
+                <div class="r-card-title"><i class="bi bi-shield-exclamation" style="color:#D97706;"></i> Autorisation obligatoire</div>
+                <div class="r-card-subtitle">Conformité légale</div>
             </div>
             <div class="r-card-body">
-                <div style="max-width:300px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Date d'envoi *</label>
-                    <input type="datetime-local" name="date_planifiee" required
-                           min="{{ 'now'|date('Y-m-d\\TH:i') }}"
-                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
-                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">L'envoi se fait manuellement depuis le détail de la campagne.</div>
-                </div>
-            </div>
-        </div>
-
-        {# Autorisation éthique — obligatoire #}
-        <div class="r-card" style="margin-bottom:24px;border:2px solid #FDE68A;">
-            <div class="r-card-header" style="background:#FFFBEB;">
-                <div class="r-card-title" style="color:#92400E;"><i class="bi bi-shield-exclamation"></i> Autorisation obligatoire</div>
-            </div>
-            <div class="r-card-body">
-                <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer;margin-bottom:16px;">
-                    <input type="checkbox" name="autorisation_confirmee" value="1" required id="checkAutorisation"
-                           style="width:18px;height:18px;margin-top:2px;flex-shrink:0;accent-color:#D97706;">
-                    <span style="font-size:13px;color:#374151;line-height:1.6;">
-                        Je confirme que cette simulation de phishing a été <strong>autorisée par la direction</strong> de l'entreprise
-                        et qu'elle est réalisée dans un cadre légal et éthique à des fins de sensibilisation.
-                    </span>
+                <label class="autorisation-checkbox">
+                    <input type="checkbox" name="autorisation_confirmee" value="1" required>
+                    <span>Je confirme que cette simulation a été <strong>autorisée par la direction</strong> de l'entreprise et qu'elle est réalisée dans un cadre légal et éthique à des fins de sensibilisation.</span>
                 </label>
-                <div>
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
-                        Nom du responsable ayant donné l'autorisation *
-                    </label>
-                    <input type="text" name="nom_autorisateur" placeholder="Prénom Nom, Titre"
-                           style="width:100%;max-width:400px;padding:10px 14px;border:1px solid #FDE68A;border-radius:8px;font-size:14px;box-sizing:border-box;background:#FFFBEB;">
+                <div class="form-group">
+                    <label class="form-label">Nom du responsable ayant donné l'autorisation <span class="text-red">*</span></label>
+                    <input type="text" name="nom_autorisateur" placeholder="Prénom Nom, Titre" class="form-control" style="max-width: 400px;">
                 </div>
             </div>
         </div>
 
-        <div style="display:flex;gap:10px;">
-            <button type="submit" class="r-btn r-btn-primary" style="background:linear-gradient(135deg,#D97706,#B45309);">
+        {# Actions #}
+        <div class="form-actions">
+            <a href="{{ path('rssi_phishing_liste') }}" class="btn btn-ghost btn-sm">
+                <i class="bi bi-x-lg"></i> Annuler
+            </a>
+            <button type="submit" class="btn btn-primary btn-sm">
                 <i class="bi bi-fish"></i> Créer la campagne
             </button>
-            <a href="{{ path('rssi_phishing_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
         </div>
 
     </form>
 </div>
+{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* Override couleur cyan -> bleu */
+    :root {
+        --r-accent: #3B82F6;
+        --r-accent-dim: rgba(59,130,246,0.12);
+    }
+    .r-brand-icon, .r-user-avatar {
+        background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+        box-shadow: 0 2px 8px rgba(59,130,246,0.2) !important;
+    }
+    .r-brand-role, .r-nav-link.active {
+        color: #3B82F6 !important;
+    }
+    .r-nav-link.active {
+        background: rgba(59,130,246,0.12) !important;
+    }
+    .r-topbar-company {
+        background: #EFF6FF !important;
+        border-color: #BFDBFE !important;
+        color: #1E40AF !important;
+    }
+
+    /* Container */
+    .campaign-form-container {
+        max-width: 960px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Sous-titres */
+    .r-card-subtitle {
+        font-size: 0.75rem;
+        color: #64748B;
+        margin-top: 0.25rem;
+        line-height: 1.4;
+    }
+
+    /* Alerte éthique */
+    .alert-ethical {
+        background: #FEF9C3;
+        border: 1px solid #FDE68A;
+        border-radius: 1rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    .alert-ethical i {
+        font-size: 1.5rem;
+        color: #D97706;
+        flex-shrink: 0;
+    }
+    .alert-title {
+        font-weight: 700;
+        color: #92400E;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+    }
+    .alert-text {
+        font-size: 0.8125rem;
+        color: #78350F;
+        line-height: 1.5;
+    }
+    html.dark .alert-ethical {
+        background: #422006;
+        border-color: #713F12;
+    }
+    html.dark .alert-ethical i {
+        color: #FBBF24;
+    }
+    html.dark .alert-title {
+        color: #FDE047;
+    }
+    html.dark .alert-text {
+        color: #FEF9C3;
+    }
+
+    /* Grille gabarits */
+    .gabarits-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1rem;
+    }
+    .gabarit-item {
+        cursor: pointer;
+    }
+    .gabarit-radio {
+        display: none;
+    }
+    .gabarit-card {
+        border: 2px solid #E2E8F0;
+        border-radius: 1rem;
+        padding: 1rem;
+        transition: all 0.15s;
+        background: white;
+        position: relative;
+        height: 100%;
+    }
+    .gabarit-radio:checked + .gabarit-card {
+        border-color: #3B82F6;
+        background: #F0F9FF;
+    }
+    .gabarit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .gabarit-title {
+        font-weight: 700;
+        color: #0F172A;
+        font-size: 0.875rem;
+    }
+    .gabarit-badges {
+        display: flex;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-email { background: #DBEAFE; color: #1D4ED8; }
+    .badge-difficulte-facile { background: #DCFCE7; color: #166534; }
+    .badge-difficulte-moyen { background: #FEF9C3; color: #854D0E; }
+    .badge-difficulte-difficile { background: #FEE2E2; color: #991B1B; }
+    .gabarit-categorie {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-bottom: 0.5rem;
+    }
+    .gabarit-description {
+        font-size: 0.75rem;
+        color: #94A3B8;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+    }
+    .gabarit-footer {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        border-top: 1px solid #F1F5F9;
+        padding-top: 0.5rem;
+        display: flex;
+        gap: 0.75rem;
+    }
+    .check-icon {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: none;
+        color: #3B82F6;
+        font-size: 1.25rem;
+    }
+    .gabarit-radio:checked + .gabarit-card .check-icon {
+        display: block;
+    }
+    html.dark .gabarit-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .gabarit-title {
+        color: #F1F5F9;
+    }
+    html.dark .gabarit-description,
+    html.dark .gabarit-categorie,
+    html.dark .gabarit-footer {
+        color: #94A3B8;
+    }
+
+    /* Canaux */
+    .canaux-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+
+    /* Cibles */
+    .cibles-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+    .departements-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .departement-item {
+        border: 1px solid #E2E8F0;
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+    }
+    .departement-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #F1F5F9;
+    }
+    .dept-checkbox {
+        width: 16px;
+        height: 16px;
+        accent-color: #3B82F6;
+    }
+    .departement-label {
+        font-weight: 700;
+        color: #1E293B;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        flex-wrap: wrap;
+    }
+    .departement-count {
+        font-weight: 400;
+        color: #94A3B8;
+        font-size: 0.75rem;
+    }
+    .employes-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 0.5rem;
+        padding-left: 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .employes-list {
+            padding-left: 0;
+        }
+    }
+    .employe-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: #475569;
+        cursor: pointer;
+    }
+    .emp-check {
+        width: 14px;
+        height: 14px;
+        accent-color: #3B82F6;
+    }
+    .employe-name {
+        font-weight: 500;
+    }
+    .employe-contact {
+        font-size: 0.65rem;
+        color: #94A3B8;
+    }
+    html.dark .departement-item {
+        border-color: #334155;
+    }
+    html.dark .departement-label {
+        color: #F1F5F9;
+    }
+    html.dark .employe-item {
+        color: #CBD5E1;
+    }
+
+    /* Autorisation */
+    .card-authorisation {
+        border-color: #FDE68A;
+    }
+    .autorisation-checkbox {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        cursor: pointer;
+    }
+    .autorisation-checkbox input {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: #D97706;
+    }
+    .autorisation-checkbox span {
+        font-size: 0.8125rem;
+        color: #374151;
+        line-height: 1.5;
+    }
+    html.dark .autorisation-checkbox span {
+        color: #E2E8F0;
+    }
+
+    /* Formulaires */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.15s;
+        background: white;
+        color: #0F172A;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .form-hint {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        margin-top: 0.25rem;
+    }
+    .text-muted {
+        font-weight: 400;
+        color: #94A3B8;
+    }
+    .text-red {
+        color: #EF4444;
+    }
+    html.dark .form-control {
+        background: #1E293B;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    html.dark .form-label {
+        color: #94A3B8;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        padding: 0.25rem 0.75rem;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #3B82F6;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #2563EB;
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 1.5rem;
+        color: #94A3B8;
+        font-size: 0.8125rem;
+    }
+    .empty-state i {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .canaux-grid {
+            grid-template-columns: 1fr;
+        }
+        .employes-list {
+            grid-template-columns: 1fr;
+        }
+        .form-actions {
+            flex-direction: column-reverse;
+        }
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .gabarits-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 480px) {
+        .alert-ethical {
+            flex-direction: column;
+            text-align: center;
+        }
+        .departement-header {
+            flex-wrap: wrap;
+        }
+        .cibles-actions {
+            flex-direction: column;
+        }
+        .cibles-actions .btn {
+            width: 100%;
+        }
+    }
+</style>
 <script>
-// Sélection gabarit avec highlight visuel
-document.querySelectorAll('.gabarit-radio').forEach(radio => {
-    radio.addEventListener('change', () => {
-        document.querySelectorAll('.gabarit-card').forEach(c => {
-            c.style.borderColor = '#E2E8F0';
-            c.style.background  = 'white';
-            c.querySelector('.check-icon').style.display = 'none';
+    // Sélection gabarit
+    document.querySelectorAll('.gabarit-radio').forEach(radio => {
+        radio.addEventListener('change', () => {
+            document.querySelectorAll('.gabarit-card').forEach(card => {
+                card.style.borderColor = '';
+            });
         });
-        const card = radio.closest('label').querySelector('.gabarit-card');
-        card.style.borderColor = '#0891B2';
-        card.style.background  = '#F0F9FF';
-        card.querySelector('.check-icon').style.display = 'block';
     });
-});
 
-// Sélection par département
-function toggleDept(deptId) {
-    const deptCheck = document.getElementById('dept_' + deptId);
-    document.querySelectorAll('.dept-' + deptId).forEach(c => c.checked = deptCheck.checked);
-}
-
-function toutSelectionner() {
-    document.querySelectorAll('input[name="cibles[]"]').forEach(c => c.checked = true);
-}
-function toutDeselectionner() {
-    document.querySelectorAll('input[name="cibles[]"]').forEach(c => c.checked = false);
-}
+    // Sélection par département
+    function toggleDept(deptId) {
+        const deptCheck = document.getElementById('dept_' + deptId);
+        const checkboxes = document.querySelectorAll('.dept-' + deptId);
+        checkboxes.forEach(cb => cb.checked = deptCheck.checked);
+    }
+    function toutSelectionner() {
+        document.querySelectorAll('input[name="cibles[]"]').forEach(cb => cb.checked = true);
+    }
+    function toutDeselectionner() {
+        document.querySelectorAll('input[name="cibles[]"]').forEach(cb => cb.checked = false);
+    }
 </script>
 {% endblock %}

@@ -1,102 +1,622 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lien invalide</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulation détectée — SAT Platform</title>
 
-body {
-    font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
-    background: #F8FAFC;
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+
+<style>
+  /* ========== TOKENS PREMIUM ========== */
+  :root {
+    --bg: #F7F9FC;
+    --surface: #FFFFFF;
+    --surface-muted: #F8FAFE;
+    --border: #E9EDF2;
+    --border-focus: #D0D5DD;
+    --text-primary: #0A0D14;
+    --text-secondary: #4A5568;
+    --text-tertiary: #718096;
+    
+    --danger: #C2410C;
+    --danger-light: #FFF7ED;
+    --danger-border: #FFEDD5;
+    
+    --warning: #B45309;
+    --warning-light: #FFFBEB;
+    
+    --success: #2F855A;
+    --success-light: #F0FDF4;
+    
+    --accent: #2563EB;
+    --accent-light: #EFF6FF;
+    
+    --star-gold: #F5A623;
+    --star-dim: #E2E8F0;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.5;
     min-height: 100vh;
+    padding: 48px 24px;
+  }
+
+  .container {
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  /* Carte principale */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 8px 20px rgba(0,0,0,0.02);
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+
+  /* En-tête */
+  .hero {
+    padding: 32px 36px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    border-radius: 40px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    letter-spacing: 0.01em;
+    margin-bottom: 24px;
+  }
+
+  .hero-content {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .hero-icon {
+    width: 56px;
+    height: 56px;
+    background: var(--danger-light);
+    border-radius: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
-    -webkit-font-smoothing: antialiased;
-}
+    color: var(--danger);
+    font-size: 26px;
+    flex-shrink: 0;
+    border: 1px solid var(--danger-border);
+  }
 
-.card {
-    background: #FFFFFF;
-    border-radius: 16px;
-    box-shadow: 0 2px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
-    width: 100%;
-    max-width: 420px;
-    padding: 48px 40px;
-    text-align: center;
-}
+  .hero-text h1 {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+  }
 
-.icon-wrap {
+  .hero-text p {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-width: 560px;
+  }
+
+  /* Contenu principal */
+  .content {
+    padding: 28px 36px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Section générique */
+  .section {
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-muted);
+  }
+
+  .section-header i {
+    font-size: 18px;
+    color: var(--text-tertiary);
+  }
+
+  .section-header h3 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+    margin: 0;
+  }
+
+  .section-body {
+    padding: 20px 24px;
+  }
+
+  /* Carte score */
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 24px;
+  }
+
+  .score-value {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .score-number {
+    font-size: 44px;
+    font-weight: 800;
+    color: var(--danger);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .score-max {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+  }
+  .score-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .progress-wrapper {
+    flex: 1;
+    min-width: 180px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 6px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    width: {{ employe.scoreVigilance|round }}%;
+    height: 100%;
+    background: var(--danger);
+    border-radius: 8px;
+  }
+
+  .user-tag {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .stars {
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--star-dim);
+  }
+  .stars i {
+    color: var(--star-gold);
+  }
+  .level-badge {
+    background: var(--surface-muted);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  /* Module recommandé */
+  .module-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  .module-info {
+    flex: 1;
+  }
+  .module-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+  }
+  .module-desc {
+    font-size: 13px;
+    color: var(--text-tertiary);
+  }
+  .btn-sm {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-sm:hover {
+    background: #1E4BB5;
+    transform: translateY(-1px);
+  }
+
+  /* Liste d'indices */
+  .hint-list, .tip-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hint-item, .tip-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    border-left: 2px solid var(--danger);
+    padding-left: 16px;
+  }
+  .hint-number {
+    width: 24px;
+    height: 24px;
+    background: var(--danger-light);
+    color: var(--danger);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .hint-item p {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .tip-item {
+    border-left-color: var(--success);
+  }
+  .tip-item i {
+    color: var(--success);
+    font-size: 18px;
+    margin-top: 0px;
+  }
+  .tip-item span {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  /* Email details */
+  .email-details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .email-row {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  .email-label {
+    min-width: 100px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .email-value {
+    color: var(--text-secondary);
+  }
+  .email-danger {
+    color: var(--danger);
+    font-weight: 500;
+  }
+
+  /* Boutons */
+  .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 72px;
-    height: 72px;
-    background: #F1F5F9;
-    border-radius: 50%;
-    font-size: 32px;
-    margin-bottom: 24px;
-}
-
-.title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #1E293B;
-    letter-spacing: -0.02em;
-    margin-bottom: 10px;
-}
-
-.desc {
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 60px;
     font-size: 14px;
-    color: #64748B;
-    line-height: 1.65;
-    margin-bottom: 32px;
-    max-width: 320px;
-    margin-left: auto;
-    margin-right: auto;
-}
+    font-weight: 600;
+    font-family: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+  }
+  .btn-primary {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+  }
+  .btn-primary:hover {
+    background: #1E293B;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+  .btn-secondary {
+    background: var(--surface);
+    border-color: var(--border-focus);
+    color: var(--text-primary);
+  }
+  .btn-secondary:hover {
+    background: var(--surface-muted);
+    border-color: var(--border);
+  }
 
-.code-box {
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    padding: 16px 20px;
-    font-size: 13px;
-    color: #94A3B8;
-    margin-bottom: 32px;
-}
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    text-align: center;
+    line-height: 1.6;
+  }
+  .footer strong {
+    color: var(--text-primary);
+  }
 
-.code-box code {
-    display: block;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: #CBD5E1;
-    margin-top: 6px;
-    word-break: break-all;
-}
+  /* Responsive */
+  @media (max-width: 680px) {
+    body { padding: 20px 16px; }
+    .hero, .content { padding: 20px; }
+    .hero-content { flex-direction: column; }
+    .hero-icon { width: 48px; height: 48px; font-size: 22px; }
+    .hero-text h1 { font-size: 26px; }
+    .score-row { flex-direction: column; align-items: flex-start; }
+    .user-tag { align-items: flex-start; }
+    .module-card { flex-direction: column; align-items: stretch; }
+    .btn-sm { align-self: flex-start; }
+    .email-row { flex-direction: column; gap: 4px; }
+    .section-body { padding: 16px; }
+  }
 </style>
 </head>
 <body>
 
-<div class="card">
-    <div class="icon-wrap">🔗</div>
+<div class="container">
+  <div class="card">
 
-    <div class="title">Lien invalide ou expiré</div>
-
-    <p class="desc">
-        Ce lien n'est plus valide. Il a peut-être déjà été utilisé
-        ou sa durée de validité est expirée.
-    </p>
-
-    <div class="code-box">
-        Si vous pensez avoir reçu ce lien par erreur,
-        ignorez simplement ce message.
-        <code>Erreur : token introuvable ou expiré</code>
+    <!-- EN-TÊTE -->
+    <div class="hero">
+      <div class="badge">
+        <i class="bi bi-shield-exclamation"></i>
+        Simulation éducative
+      </div>
+      <div class="hero-content">
+        <div class="hero-icon">
+          <i class="bi bi-bug-fill"></i>
+        </div>
+        <div class="hero-text">
+          <h1>Simulation détectée</h1>
+          <p>
+            Vous venez d'interagir avec une campagne de phishing simulée
+            organisée par votre entreprise.
+            <strong>Aucune donnée sensible n'a été collectée.</strong>
+          </p>
+        </div>
+      </div>
     </div>
+
+    <!-- CONTENU -->
+    <div class="content">
+
+      <!-- SCORE DE VIGILANCE -->
+      <div class="section">
+        <div class="section-header">
+          <i class="bi bi-bar-chart-steps"></i>
+          <h3>Impact sur votre score</h3>
+        </div>
+        <div class="section-body">
+          <div class="score-row">
+            <div>
+              <div class="score-value">
+                <span class="score-number">{{ employe.scoreVigilance|round }}</span>
+                <span class="score-max">/100</span>
+              </div>
+              <div class="score-text">Score de vigilance actuel</div>
+            </div>
+            <div class="progress-wrapper">
+              <div class="progress-label">
+                <span>Niveau de vigilance</span>
+                <span>{{ employe.scoreVigilance|round }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ employe.scoreVigilance|round }}%;"></div>
+              </div>
+            </div>
+            <div class="user-tag">
+              <div class="stars">
+                {% for i in 1..5 %}
+                  {% if i <= employe.nombreEtoiles %}
+                    <i class="bi bi-star-fill" style="color: var(--star-gold);"></i>
+                  {% else %}
+                    <i class="bi bi-star" style="color: var(--star-dim);"></i>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <div class="level-badge">{{ employe.niveauVigilance }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {% if modulePropose is defined and modulePropose %}
+      <!-- FORMATION RECOMMANDÉE -->
+      <div class="section">
+        <div class="section-header">
+          <i class="bi bi-mortarboard-fill"></i>
+          <h3>Formation recommandée</h3>
+        </div>
+        <div class="section-body">
+          <div class="module-card">
+            <div class="module-info">
+              <div class="module-title">{{ modulePropose.titre }}</div>
+              {% if modulePropose.description %}
+                <div class="module-desc">{{ modulePropose.description|slice(0,100) }}{% if modulePropose.description|length > 100 %}…{% endif %}</div>
+              {% endif %}
+            </div>
+            <form method="post" action="{{ path('employe_formation_commencer', {id: modulePropose.id}) }}">
+              <button type="submit" class="btn-sm">
+                <i class="bi bi-play-circle-fill"></i> Commencer
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- ANALYSE DE L'EMAIL -->
+      <div class="section">
+        <div class="section-header">
+          <i class="bi bi-envelope-paper-fill"></i>
+          <h3>Analyse de l'email</h3>
+        </div>
+        <div class="section-body">
+          <div class="email-details">
+            <div class="email-row">
+              <div class="email-label">Expéditeur</div>
+              <div class="email-value email-danger">
+                {{ gabarit.nomExpediteur }} &lt;{{ gabarit.emailExpediteur }}&gt;
+              </div>
+            </div>
+            <div class="email-row">
+              <div class="email-label">Sujet</div>
+              <div class="email-value">{{ gabarit.sujetEmail }}</div>
+            </div>
+            <div class="email-row">
+              <div class="email-label">Catégorie</div>
+              <div class="email-value">{{ gabarit.categorie }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INDICES (POURQUOI C'ÉTAIT UN PHISHING) -->
+      <div class="section">
+        <div class="section-header">
+          <i class="bi bi-lightbulb-fill"></i>
+          <h3>Indices révélateurs</h3>
+        </div>
+        <div class="section-body">
+          <div class="hint-list">
+            {% for i, indice in indices %}
+            <div class="hint-item">
+              <div class="hint-number">{{ i + 1 }}</div>
+              <p>{{ indice }}</p>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- BONNES PRATIQUES -->
+      <div class="section">
+        <div class="section-header">
+          <i class="bi bi-shield-check"></i>
+          <h3>Bonnes pratiques</h3>
+        </div>
+        <div class="section-body">
+          <div class="tip-list">
+            <div class="tip-item">
+              <i class="bi bi-check2-circle"></i>
+              <span>Vérifiez toujours l’adresse complète de l’expéditeur.</span>
+            </div>
+            <div class="tip-item">
+              <i class="bi bi-check2-circle"></i>
+              <span>Passez le curseur sur les liens avant de cliquer.</span>
+            </div>
+            <div class="tip-item">
+              <i class="bi bi-check2-circle"></i>
+              <span>Signalez les emails suspects depuis votre tableau de bord.</span>
+            </div>
+            <div class="tip-item">
+              <i class="bi bi-check2-circle"></i>
+              <span>Participez aux formations pour renforcer votre vigilance.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOUTONS D'ACTION -->
+      <div class="actions">
+        {% if modulePropose is defined and modulePropose %}
+          <form method="post" action="{{ path('employe_formation_commencer', {id: modulePropose.id}) }}" style="width:100%;">
+            <button type="submit" class="btn btn-primary" style="width:100%;">
+              <i class="bi bi-mortarboard-fill"></i> Suivre la formation recommandée
+            </button>
+          </form>
+        {% endif %}
+        <a href="{{ path('employe_dashboard') }}" class="btn {% if modulePropose is not defined or not modulePropose %}btn-primary{% else %}btn-secondary{% endif %}">
+          <i class="bi bi-grid-3x3-gap-fill"></i> Retour au tableau de bord
+        </a>
+      </div>
+
+      <!-- MENTION CONFIDENTIALITÉ -->
+      <div class="footer">
+        Cette simulation a été organisée par votre responsable sécurité dans le cadre
+        du programme de sensibilisation.<br>
+        <strong>Aucune donnée personnelle ou identifiant n’a été enregistré.</strong>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 </body>

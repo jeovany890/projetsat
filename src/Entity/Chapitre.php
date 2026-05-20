@@ -26,9 +26,6 @@ class Chapitre
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $dureeVideo = null;
 
-    #[ORM\Column(type: 'integer')]
-    private ?int $ordre = null;
-
     #[ORM\Column(type: 'datetime')]
     private ?\DateTimeInterface $dateCreation = null;
 
@@ -36,7 +33,6 @@ class Chapitre
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?ModuleFormation $module = null;
 
-    // ✅ NOUVEAU : Quiz lié à ce chapitre
     #[ORM\OneToOne(targetEntity: Quiz::class, mappedBy: 'chapitre', cascade: ['persist', 'remove'])]
     private ?Quiz $quiz = null;
 
@@ -54,8 +50,6 @@ class Chapitre
     public function setUrlVideo(?string $urlVideo): static { $this->urlVideo = $urlVideo; return $this; }
     public function getDureeVideo(): ?int { return $this->dureeVideo; }
     public function setDureeVideo(?int $dureeVideo): static { $this->dureeVideo = $dureeVideo; return $this; }
-    public function getOrdre(): ?int { return $this->ordre; }
-    public function setOrdre(int $ordre): static { $this->ordre = $ordre; return $this; }
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
     public function getModule(): ?ModuleFormation { return $this->module; }

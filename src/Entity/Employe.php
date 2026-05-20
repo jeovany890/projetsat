@@ -11,102 +11,88 @@ class Employe extends Utilisateur
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $poste = null;
 
+    // Points gamification — cumulatifs, jamais négatifs
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
     private int $totalPoints = 0;
 
-    #[ORM\Column(type: 'integer', options: ['default' => 0])]
-    private int $totalEtoiles = 0;
-
-    #[ORM\Column(type: 'float', options: ['default' => 50.00])]
-    private float $scoreVigilance = 50.00;
+    // Score de vigilance — 0 à 100, initialisé à 50 à la création
+    // Augmente/diminue selon les événements phishing et formations
+    #[ORM\Column(type: 'float', options: ['default' => 50.0])]
+    private float $scoreVigilance = 50.0;
 
     #[ORM\ManyToOne(targetEntity: Departement::class, inversedBy: 'employes')]
     #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
     private ?Departement $departement = null;
 
     // ========================================
-    // GETTERS & SETTERS — Informations de base
+    // POSTE
     // ========================================
 
-    public function getPoste(): ?string
-    {
-        return $this->poste;
-    }
-
-    public function setPoste(?string $poste): static
-    {
-        $this->poste = $poste;
-        return $this;
-    }
+    public function getPoste(): ?string { return $this->poste; }
+    public function setPoste(?string $poste): static { $this->poste = $poste; return $this; }
 
     // ========================================
-    // POINTS & ÉTOILES
+    // POINTS (gamification — jamais négatifs)
     // ========================================
 
-    public function getTotalPoints(): int
-    {
-        return $this->totalPoints;
-    }
+    public function getTotalPoints(): int { return $this->totalPoints; }
 
     public function setTotalPoints(int $totalPoints): static
     {
-        $this->totalPoints = $totalPoints;
+        $this->totalPoints = max(0, $totalPoints);
         return $this;
     }
 
     public function ajouterPoints(int $points): static
     {
-        $this->totalPoints += $points;
-        return $this;
-    }
-
-    public function retirerPoints(int $points): static
-    {
-        $this->totalPoints -= $points;
-        if ($this->totalPoints < 0) {
-            $this->totalPoints = 0;
+        if ($points > 0) {
+            $this->totalPoints += $points;
         }
         return $this;
     }
 
-    public function getTotalEtoiles(): int
-    {
-        return $this->totalEtoiles;
-    }
+    // ========================================
+    // SCORE VIGILANCE (0–100, stocké en BD)
+    // ========================================
 
-    public function setTotalEtoiles(int $totalEtoiles): static
+    public function getScoreVigilance(): float { return $this->scoreVigilance; }
+
+    public function setScoreVigilance(float $score): static
     {
-        $this->totalEtoiles = $totalEtoiles;
+        $this->scoreVigilance = max(0.0, min(100.0, $score));
         return $this;
     }
 
-    public function ajouterEtoiles(int $etoiles): static
+    public function ajusterScoreVigilance(float $delta): static
     {
-        $this->totalEtoiles += $etoiles;
+        $this->scoreVigilance = max(0.0, min(100.0, $this->scoreVigilance + $delta));
         return $this;
     }
 
     // ========================================
-    // SCORE VIGILANCE
+    // ÉTOILES — calculées dynamiquement depuis
+    // le score de vigilance, JAMAIS stockées.
+    //  0–19  → 1 ★
+    // 20–39  → 2 ★
+    // 40–59  → 3 ★
+    // 60–79  → 4 ★
+    // 80–100 → 5 ★
     // ========================================
 
-    public function getScoreVigilance(): float
+    public function getNombreEtoiles(): int
     {
-        return $this->scoreVigilance;
+        return match(true) {
+            $this->scoreVigilance >= 80 => 5,
+            $this->scoreVigilance >= 60 => 4,
+            $this->scoreVigilance >= 40 => 3,
+            $this->scoreVigilance >= 20 => 2,
+            default                     => 1,
+        };
     }
 
-    public function setScoreVigilance(float $scoreVigilance): static
-    {
-        $this->scoreVigilance = max(0, min(100, $scoreVigilance));
-        return $this;
-    }
-
-    public function ajusterScoreVigilance(float $ajustement): static
-    {
-        $this->scoreVigilance += $ajustement;
-        $this->scoreVigilance = max(0, min(100, $this->scoreVigilance));
-        return $this;
-    }
+    // ========================================
+    // NIVEAU DE VIGILANCE (label texte)
+    // ========================================
 
     public function getNiveauVigilance(): string
     {
@@ -115,44 +101,36 @@ class Employe extends Utilisateur
             $this->scoreVigilance >= 60 => 'Vigilant',
             $this->scoreVigilance >= 40 => 'Prudent',
             $this->scoreVigilance >= 20 => 'Débutant',
-            default => 'À risque'
+            default                     => 'À risque',
         };
     }
 
     // ========================================
-    // RELATION DÉPARTEMENT
+    // PROFIL DE RISQUE (pour le dashboard RSSI)
+    // Calculé dynamiquement depuis le score.
     // ========================================
 
-    public function getDepartement(): ?Departement
+    public function getProfilRisque(): string
     {
-        return $this->departement;
+        return match(true) {
+            $this->scoreVigilance >= 60 => 'faible',
+            $this->scoreVigilance >= 35 => 'moyen',
+            default                     => 'élevé',
+        };
     }
 
-    public function setDepartement(?Departement $departement): static
-    {
-        $this->departement = $departement;
-        return $this;
-    }
-
     // ========================================
-    // ✅ HELPER : Accès direct à l'entreprise
-    // via Département (évite la double navigation)
+    // DÉPARTEMENT & ENTREPRISE
     // ========================================
 
-    /**
-     * Retourne l'entreprise de l'employé via son département.
-     * Utilisation : $employe->getEntreprise() au lieu de
-     *               $employe->getDepartement()->getEntreprise()
-     */
+    public function getDepartement(): ?Departement { return $this->departement; }
+    public function setDepartement(?Departement $departement): static { $this->departement = $departement; return $this; }
+
     public function getEntreprise(): ?Entreprise
     {
         return $this->departement?->getEntreprise();
     }
 
-    /**
-     * Vérifie si l'employé appartient à une entreprise donnée.
-     * Utile dans les controllers RSSI pour filtrer ses employés.
-     */
     public function appartientAEntreprise(Entreprise $entreprise): bool
     {
         return $this->getEntreprise()?->getId() === $entreprise->getId();

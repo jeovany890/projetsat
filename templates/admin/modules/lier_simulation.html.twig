@@ -1,0 +1,90 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}Associer une simulation — {{ module.titre }}{% endblock %}
+{% block content %}
+<div style="max-width:700px;margin:0 auto;">
+
+  {# Breadcrumb #}
+  <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-500);margin-bottom:24px;">
+    <a href="{{ path('admin_modules_liste') }}" style="color:var(--gray-500);text-decoration:none;">Modules</a>
+    <span>›</span>
+    <a href="{{ path('admin_module_details', {id: module.id}) }}" style="color:var(--gray-500);text-decoration:none;">{{ module.titre }}</a>
+    <span>›</span>
+    <span style="color:var(--gray-800);font-weight:600;">Associer une simulation</span>
+  </div>
+
+  {# En-tête #}
+  <div style="background:linear-gradient(135deg,#1E293B,#334155);border-radius:14px;padding:24px;margin-bottom:24px;color:white;">
+    <div style="font-size:13px;color:rgba(255,255,255,.5);margin-bottom:8px;">Module sélectionné</div>
+    <h1 style="font-size:20px;font-weight:800;margin:0 0 6px;">{{ module.titre }}</h1>
+    <div style="font-size:13px;color:rgba(255,255,255,.6);">
+      {{ module.chapitres|length }} chapitre(s) —
+      {% if module.simulation %}
+      <span style="color:#6EE7B7;">✅ Simulation déjà liée : {{ module.simulation.titre }}</span>
+      {% else %}
+      <span style="color:#FCA5A5;">⚠️ Aucune simulation liée</span>
+      {% endif %}
+    </div>
+  </div>
+
+  {# Formulaire de sélection #}
+  <form method="post" action="{{ path('admin_module_simulation', {id: module.id}) }}">
+    <div class="card" style="padding:24px;">
+      <h2 style="font-size:16px;font-weight:700;margin:0 0 16px;">Choisir une simulation</h2>
+
+      {% if simulations|length == 0 %}
+        <div style="text-align:center;padding:40px;color:var(--gray-400);">
+          <i class="bi bi-controller" style="font-size:42px;display:block;margin-bottom:12px;"></i>
+          <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Aucune simulation disponible</div>
+          <p style="font-size:13px;margin-bottom:16px;">Créez d'abord une simulation avant de l'associer à ce module.</p>
+          <a href="{{ path('admin_simulation_nouvelle') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Créer une simulation
+          </a>
+        </div>
+      {% else %}
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          {# Option aucune #}
+          <label style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid #E2E8F0;border-radius:12px;cursor:pointer;transition:.15s;" onmouseover="this.style.borderColor='#CBD5E1'" onmouseout="this.style.borderColor='#E2E8F0'">
+            <input type="radio" name="simulation_id" value="aucune" {% if not module.simulation %}checked{% endif %} style="width:16px;height:16px;accent-color:#6366F1;">
+            <div>
+              <div style="font-size:14px;font-weight:600;color:var(--gray-700);">🔗 Aucune simulation</div>
+              <div style="font-size:12px;color:var(--gray-400);">Délier ou ne pas associer de simulation</div>
+            </div>
+          </label>
+
+          {% for sim in simulations %}
+          {% set isSelected = module.simulation and module.simulation.id == sim.id %}
+          <label style="display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid {{ isSelected ? '#C7D2FE' : '#E2E8F0' }};border-radius:12px;cursor:pointer;background:{{ isSelected ? '#EEF2FF' : 'white' }};transition:.15s;" onmouseover="this.style.borderColor='#C7D2FE';this.style.background='#EEF2FF'" onmouseout="this.style.borderColor='{{ isSelected ? '#C7D2FE' : '#E2E8F0' }}';this.style.background='{{ isSelected ? '#EEF2FF' : 'white' }}'">
+            <input type="radio" name="simulation_id" value="{{ sim.id }}" {% if isSelected %}checked{% endif %} style="width:16px;height:16px;accent-color:#6366F1;">
+            <div style="font-size:24px;flex-shrink:0;">
+              {% if sim.typeSimulation == 'GMAIL' %}📧
+              {% elseif sim.typeSimulation == 'SMS' %}📱
+              {% else %}💬{% endif %}
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:14px;font-weight:700;color:var(--gray-800);">{{ sim.titre }}</div>
+              <div style="font-size:12px;color:var(--gray-500);margin-top:2px;display:flex;gap:10px;">
+                <span>{{ sim.typeSimulation }}</span>
+                <span>{{ sim.difficulte|capitalize }}</span>
+                <span>{{ sim.dureeEstimee }} min</span>
+                <span>{{ sim.pointsReussite }} pts</span>
+              </div>
+            </div>
+            {% if isSelected %}
+            <span style="background:#EEF2FF;color:#4F46E5;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;flex-shrink:0;">Actuelle</span>
+            {% endif %}
+          </label>
+          {% endfor %}
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <a href="{{ path('admin_module_details', {id: module.id}) }}" class="btn btn-ghost">Annuler</a>
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-link-45deg"></i> Confirmer l'association
+          </button>
+        </div>
+      {% endif %}
+    </div>
+  </form>
+
+</div>
+{% endblock %}

@@ -1,0 +1,451 @@
+{# templates/employe/formations/detail.html.twig #}
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}{{ module.titre }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* Structure principale */
+    .formation-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    @media (max-width: 900px) {
+        .formation-wrapper {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        /* Sur mobile, la sidebar passe au-dessus du contenu */
+        .sidebar-right {
+            order: -1;
+        }
+    }
+
+    /* Contenu principal (colonne gauche) */
+    .formation-content {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        padding: 2rem;
+    }
+    .chapter-header {
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 0.75rem;
+    }
+    .chapter-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0 0 0.5rem;
+    }
+    .chapter-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: #0f172a;
+        margin: 1.5rem 0;
+    }
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+    .chapter-text {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: #334155;
+    }
+    .chapter-text h1, .chapter-text h2, .chapter-text h3 {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 1.2rem 0 0.6rem;
+    }
+    .chapter-text p {
+        margin-bottom: 1rem;
+    }
+    .chapter-text ul, .chapter-text ol {
+        padding-left: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .chapter-actions {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: all 0.15s;
+    }
+    .btn-primary {
+        background: #10b981;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #059669;
+    }
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+    .badge-success {
+        background: #dcfce7;
+        color: #166534;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    /* Sidebar droite */
+    .sidebar-right {
+        background: #f8fafc;
+        border-radius: 1rem;
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+    }
+    .sidebar-header {
+        padding: 1rem 1.2rem;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #0f172a;
+    }
+    /* Barre de progression globale */
+    .global-progress {
+        padding: 1rem 1.2rem;
+        background: #f1f5f9;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .progress-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #475569;
+        margin-bottom: 0.3rem;
+        display: flex;
+        justify-content: space-between;
+    }
+    .progress-bar-bg {
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        background: #10b981;
+        border-radius: 99px;
+        transition: width 0.3s;
+    }
+    /* Liste des chapitres */
+    .chapter-list {
+        display: flex;
+        flex-direction: column;
+    }
+    .chapter-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.8rem 1.2rem;
+        text-decoration: none;
+        color: #334155;
+        border-left: 3px solid transparent;
+        transition: all 0.15s;
+        font-size: 0.875rem;
+    }
+    .chapter-item:hover {
+        background: #f1f5f9;
+    }
+    .chapter-item.active {
+        background: #eff6ff;
+        border-left-color: #10b981;
+        color: #065f46;
+        font-weight: 500;
+    }
+    .chapter-number {
+        width: 28px;
+        height: 28px;
+        border-radius: 20px;
+        background: #e2e8f0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #334155;
+    }
+    .chapter-number.done {
+        background: #10b981;
+        color: white;
+    }
+    .chapter-info {
+        flex: 1;
+    }
+    .chapter-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        background: #e2e8f0;
+        color: #475569;
+        display: inline-block;
+        margin-top: 0.2rem;
+    }
+    .chapter-badge.quiz-pass {
+        background: #dcfce7;
+        color: #166534;
+    }
+    /* Simulation */
+    .simulation-item {
+        margin-top: 0.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+    .simulation-item.disabled {
+        opacity: 0.6;
+        cursor: default;
+        pointer-events: none;
+    }
+    .simulation-badge {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 12px;
+        background: #e2e8f0;
+        color: #475569;
+    }
+    .simulation-badge.available {
+        background: #fef3c7;
+        color: #b45309;
+    }
+    .simulation-badge.done {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    /* Dark mode */
+    html.dark .formation-content,
+    html.dark .sidebar-right,
+    html.dark .sidebar-header,
+    html.dark .global-progress {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    html.dark .chapter-title,
+    html.dark .chapter-text,
+    html.dark .sidebar-header {
+        color: #f1f5f9;
+    }
+    html.dark .chapter-text {
+        color: #cbd5e1;
+    }
+    html.dark .chapter-item {
+        color: #94a3b8;
+    }
+    html.dark .chapter-item.active {
+        background: #0f172a;
+        color: #34d399;
+    }
+    html.dark .btn-secondary {
+        background: #334155;
+        border-color: #475569;
+        color: #e2e8f0;
+    }
+    html.dark .btn-secondary:hover {
+        background: #475569;
+    }
+    html.dark .progress-bar-bg {
+        background: #334155;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="formation-wrapper">
+    {# Colonne gauche : contenu du chapitre #}
+    <main class="formation-content">
+        {% if chapitreActif %}
+            <div class="chapter-header">
+                <h1 class="chapter-title">{{ chapitreActif.titre }}</h1>
+                <div class="chapter-meta">
+                    {% if chapitreActif.urlVideo %}
+                        <span>Vidéo incluse</span>
+                    {% endif %}
+                    {% if chapitreActif.quiz %}
+                        {% set t = tentativesChapitres[chapitreActif.id] ?? null %}
+                        {% if t and t.aReussi %}
+                            <span class="badge-success">Quiz réussi</span>
+                        {% elseif t %}
+                            <span class="badge-success" style="background:#fee2e2;color:#991b1b;">Quiz échoué</span>
+                        {% else %}
+                            <span>Quiz à valider</span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if chapitreActif.urlVideo %}
+                <div class="video-container">
+                    <iframe src="{{ chapitreActif.urlVideo }}" allowfullscreen></iframe>
+                </div>
+            {% endif %}
+
+            {% if chapitreActif.contenu %}
+                <div class="chapter-text">{{ chapitreActif.contenu|raw }}</div>
+            {% else %}
+                <div class="chapter-text">Aucun contenu pour ce chapitre.</div>
+            {% endif %}
+
+            <div class="chapter-actions">
+                {# Bouton précédent #}
+                {% set chapitresTries = chapitres|sort((a,b) => a.id <=> b.id) %}
+                {% set currentIdx = 0 %}
+                {% for chap in chapitresTries %}
+                    {% if chap.id == chapitreActif.id %}
+                        {% set currentIdx = loop.index0 %}
+                    {% endif %}
+                {% endfor %}
+                {% if currentIdx > 0 %}
+                    {% set prevChap = chapitresTries[currentIdx - 1] %}
+                    <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: prevChap.id}) }}" class="btn btn-secondary">
+                        ← Précédent
+                    </a>
+                {% else %}
+                    <div></div>
+                {% endif %}
+
+                {# Bouton principal #}
+                {% set chapDone = (not chapitreActif.quiz) or (tentativesChapitres[chapitreActif.id] and tentativesChapitres[chapitreActif.id].aReussi) %}
+                {% if not chapDone %}
+                    {% if chapitreActif.quiz %}
+                        <a href="{{ path('employe_chapitre_quiz', {moduleId: module.id, chapitreId: chapitreActif.id}) }}" class="btn btn-primary">
+                            Passer le quiz
+                        </a>
+                    {% else %}
+                        <form method="post" action="{{ path('employe_chapitre_terminer', {moduleId: module.id, chapitreId: chapitreActif.id}) }}">
+                            <button type="submit" class="btn btn-primary">Marquer comme terminé</button>
+                        </form>
+                    {% endif %}
+                {% else %}
+                    {% if currentIdx < chapitresTries|length - 1 %}
+                        {% set nextChap = chapitresTries[currentIdx + 1] %}
+                        <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: nextChap.id}) }}" class="btn btn-primary">
+                            Suivant →
+                        </a>
+                    {% elseif tousChapitresTermines and module.simulation %}
+                        <a href="{{ path('employe_simulation_jouer', {id: module.simulation.id}) }}" class="btn btn-primary">
+                            Passer la simulation
+                        </a>
+                    {% else %}
+                        <span class="badge-success">✓ Chapitre terminé</span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% else %}
+            <div style="text-align:center; padding:3rem;">
+                <p>Sélectionnez un chapitre dans la colonne de droite.</p>
+            </div>
+        {% endif %}
+    </main>
+
+    {# Colonne droite : progression globale + chapitres + simulation #}
+    <aside class="sidebar-right">
+        <div class="sidebar-header">Contenu du cours</div>
+
+        {% set pct = progression.pourcentageProgression %}
+        <div class="global-progress">
+            <div class="progress-label">
+                <span>Progression globale</span>
+                <span>{{ pct }}%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ pct }}%;"></div>
+            </div>
+        </div>
+
+        <div class="chapter-list">
+            {% set chapitresTries = chapitres|sort((a,b) => a.id <=> b.id) %}
+            {% for chap in chapitresTries %}
+                {% set t = tentativesChapitres[chap.id] ?? null %}
+                {% set done = (not chap.quiz) or (t and t.aReussi) %}
+                {% set isActive = chapitreActif and chap.id == chapitreActif.id %}
+                <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: chap.id}) }}"
+                   class="chapter-item {{ isActive ? 'active' : '' }}">
+                    <span class="chapter-number {{ done ? 'done' : '' }}">
+                        {% if done %}✓{% else %}{{ loop.index }}{% endif %}
+                    </span>
+                    <div class="chapter-info">
+                        <div>{{ chap.titre }}</div>
+                        {% if chap.quiz %}
+                            <div class="chapter-badge {% if done %}quiz-pass{% endif %}">
+                                {% if done %}Quiz réussi{% else %}Quiz à passer{% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </a>
+            {% endfor %}
+
+            {% if module.simulation %}
+                <div class="simulation-item">
+                    <a href="{{ tousChapitresTermines ? path('employe_simulation_jouer', {id: module.simulation.id}) : '#' }}"
+                       class="chapter-item {{ not chapitreActif and tousChapitresTermines ? 'active' : '' }}"
+                       style="{% if not tousChapitresTermines %}opacity:0.6; cursor:default;{% endif %}">
+                        <span class="chapter-number {% if resultatSimulation and resultatSimulation.aReussi %}done{% endif %}">
+                            {% if resultatSimulation and resultatSimulation.aReussi %}✓{% else %}🎮{% endif %}
+                        </span>
+                        <div class="chapter-info">
+                            <div>Simulation finale</div>
+                            <div class="simulation-badge 
+                                {% if resultatSimulation and resultatSimulation.aReussi %}done
+                                {% elseif tousChapitresTermines %}available
+                                {% endif %}">
+                                {% if resultatSimulation and resultatSimulation.aReussi %}
+                                    Score {{ resultatSimulation.score }}%
+                                {% elseif tousChapitresTermines %}
+                                    Disponible
+                                {% else %}
+                                    Verrouillé (terminez tous les chapitres)
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

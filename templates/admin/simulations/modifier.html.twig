@@ -1,134 +1,991 @@
 {% extends 'admin/layout.html.twig' %}
+
 {% block page_title %}Modifier — {{ simulation.titre }}{% endblock %}
 
+{% block topbar_actions %}
+    <a href="{{ path('admin_simulations_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 900px; margin: 0 auto;">
+<div class="simulation-form-container">
 
-    <div style="margin-bottom: var(--space-6);">
-        <a href="{{ path('admin_simulations_liste') }}" style="color: var(--gray-600); display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm);">
-            <i class="bi bi-arrow-left"></i> Retour aux simulations
-        </a>
-    </div>
+    {# Variables pour les placeholders JavaScript #}
+    {% set ph_prenom     = '{{PRENOM}}' %}
+    {% set ph_nom        = '{{NOM}}' %}
+    {% set ph_email      = '{{EMAIL}}' %}
+    {% set ph_telephone  = '{{TELEPHONE}}' %}
+    {% set ph_entreprise = '{{ENTREPRISE}}' %}
 
-    <div class="card">
-        <div class="card-body" style="padding: var(--space-8);">
-            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-8);">
-                <i class="bi bi-pencil-square" style="color: var(--primary-600);"></i>
-                Modifier la simulation
-            </h2>
+    {# Données existantes #}
+    {% set contenu = simulation.contenuSimulation %}
+    {% set type_sim = simulation.typeSimulation %}
 
-            <form method="post">
+    <form method="post" id="formSim">
+        <input type="hidden" name="contenu_simulation_json" id="contenuJson">
 
-                <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
-                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">📋 Informations générales</h3>
-
-                    <div class="form-group">
-                        <label class="form-label">Titre *</label>
-                        <input type="text" class="form-control" name="titre" required value="{{ simulation.titre }}">
+        <div class="sim-grid">
+            {# Colonne gauche : formulaire #}
+            <div class="sim-left">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Informations générales</h3>
+                        <span class="text-muted">#{{ simulation.id }}</span>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="2">{{ simulation.description }}</textarea>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-4);">
+                    <div class="card-body">
                         <div class="form-group">
-                            <label class="form-label">Type *</label>
-                            <select class="form-control" name="type_simulation" required>
-                                {% for key, label in types %}
-                                    <option value="{{ key }}" {{ simulation.typeSimulation == key ? 'selected' }}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
+                            <label class="form-label">Titre *</label>
+                            <input type="text" name="titre" required value="{{ simulation.titre }}" class="form-control">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Difficulté</label>
-                            <select class="form-control" name="difficulte">
-                                <option value="facile" {{ simulation.difficulte == 'facile' ? 'selected' }}>Facile</option>
-                                <option value="moyen" {{ simulation.difficulte == 'moyen' ? 'selected' }}>Moyen</option>
-                                <option value="difficile" {{ simulation.difficulte == 'difficile' ? 'selected' }}>Difficile</option>
-                            </select>
+                            <label class="form-label">Description</label>
+                            <textarea name="description" rows="2" class="form-control">{{ simulation.description }}</textarea>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Durée (min)</label>
-                            <input type="number" class="form-control" name="duree_estimee" value="{{ simulation.dureeEstimee }}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Type de simulation *</label>
+                                <select name="type_simulation" id="typeSelect" class="form-control" onchange="changerType()" required>
+                                    <option value="GMAIL"    {{ type_sim == 'GMAIL'    ? 'selected' }}>Gmail — Boite email</option>
+                                    <option value="SMS"      {{ type_sim == 'SMS'      ? 'selected' }}>SMS — Messagerie</option>
+                                    <option value="WHATSAPP" {{ type_sim == 'WHATSAPP' ? 'selected' }}>WhatsApp</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Difficulté</label>
+                                <select name="difficulte" class="form-control">
+                                    <option value="facile"    {{ simulation.difficulte == 'facile'    ? 'selected' }}>Facile</option>
+                                    <option value="moyen"     {{ simulation.difficulte == 'moyen'     ? 'selected' }}>Moyen</option>
+                                    <option value="difficile" {{ simulation.difficulte == 'difficile' ? 'selected' }}>Difficile</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Durée estimée (min)</label>
+                                <input type="number" name="duree_estimee" value="{{ simulation.dureeEstimee }}" min="1" max="60" class="form-control">
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4);">
-                        <div class="form-group">
-                            <label class="form-label">Points réussite</label>
-                            <input type="number" class="form-control" name="points_reussite" value="{{ simulation.pointsReussite }}">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Points si réussite</label>
+                                <input type="number" name="points_reussite" value="{{ simulation.pointsReussite }}" class="form-control">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">Seuil réussite (%)</label>
-                            <input type="number" class="form-control" name="seuil_reussite" value="{{ simulation.seuilReussite }}">
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="est_publie" {{ simulation.estPublie ? 'checked' }}>
+                                <span>Publiée</span>
+                            </label>
                         </div>
                     </div>
                 </div>
 
-                {# Contenu selon type — pré-rempli #}
-                {% set c = simulation.contenuSimulation %}
-                {% if simulation.typeSimulation == 'GMAIL' %}
-                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
-                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">📧 Contenu Gmail</h3>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
-                            <div class="form-group"><label class="form-label">Nom expéditeur</label><input type="text" class="form-control" name="gmail_expediteur_nom" value="{{ c.expediteur_nom ?? '' }}"></div>
-                            <div class="form-group"><label class="form-label">Email expéditeur</label><input type="text" class="form-control" name="gmail_expediteur_email" value="{{ c.expediteur_email ?? '' }}"></div>
+                {# Zone GMAIL #}
+                <div id="zoneGmail" class="zone-simulation" style="{{ type_sim == 'GMAIL' ? '' : 'display:none;' }}">
+                    <div class="card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3>Emails de la boite Gmail</h3>
+                                <p class="card-subtitle">Ajoutez, modifiez ou supprimez des emails.</p>
+                            </div>
+                            <button type="button" onclick="ajouterGmail()" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg"></i> Ajouter un email
+                            </button>
                         </div>
-                        <div class="form-group"><label class="form-label">Sujet</label><input type="text" class="form-control" name="gmail_sujet" value="{{ c.sujet ?? '' }}"></div>
-                        <div class="form-group"><label class="form-label">Corps HTML</label><textarea class="form-control" name="gmail_corps" rows="5">{{ c.corps ?? '' }}</textarea></div>
-                        <div class="form-group"><label class="form-label">Texte du lien piège</label><input type="text" class="form-control" name="gmail_lien_texte" value="{{ c.lien_piege_texte ?? '' }}"></div>
-                    </div>
-                {% elseif simulation.typeSimulation == 'MOT_DE_PASSE' %}
-                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
-                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🔒 Formulaire mot de passe</h3>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
-                            <div class="form-group"><label class="form-label">Nom du site</label><input type="text" class="form-control" name="mdp_site_nom" value="{{ c.site_nom ?? '' }}"></div>
-                            <div class="form-group"><label class="form-label">URL fausse</label><input type="text" class="form-control" name="mdp_site_url" value="{{ c.site_url_affiche ?? '' }}"></div>
+                        <div class="card-body" id="listeGmail">
+                            <div class="empty-message">Chargement...</div>
                         </div>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);">
-                            <div class="form-group"><label class="form-label">Emoji</label><input type="text" class="form-control" name="mdp_logo" value="{{ c.logo_emoji ?? '🏦' }}"></div>
-                            <div class="form-group"><label class="form-label">Message</label><input type="text" class="form-control" name="mdp_message" value="{{ c.message ?? '' }}"></div>
-                        </div>
-                    </div>
-                {% elseif simulation.typeSimulation == 'LIEN_SUSPECT' %}
-                    <div style="margin-bottom: var(--space-8); padding-bottom: var(--space-8); border-bottom: 2px solid var(--gray-100);">
-                        <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🔗 Liens suspects</h3>
-                        <div class="form-group"><label class="form-label">Liens (un par ligne)</label><textarea class="form-control" name="liens" rows="5">{{ c.liens is defined ? c.liens|join('\n') : '' }}</textarea></div>
-                        <div class="form-group"><label class="form-label">Index du lien piège</label><input type="text" class="form-control" name="lien_piege_index" value="{{ c.lien_piege_index ?? 0 }}"></div>
-                    </div>
-                {% endif %}
-
-                <div style="margin-bottom: var(--space-8);">
-                    <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); margin-bottom: var(--space-6);">🎯 Pédagogie</h3>
-                    <div class="form-group">
-                        <label class="form-label">Indices (un par ligne)</label>
-                        <textarea class="form-control" name="indices" rows="4">{{ c.indices is defined ? c.indices|join('\n') : '' }}</textarea>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Explication</label>
-                        <textarea class="form-control" name="explication" rows="3">{{ c.explication ?? '' }}</textarea>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer; padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); border: 2px solid var(--gray-200);">
-                        <input type="checkbox" name="est_publie" {{ simulation.estPublie ? 'checked' }} style="width: 20px; height: 20px;">
-                        <div>
-                            <div style="font-weight: var(--font-semibold);">Publiée</div>
-                            <div style="font-size: var(--text-sm); color: var(--gray-600);">Disponible pour être liée aux modules</div>
+                {# Zone SMS #}
+                <div id="zoneSms" class="zone-simulation" style="{{ type_sim == 'SMS' ? '' : 'display:none;' }}">
+                    <div class="card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3>SMS de la messagerie</h3>
+                                <p class="card-subtitle">Ajoutez, modifiez ou supprimez des SMS.</p>
+                            </div>
+                            <button type="button" onclick="ajouterSms()" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg"></i> Ajouter un SMS
+                            </button>
                         </div>
-                    </label>
+                        <div class="card-body" id="listeSms">
+                            <div class="empty-message">Chargement...</div>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="display: flex; gap: var(--space-4);">
-                    <button type="submit" class="btn btn-primary btn-lg" style="flex: 1;">
-                        <i class="bi bi-check-circle"></i> Enregistrer
-                    </button>
-                    <a href="{{ path('admin_simulations_liste') }}" class="btn btn-secondary btn-lg">Annuler</a>
+                {# Zone WhatsApp #}
+                <div id="zoneWa" class="zone-simulation" style="{{ type_sim == 'WHATSAPP' ? '' : 'display:none;' }}">
+                    <div class="card">
+                        <div class="card-header-flex">
+                            <div>
+                                <h3>Conversations WhatsApp</h3>
+                                <p class="card-subtitle">Ajoutez, modifiez ou supprimez des conversations.</p>
+                            </div>
+                            <button type="button" onclick="ajouterWa()" class="btn btn-primary btn-sm">
+                                <i class="bi bi-plus-lg"></i> Ajouter une conversation
+                            </button>
+                        </div>
+                        <div class="card-body" id="listeWa">
+                            <div class="empty-message">Chargement...</div>
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+                <button type="submit" onclick="return construireJson()" class="btn btn-primary btn-block">
+                    <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                </button>
+            </div>
+
+            {# Colonne droite : aperçu #}
+            <div class="sim-right">
+                <div class="card">
+                    <div class="card-header-flex">
+                        <span>Aperçu de l'interface</span>
+                        <span id="compteur" class="text-muted">—</span>
+                    </div>
+                </div>
+                <div id="apercuGmail" class="apercu-card" style="{{ type_sim == 'GMAIL' ? '' : 'display:none;' }}">
+                    <div class="apercu-header"><i class="bi bi-envelope-fill"></i> Gmail</div>
+                    <div class="apercu-subheader">Simulation en cours — Phishing ou légitime ?</div>
+                    <div class="apercu-content">
+                        <div class="inbox-header">Principal</div>
+                        <div id="apercuGmailRows"></div>
+                    </div>
+                </div>
+                <div id="apercuSms" class="apercu-card apercu-dark" style="{{ type_sim == 'SMS' ? '' : 'display:none;' }}">
+                    <div class="apercu-header-dark">Messages</div>
+                    <div class="apercu-subheader-dark">Simulation SMS en cours</div>
+                    <div id="apercuSmsRows"></div>
+                </div>
+                <div id="apercuWa" class="apercu-card apercu-wa" style="{{ type_sim == 'WHATSAPP' ? '' : 'display:none;' }}">
+                    <div class="apercu-header-wa">WhatsApp</div>
+                    <div class="apercu-subheader-wa">Simulation WhatsApp en cours</div>
+                    <div id="apercuWaRows"></div>
+                </div>
+                <div id="apercuVide" class="apercu-empty" style="{{ type_sim ? 'display:none;' : '' }}">
+                    <i class="bi bi-phone-fill"></i>
+                    <p>L'aperçu apparaîtra ici</p>
+                </div>
+            </div>
         </div>
-    </div>
+    </form>
 </div>
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .simulation-form-container {
+        max-width: 1300px;
+        margin: 0 auto;
+    }
+    .sim-grid {
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    @media (max-width: 900px) {
+        .sim-grid {
+            grid-template-columns: 1fr;
+        }
+        .sim-right {
+            position: static;
+        }
+    }
+    .sim-left {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    .sim-right {
+        position: sticky;
+        top: 1.5rem;
+    }
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        background: #F8FAFC;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        color: #0F172A;
+    }
+    .card-header-flex {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-header-flex h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0;
+        color: #0F172A;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+    .form-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.4rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background: white;
+        color: #0F172A;
+        transition: all 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #E53E3E;
+        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+    }
+    textarea.form-control {
+        resize: vertical;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    .checkbox-group {
+        margin-top: 0.5rem;
+    }
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    .btn-block {
+        width: 100%;
+        justify-content: center;
+    }
+    .text-muted {
+        color: #94A3B8;
+        font-size: 0.7rem;
+    }
+    .empty-message {
+        text-align: center;
+        padding: 1.5rem;
+        color: #94A3B8;
+        border: 1px dashed #E2E8F0;
+        border-radius: 0.75rem;
+    }
+    .zone-simulation {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    /* Aperçu */
+    .apercu-card {
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        margin-top: 1rem;
+    }
+    .apercu-header {
+        background: #F6F8FC;
+        padding: 0.5rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-bottom: 1px solid #DADCE0;
+        font-weight: 500;
+    }
+    .apercu-subheader {
+        background: #FFF8E1;
+        padding: 0.3rem 1rem;
+        border-bottom: 1px solid #FFD54F;
+        font-size: 0.7rem;
+        color: #5D4037;
+    }
+    .apercu-content {
+        background: white;
+    }
+    .inbox-header {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid #F0F0F0;
+        font-size: 0.7rem;
+        color: #888;
+    }
+    .apercu-dark {
+        background: #1C1C1E;
+        color: white;
+    }
+    .apercu-header-dark {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        font-weight: 700;
+    }
+    .apercu-subheader-dark {
+        background: rgba(255,166,0,0.1);
+        padding: 0.3rem 1rem;
+        font-size: 0.7rem;
+        color: #FFD60A;
+    }
+    .apercu-wa {
+        background: #111;
+    }
+    .apercu-header-wa {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #2A2A2A;
+        font-weight: 700;
+        color: #E9EDF0;
+    }
+    .apercu-subheader-wa {
+        background: rgba(255,166,0,0.1);
+        padding: 0.3rem 1rem;
+        font-size: 0.7rem;
+        color: #FFD60A;
+    }
+    .apercu-empty {
+        text-align: center;
+        padding: 2rem;
+        background: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 1rem;
+        margin-top: 1rem;
+        color: #94A3B8;
+    }
+
+    /* Composants dynamiques (JS) */
+    .msg-card {
+        border: 1px solid #E2E8F0;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .msg-card.phishing {
+        border-color: #FCA5A5;
+    }
+    .msg-card.legitime {
+        border-color: #86EFAC;
+    }
+    .msg-card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #F8FAFC;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .msg-card.phishing .msg-card-header {
+        background: #FEF2F2;
+        border-color: #FCA5A5;
+    }
+    .msg-card.legitime .msg-card-header {
+        background: #F0FDF4;
+        border-color: #86EFAC;
+    }
+    .msg-card-body {
+        padding: 1rem;
+    }
+    .type-toggle {
+        display: inline-flex;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 1rem;
+    }
+    .type-toggle button {
+        padding: 0.25rem 0.75rem;
+        border: none;
+        background: white;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .type-toggle button.actif-phish {
+        background: #EF4444;
+        color: white;
+        font-weight: 700;
+    }
+    .type-toggle button.actif-legit {
+        background: #22C55E;
+        color: white;
+        font-weight: 700;
+    }
+    .champ {
+        margin-bottom: 0.75rem;
+    }
+    .champ label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    .champ input, .champ textarea, .champ select {
+        width: 100%;
+        border: 1px solid #E2E8F0;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.6rem;
+        font-size: 0.75rem;
+        background: white;
+    }
+    .champ-row {
+        display: grid;
+        gap: 0.5rem;
+    }
+    .btn-del {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        width: 28px;
+        height: 28px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-del:hover {
+        background: #FEE2E2;
+        border-color: #FCA5A5;
+        color: #DC2626;
+    }
+    .badge-phish {
+        background: #FEE2E2;
+        color: #DC2626;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+    }
+    .badge-legit {
+        background: #DCFCE7;
+        color: #166534;
+        font-size: 0.6rem;
+        font-weight: 700;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+    }
+    .gmail-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid #F6F8FC;
+    }
+    .gmail-av {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+    .gmail-body {
+        flex: 1;
+    }
+    .gmail-sender {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #202124;
+    }
+    .gmail-subj {
+        font-size: 0.65rem;
+        color: #5F6368;
+    }
+    .gmail-time {
+        font-size: 0.6rem;
+        color: #5F6368;
+    }
+    .sms-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .sms-av {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: #3A3A3C;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+    }
+    .sms-name {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+    }
+    .sms-preview {
+        font-size: 0.65rem;
+        color: rgba(255,255,255,0.5);
+    }
+    .wa-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .wa-av {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: white;
+    }
+    .wa-name {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #E9EDF0;
+    }
+    .wa-last {
+        font-size: 0.65rem;
+        color: #8696A0;
+    }
+    .wa-msg-ligne {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        background: #F8FAFC;
+        border-radius: 0.5rem;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .wa-msg-ligne select, .wa-msg-ligne input {
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+    .wa-msg-ligne .msg-texte { flex: 1; min-width: 150px; }
+    .wa-msg-ligne .msg-time { width: 60px; }
+    .wa-msg-ligne .msg-sender { width: 80px; }
+    .wa-msg-ligne .msg-dir { width: 75px; }
+</style>
+{% endblock %}
+
+<script>
+const PH_PRENOM     = "{{ ph_prenom }}";
+const PH_NOM        = "{{ ph_nom }}";
+const PH_EMAIL      = "{{ ph_email }}";
+const PH_TELEPHONE  = "{{ ph_telephone }}";
+const PH_ENTREPRISE = "{{ ph_entreprise }}";
+const HINT_GMAIL    = "Placeholders : " + PH_PRENOM + " " + PH_NOM + " " + PH_EMAIL + " " + PH_TELEPHONE + " " + PH_ENTREPRISE;
+const HINT_SMS      = "Placeholders : " + PH_PRENOM + " " + PH_TELEPHONE;
+const HINT_CORPS    = "<p>Bonjour " + PH_PRENOM + ",</p><br><p>...</p>";
+
+const LABELS = {
+    GMAIL:    { danger: 'Phishing',           safe: 'Legitime',  badgeDanger: 'Phishing',  badgeSafe: 'Legitime'  },
+    SMS:      { danger: 'Smishing',           safe: 'Legitime',  badgeDanger: 'Smishing',  badgeSafe: 'Legitime'  },
+    WHATSAPP: { danger: 'Phishing / Arnaque', safe: 'Legitime',  badgeDanger: 'Phishing',  badgeSafe: 'Legitime'  }
+};
+
+const TYPE_INITIAL = "{{ type_sim }}";
+const CONTENU_BDD  = {{ simulation.contenuSimulation|json_encode|raw }};
+
+let type = TYPE_INITIAL;
+let gmails = [];
+let smss   = [];
+let was    = [];
+
+// Initialisation
+(function init() {
+    if (!CONTENU_BDD) return;
+    if (type === 'GMAIL' && CONTENU_BDD.emails) {
+        gmails = CONTENU_BDD.emails.map(e => ({
+            is_phishing:  !!e.is_phishing,
+            sender_name:  e.sender_name  || '',
+            sender_email: e.sender_email || '',
+            subject:      e.subject      || '',
+            body:         e.body         || '',
+            avatar_color: e.avatar_color || '#EA4335',
+            avatar_text:  e.avatar_text  || '',
+            time:         e.time         || "Aujourd'hui",
+            explication:  e.explication  || ''
+        }));
+        renderGmail();
+    } else if (type === 'SMS' && CONTENU_BDD.sms) {
+        smss = CONTENU_BDD.sms.map(s => ({
+            is_phishing: !!s.is_phishing,
+            name:        s.name        || '',
+            num:         s.num         || '',
+            message:     s.message     || '',
+            date:        s.date        || "Aujourd'hui",
+            hasLink:     !!s.hasLink,
+            explication: s.explication || ''
+        }));
+        renderSms();
+    } else if (type === 'WHATSAPP' && CONTENU_BDD.conversations) {
+        was = CONTENU_BDD.conversations.map(conv => ({
+            is_phishing: !!conv.is_phishing,
+            name:        conv.name       || '',
+            status:      conv.status     || 'en ligne',
+            avatarBg:    conv.avatarBg   || '#25D366',
+            avatarText:  conv.avatarText || '',
+            messages:    (conv.messages || []).map(m => ({
+                out:    !!m.out,
+                sender: m.sender || '',
+                text:   m.text   || '',
+                time:   m.time   || ''
+            })),
+            explication: conv.explication || ''
+        }));
+        renderWa();
+    }
+    majApercu();
+})();
+
+function changerType() {
+    type = document.getElementById('typeSelect').value;
+    document.getElementById('zoneGmail').style.display   = type === 'GMAIL'    ? '' : 'none';
+    document.getElementById('zoneSms').style.display     = type === 'SMS'      ? '' : 'none';
+    document.getElementById('zoneWa').style.display      = type === 'WHATSAPP' ? '' : 'none';
+    document.getElementById('apercuGmail').style.display = type === 'GMAIL'    ? '' : 'none';
+    document.getElementById('apercuSms').style.display   = type === 'SMS'      ? '' : 'none';
+    document.getElementById('apercuWa').style.display    = type === 'WHATSAPP' ? '' : 'none';
+    majApercu();
+}
+
+// GMAIL (identique à la version "nouvelle" mais avec gmails existants)
+function ajouterGmail() {
+    gmails.push({
+        is_phishing: true, sender_name: '', sender_email: '', subject: '', body: '',
+        avatar_color: '#EA4335', avatar_text: '', time: "Aujourd'hui", explication: ''
+    });
+    renderGmail();
+}
+function supprimerGmail(i) { gmails.splice(i,1); renderGmail(); majApercu(); }
+function updateGmail(i, champ, val) {
+    gmails[i][champ] = (champ === 'is_phishing') ? (val === 'phishing') : val;
+    let card = document.getElementById('gmail-card-'+i);
+    if (card) {
+        card.className = 'msg-card ' + (gmails[i].is_phishing ? 'phishing' : 'legitime');
+        let header = card.querySelector('.msg-card-header');
+        if (header) header.className = 'msg-card-header ' + (gmails[i].is_phishing ? 'phishing' : 'legitime');
+        let btnP = document.getElementById('gmail-btn-phish-'+i);
+        let btnL = document.getElementById('gmail-btn-legit-'+i);
+        if (btnP) btnP.className = gmails[i].is_phishing ? 'actif-phish' : '';
+        if (btnL) btnL.className = !gmails[i].is_phishing ? 'actif-legit' : '';
+    }
+    majApercu();
+}
+function renderGmail() {
+    let c = document.getElementById('listeGmail');
+    if (!gmails.length) {
+        c.innerHTML = '<div class="empty-message">Aucun email. Cliquez "+ Ajouter un email".</div>';
+        return;
+    }
+    c.innerHTML = gmails.map((e,i) => {
+        let lbl = LABELS.GMAIL;
+        return `<div class="msg-card ${e.is_phishing ? 'phishing' : 'legitime'}" id="gmail-card-${i}">
+            <div class="msg-card-header ${e.is_phishing ? 'phishing' : 'legitime'}">
+                <div style="width:28px;height:28px;border-radius:50%;background:${e.avatar_color||'#9E9E9E'};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${x(e.avatar_text || e.sender_name.slice(0,2).toUpperCase() || '?')}</div>
+                <span style="flex:1;font-weight:600;">${e.sender_name ? x(e.sender_name) : '<em>Nom expediteur</em>'}</span>
+                <span class="${e.is_phishing ? 'badge-phish' : 'badge-legit'}">${e.is_phishing ? lbl.badgeDanger : lbl.badgeSafe}</span>
+                <button type="button" onclick="supprimerGmail(${i})" class="btn-del">✕</button>
+            </div>
+            <div class="msg-card-body">
+                <div class="type-toggle">
+                    <button type="button" id="gmail-btn-phish-${i}" class="${e.is_phishing ? 'actif-phish' : ''}" onclick="updateGmail(${i},'is_phishing','phishing')">${lbl.danger}</button>
+                    <button type="button" id="gmail-btn-legit-${i}" class="${!e.is_phishing ? 'actif-legit' : ''}" onclick="updateGmail(${i},'is_phishing','legitime')">${lbl.safe}</button>
+                </div>
+                <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                    <div class="champ"><label>Nom affiché *</label><input type="text" value="${x(e.sender_name)}" placeholder="Ex: BOA Service Client" oninput="gmails[${i}].sender_name=this.value;majApercu()"></div>
+                    <div class="champ"><label>Email expéditeur *</label><input type="text" value="${x(e.sender_email)}" placeholder="Ex: support@boa-beniin.com" oninput="gmails[${i}].sender_email=this.value"></div>
+                </div>
+                <div class="champ"><label>Sujet *</label><input type="text" value="${x(e.subject)}" placeholder="Ex: Votre compte sera suspendu dans 24h" oninput="gmails[${i}].subject=this.value;majApercu()"></div>
+                <div class="champ-row" style="grid-template-columns:60px 50px 1fr;">
+                    <div class="champ"><label>Couleur avatar</label><input type="color" value="${e.avatar_color||'#EA4335'}" oninput="gmails[${i}].avatar_color=this.value;majApercu()"></div>
+                    <div class="champ"><label>Texte</label><input type="text" value="${x(e.avatar_text)}" maxlength="2" placeholder="BO" oninput="gmails[${i}].avatar_text=this.value;majApercu()"></div>
+                    <div class="champ"><label>Heure affichée</label><input type="text" value="${x(e.time)}" placeholder="09:14 ou Mar 24" oninput="gmails[${i}].time=this.value"></div>
+                </div>
+                <div class="champ"><label>Corps de l'email (HTML) *</label><textarea rows="4" placeholder="${x(HINT_CORPS)}" oninput="gmails[${i}].body=this.value">${x(e.body)}</textarea><small>${HINT_GMAIL}</small></div>
+                <div class="champ"><label>Explication pédagogique *</label><textarea rows="2" placeholder="Ex: Phishing. Indice 1 : le domaine..." oninput="gmails[${i}].explication=this.value">${x(e.explication)}</textarea></div>
+            </div>
+        </div>`;
+    }).join('');
+    majApercu();
+}
+
+// SMS (version simplifiée mais fonctionnelle)
+function ajouterSms() {
+    smss.push({is_phishing:true, name:'', num:'', message:'', date:"Aujourd'hui", hasLink:false, explication:''});
+    renderSms();
+}
+function supprimerSms(i) { smss.splice(i,1); renderSms(); majApercu(); }
+function renderSms() {
+    let c = document.getElementById('listeSms');
+    if (!smss.length) {
+        c.innerHTML = '<div class="empty-message">Aucun SMS. Cliquez "+ Ajouter un SMS".</div>';
+        return;
+    }
+    c.innerHTML = smss.map((s,i) => {
+        let lbl = LABELS.SMS;
+        return `<div class="msg-card ${s.is_phishing ? 'phishing' : 'legitime'}" style="margin-bottom:12px;">
+            <div class="msg-card-header ${s.is_phishing ? 'phishing' : 'legitime'}">
+                <div style="width:28px;height:28px;border-radius:50%;background:${s.is_phishing ? '#FF9F0A' : '#3A3A3C'};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${x((s.name||'?').slice(0,2).toUpperCase())}</div>
+                <span style="flex:1;font-weight:600;">${s.name ? x(s.name) : '<em>Expediteur</em>'}</span>
+                <span class="${s.is_phishing ? 'badge-phish' : 'badge-legit'}">${s.is_phishing ? lbl.badgeDanger : lbl.badgeSafe}</span>
+                <button type="button" onclick="supprimerSms(${i})" class="btn-del">✕</button>
+            </div>
+            <div class="msg-card-body">
+                <div class="type-toggle"><button class="${s.is_phishing ? 'actif-phish' : ''}" onclick="smss[${i}].is_phishing=true;renderSms()">${lbl.danger}</button><button class="${!s.is_phishing ? 'actif-legit' : ''}" onclick="smss[${i}].is_phishing=false;renderSms()">${lbl.safe}</button></div>
+                <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                    <div class="champ"><label>Expediteur affiché *</label><input type="text" value="${x(s.name)}" placeholder="Ex: MTNBenin" oninput="smss[${i}].name=this.value;majApercu()"></div>
+                    <div class="champ"><label>Numero / info</label><input type="text" value="${x(s.num)}" placeholder="Ex: +229 0145XXXXXX" oninput="smss[${i}].num=this.value"></div>
+                </div>
+                <div class="champ"><label>Contenu du SMS *</label><textarea rows="3" placeholder="Ex: URGENT! Votre compte MoMo..." oninput="smss[${i}].message=this.value;majApercu()">${x(s.message)}</textarea><small>${HINT_SMS}</small></div>
+                <div class="champ-row" style="grid-template-columns:1fr auto;">
+                    <div class="champ"><label>Date affichée</label><input type="text" value="${x(s.date)}" placeholder="Mar 20" oninput="smss[${i}].date=this.value"></div>
+                    <div class="champ" style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="sms-lien-${i}" ${s.hasLink ? 'checked' : ''} onchange="smss[${i}].hasLink=this.checked"><label for="sms-lien-${i}">Contient un lien suspect</label></div>
+                </div>
+                <div class="champ"><label>Explication pédagogique *</label><textarea rows="2" placeholder="Ex: Smishing..." oninput="smss[${i}].explication=this.value">${x(s.explication)}</textarea></div>
+            </div>
+        </div>`;
+    }).join('');
+    majApercu();
+}
+
+// WhatsApp
+function ajouterWa() {
+    was.push({is_phishing:true, name:'', status:'en ligne', avatarBg:'#25D366', avatarText:'', messages:[], explication:''});
+    renderWa();
+}
+function supprimerWa(i) { was.splice(i,1); renderWa(); majApercu(); }
+function ajouterMsgWa(convIdx) {
+    was[convIdx].messages.push({out:false, sender:'', text:'', time:''});
+    renderWa();
+}
+function supprimerMsgWa(convIdx, msgIdx) { was[convIdx].messages.splice(msgIdx,1); renderWa(); }
+function updateMsgWa(convIdx, msgIdx, champ, val) {
+    was[convIdx].messages[msgIdx][champ] = (champ === 'out') ? (val === 'out') : val;
+    if (champ === 'out') renderWa();
+}
+function renderWa() {
+    let c = document.getElementById('listeWa');
+    if (!was.length) {
+        c.innerHTML = '<div class="empty-message">Aucune conversation. Cliquez "+ Ajouter une conversation".</div>';
+        return;
+    }
+    c.innerHTML = was.map((conv,i) => {
+        let lbl = LABELS.WHATSAPP;
+        let msgsHtml = '';
+        if (conv.messages.length === 0) {
+            msgsHtml = '<p class="text-muted" style="padding:0.5rem;">Aucun message. Cliquez "+ Message".</p>';
+        } else {
+            msgsHtml = conv.messages.map((m,mi) => `
+                <div class="wa-msg-ligne">
+                    <select class="msg-dir" onchange="updateMsgWa(${i},${mi},'out',this.value)">
+                        <option value="in"${!m.out ? ' selected' : ''}>Reçu</option>
+                        <option value="out"${m.out ? ' selected' : ''}>Envoyé</option>
+                    </select>
+                    <input class="msg-texte" type="text" placeholder="Contenu..." value="${x(m.text||'')}" oninput="was[${i}].messages[${mi}].text=this.value;majApercu()">
+                    <input class="msg-time" type="text" placeholder="14:30" value="${x(m.time||'')}" oninput="was[${i}].messages[${mi}].time=this.value">
+                    ${!m.out ? `<input class="msg-sender" type="text" placeholder="Expéditeur" value="${x(m.sender||'')}" oninput="was[${i}].messages[${mi}].sender=this.value">` : ''}
+                    <button type="button" class="btn-del" onclick="supprimerMsgWa(${i},${mi})">✕</button>
+                </div>
+            `).join('');
+        }
+        return `<div class="msg-card ${conv.is_phishing ? 'phishing' : 'legitime'}" style="margin-bottom:12px;">
+            <div class="msg-card-header ${conv.is_phishing ? 'phishing' : 'legitime'}">
+                <div style="width:28px;height:28px;border-radius:50%;background:${conv.avatarBg};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${x(conv.avatarText || conv.name.slice(0,2).toUpperCase() || '?')}</div>
+                <span style="flex:1;font-weight:600;">${conv.name ? x(conv.name) : '<em>Nom conversation</em>'}</span>
+                <span style="font-size:0.65rem;color:#94A3B8;">${conv.messages.length} msg</span>
+                <span class="${conv.is_phishing ? 'badge-phish' : 'badge-legit'}">${conv.is_phishing ? lbl.badgeDanger : lbl.badgeSafe}</span>
+                <button type="button" onclick="supprimerWa(${i})" class="btn-del">✕</button>
+            </div>
+            <div class="msg-card-body">
+                <div class="type-toggle"><button class="${conv.is_phishing ? 'actif-phish' : ''}" onclick="was[${i}].is_phishing=true;renderWa()">${lbl.danger}</button><button class="${!conv.is_phishing ? 'actif-legit' : ''}" onclick="was[${i}].is_phishing=false;renderWa()">${lbl.safe}</button></div>
+                <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                    <div class="champ"><label>Nom conversation *</label><input type="text" value="${x(conv.name)}" placeholder="Ex: Recruteur CFAO Benin" oninput="was[${i}].name=this.value;majApercu()"></div>
+                    <div class="champ"><label>Statut / info</label><input type="text" value="${x(conv.status)}" placeholder="en ligne ou Groupe · 8 membres" oninput="was[${i}].status=this.value"></div>
+                </div>
+                <div class="champ-row" style="grid-template-columns:60px 1fr;">
+                    <div class="champ"><label>Couleur avatar</label><input type="color" value="${conv.avatarBg||'#25D366'}" oninput="was[${i}].avatarBg=this.value;majApercu()"></div>
+                    <div class="champ"><label>Texte avatar</label><input type="text" value="${x(conv.avatarText)}" maxlength="3" placeholder="CF ou emoji" oninput="was[${i}].avatarText=this.value;majApercu()"></div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <label>Messages de la conversation *</label>
+                        <button type="button" onclick="ajouterMsgWa(${i})" class="btn btn-ghost btn-sm">+ Message</button>
+                    </div>
+                    <div>${msgsHtml}</div>
+                </div>
+                <div class="champ"><label>Explication pédagogique *</label><textarea rows="2" placeholder="Ex: Phishing..." oninput="was[${i}].explication=this.value">${x(conv.explication)}</textarea></div>
+            </div>
+        </div>`;
+    }).join('');
+    majApercu();
+}
+
+function majApercu() {
+    document.getElementById('apercuGmail').style.display = type === 'GMAIL'    ? '' : 'none';
+    document.getElementById('apercuSms').style.display   = type === 'SMS'      ? '' : 'none';
+    document.getElementById('apercuWa').style.display    = type === 'WHATSAPP' ? '' : 'none';
+
+    let lbl = LABELS[type] || LABELS.GMAIL;
+
+    if (type === 'GMAIL') {
+        document.getElementById('compteur').innerHTML = `${gmails.length} email(s) — ${gmails.filter(e=>e.is_phishing).length} phishing`;
+        document.getElementById('apercuGmailRows').innerHTML = gmails.length ? gmails.map(e => `
+            <div class="gmail-row">
+                <div class="gmail-av" style="background:${e.avatar_color||'#9E9E9E'};">${x(e.avatar_text || e.sender_name.slice(0,2).toUpperCase()||'?')}</div>
+                <div class="gmail-body"><div class="gmail-sender">${e.sender_name?x(e.sender_name):'...'}</div><div class="gmail-subj">${e.subject?x(e.subject):'...'}</div></div>
+                <div><div class="gmail-time">${x(e.time||'')}</div><span class="${e.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${e.is_phishing?lbl.badgeDanger:lbl.badgeSafe}</span></div>
+            </div>
+        `).join('') : '<div class="text-muted p-3">Ajoutez des emails...</div>';
+    } else if (type === 'SMS') {
+        document.getElementById('compteur').innerHTML = `${smss.length} SMS — ${smss.filter(s=>s.is_phishing).length} smishing`;
+        document.getElementById('apercuSmsRows').innerHTML = smss.length ? smss.map(s => `
+            <div class="sms-row">
+                <div class="sms-av">${x((s.name||'?').slice(0,2).toUpperCase())}</div>
+                <div><div class="sms-name">${s.name?x(s.name):'...'}</div><div class="sms-preview">${s.message?x(s.message.slice(0,50))+'...':'...'}</div></div>
+                <span class="${s.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${s.is_phishing?lbl.badgeDanger:lbl.badgeSafe}</span>
+            </div>
+        `).join('') : '<div class="text-muted p-3">Ajoutez des SMS...</div>';
+    } else if (type === 'WHATSAPP') {
+        document.getElementById('compteur').innerHTML = `${was.length} conversation(s) — ${was.filter(w=>w.is_phishing).length} phishing`;
+        document.getElementById('apercuWaRows').innerHTML = was.length ? was.map(conv => `
+            <div class="wa-row">
+                <div class="wa-av" style="background:${conv.avatarBg};">${x(conv.avatarText||conv.name.slice(0,2).toUpperCase()||'?')}</div>
+                <div><div class="wa-name">${conv.name?x(conv.name):'...'}</div><div class="wa-last">${conv.messages.length?x(conv.messages[conv.messages.length-1].text.slice(0,40)||''):'Aucun message'}</div></div>
+                <span class="${conv.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${conv.is_phishing?lbl.badgeDanger:lbl.badgeSafe}</span>
+            </div>
+        `).join('') : '<div class="text-muted p-3">Ajoutez des conversations...</div>';
+    }
+}
+
+function construireJson() {
+    if (!type) { alert('Type de simulation manquant.'); return false; }
+    let items = type === 'GMAIL' ? gmails : type === 'SMS' ? smss : was;
+    if (items.length < 2) { alert('Ajoutez au moins 2 éléments.'); return false; }
+    let nbPhish = items.filter(i=>i.is_phishing).length;
+    let nbLegit = items.filter(i=>!i.is_phishing).length;
+    if (nbPhish < 1) { alert('Ajoutez au moins 1 élément Phishing.'); return false; }
+    if (nbLegit < 1) { alert('Ajoutez au moins 1 élément Légitime.'); return false; }
+    let erreur = '';
+    if (type === 'GMAIL') {
+        gmails.forEach((e,i)=>{
+            if(!e.sender_name) erreur += `Email ${i+1} : nom manquant\n`;
+            if(!e.sender_email) erreur += `Email ${i+1} : email expéditeur manquant\n`;
+            if(!e.subject) erreur += `Email ${i+1} : sujet manquant\n`;
+            if(!e.body) erreur += `Email ${i+1} : corps manquant\n`;
+            if(!e.explication) erreur += `Email ${i+1} : explication manquante\n`;
+        });
+    } else if (type === 'SMS') {
+        smss.forEach((s,i)=>{
+            if(!s.name) erreur += `SMS ${i+1} : expéditeur manquant\n`;
+            if(!s.message) erreur += `SMS ${i+1} : contenu manquant\n`;
+            if(!s.explication) erreur += `SMS ${i+1} : explication manquante\n`;
+        });
+    } else if (type === 'WHATSAPP') {
+        was.forEach((conv,i)=>{
+            if(!conv.name) erreur += `Conversation ${i+1} : nom manquant\n`;
+            if(!conv.messages.length) erreur += `Conversation ${i+1} : aucun message\n`;
+            if(!conv.explication) erreur += `Conversation ${i+1} : explication manquante\n`;
+        });
+    }
+    if (erreur) { alert('Champs manquants :\n\n'+erreur); return false; }
+    let nb = Math.min(items.length, 6);
+    let contenu = {};
+    if (type === 'GMAIL') contenu = {type:'gmail_banque', nb_a_tirer:nb, emails:gmails};
+    if (type === 'SMS') contenu = {type:'sms_banque', nb_a_tirer:nb, sms:smss};
+    if (type === 'WHATSAPP') contenu = {type:'whatsapp_banque', nb_a_tirer:nb, conversations:was};
+    document.getElementById('contenuJson').value = JSON.stringify(contenu);
+    return true;
+}
+
+function x(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+</script>
 {% endblock %}

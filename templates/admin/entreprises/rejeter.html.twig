@@ -1,0 +1,267 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}Rejeter l'inscription — {{ entreprise.nom }}{% endblock %}
+
+{% block content %}
+<div class="rejeter-container">
+
+    <div class="page-header">
+        <a href="{{ path('admin_entreprises_en_attente') }}" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Retour aux demandes
+        </a>
+        <h1 class="page-title">
+            <i class="bi bi-x-circle-fill" style="color:#EF4444;"></i>
+            Rejeter la demande de <strong>{{ entreprise.nom }}</strong>
+        </h1>
+    </div>
+
+    {# Récapitulatif entreprise #}
+    <div class="info-card warning-card">
+        <div class="info-card-header">
+            <i class="bi bi-building"></i>
+            <span>Informations sur la demande</span>
+        </div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">Entreprise</span>
+                <span class="info-value">{{ entreprise.nom }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email de contact</span>
+                <span class="info-value">{{ entreprise.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Secteur</span>
+                <span class="info-value">{{ entreprise.secteur }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">IFU</span>
+                <span class="info-value">{{ entreprise.ifu }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Demandé le</span>
+                <span class="info-value">{{ entreprise.dateCreation|date('d/m/Y à H:i') }}</span>
+            </div>
+        </div>
+    </div>
+
+    {# Formulaire de rejet avec motif #}
+    <div class="form-card">
+        <div class="form-card-header">
+            <i class="bi bi-chat-text" style="color:#F59E0B;"></i>
+            <div>
+                <h3>Motif du rejet <span class="optional-badge">Optionnel mais recommandé</span></h3>
+                <p class="form-subtitle">Ce motif sera inclus dans l'email envoyé à l'entreprise pour l'aider à comprendre la décision.</p>
+            </div>
+        </div>
+
+        <form method="post" action="{{ path('admin_entreprise_rejeter', {id: entreprise.id}) }}" id="form-rejeter">
+            <div class="form-group">
+                <label class="form-label" for="motif">Motif de refus</label>
+                <textarea
+                    id="motif"
+                    name="motif"
+                    class="form-control motif-textarea"
+                    rows="5"
+                    placeholder="Ex : Dossier incomplet — le numéro IFU fourni ne correspond à aucun registre actif. Veuillez vérifier vos informations et soumettre une nouvelle demande..."
+                ></textarea>
+                <small class="form-hint">
+                    <i class="bi bi-info-circle"></i>
+                    Si laissé vide, un message générique sera envoyé. Vous pouvez indiquer ce qui manque pour permettre à l'entreprise de corriger son dossier.
+                </small>
+            </div>
+
+            <div class="alert-danger-box">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <div>
+                    <strong>Action irréversible</strong>
+                    <p>Le rejet supprimera définitivement la demande d'inscription ainsi que le compte RSSI associé. Un email sera envoyé à <strong>{{ entreprise.email }}</strong>.</p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ path('admin_entreprises_en_attente') }}" class="btn btn-ghost">
+                    <i class="bi bi-arrow-left"></i> Annuler
+                </a>
+                <button type="submit" class="btn btn-danger"
+                        id="btn-rejeter"
+                        data-form="form-rejeter">
+                    <i class="bi bi-x-circle"></i> Confirmer le rejet
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .rejeter-container {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 24px 0;
+    }
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #64748B;
+        text-decoration: none;
+        font-size: 13px;
+        margin-bottom: 16px;
+        transition: color 0.15s;
+    }
+    .btn-back:hover { color: #1E293B; }
+    .page-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .info-card, .form-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0;
+        margin-bottom: 20px;
+        overflow: hidden;
+    }
+    .warning-card { border-color: #FED7AA; }
+    .info-card-header, .form-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 16px 20px;
+        background: #FFFBEB;
+        border-bottom: 1px solid #FED7AA;
+        font-size: 13px;
+        font-weight: 600;
+        color: #92400E;
+    }
+    .form-card-header {
+        background: #F8FAFC;
+        border-bottom-color: #E2E8F0;
+        color: #1E293B;
+        align-items: center;
+    }
+    .form-card-header h3 {
+        margin: 0 0 4px;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .form-card-header .form-subtitle {
+        margin: 0;
+        font-size: 12.5px;
+        color: #64748B;
+        font-weight: 400;
+    }
+    .optional-badge {
+        font-size: 10px;
+        font-weight: 500;
+        background: #FEF9C3;
+        color: #854D0E;
+        padding: 2px 8px;
+        border-radius: 20px;
+        border: 1px solid #FDE68A;
+    }
+    .info-grid { padding: 4px 20px 12px; }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #F1F5F9;
+        font-size: 13px;
+    }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #64748B; }
+    .info-value { font-weight: 500; color: #0F172A; }
+    .form-group { padding: 20px 20px 0; }
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 6px;
+    }
+    .motif-textarea {
+        width: 100%;
+        box-sizing: border-box;
+        border: 1px solid #CBD5E1;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 13.5px;
+        color: #1E293B;
+        resize: vertical;
+        font-family: inherit;
+        line-height: 1.6;
+        transition: border-color 0.15s;
+    }
+    .motif-textarea:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    .form-hint {
+        display: block;
+        margin-top: 6px;
+        font-size: 12px;
+        color: #64748B;
+    }
+    .alert-danger-box {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 20px 20px 0;
+        padding: 14px 16px;
+        background: #FEF2F2;
+        border: 1px solid #FCA5A5;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #7F1D1D;
+    }
+    .alert-danger-box i { font-size: 16px; color: #EF4444; flex-shrink: 0; margin-top: 1px; }
+    .alert-danger-box strong { display: block; margin-bottom: 4px; font-size: 13.5px; }
+    .alert-danger-box p { margin: 0; font-size: 12.5px; color: #991B1B; line-height: 1.5; }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding: 20px;
+    }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; text-decoration: none; transition: all 0.15s; }
+    .btn-ghost { background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0; }
+    .btn-ghost:hover { background: #F1F5F9; color: #1E293B; }
+    .btn-danger { background: #EF4444; color: #fff; }
+    .btn-danger:hover { background: #DC2626; }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+document.getElementById('btn-rejeter').addEventListener('click', function(e) {
+    e.preventDefault();
+    const motif = document.getElementById('motif').value.trim();
+    const msg = motif
+        ? `Confirmer le rejet de « {{ entreprise.nom }} » avec le motif fourni ?`
+        : `Aucun motif n'a été saisi. Un message générique sera envoyé. Confirmer le rejet de « {{ entreprise.nom }} » ?`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+    const messageEl = document.getElementById('confirmationModalMessage');
+    const confirmBtn = document.getElementById('confirmationModalConfirm');
+    
+    messageEl.textContent = msg;
+    
+    confirmBtn.onclick = function() {
+        document.getElementById('form-rejeter').submit();
+        modal.hide();
+    };
+    
+    modal.show();
+});
+</script>
+{% endblock %}

@@ -2,165 +2,832 @@
 
 {% block page_title %}Quiz — {{ chapitre.titre }}{% endblock %}
 
-{% block content %}
-<div style="max-width: 1000px; margin: 0 auto;">
+{% block topbar_actions %}
+    <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour aux chapitres
+    </a>
+{% endblock %}
 
-    <div style="margin-bottom: var(--space-6); display: flex; align-items: center; gap: var(--space-4);">
-        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" style="color: var(--gray-600); font-size: var(--text-sm); display: inline-flex; align-items: center; gap: var(--space-2);">
-            <i class="bi bi-arrow-left"></i> Retour aux chapitres de {{ module.titre }}
-        </a>
-    </div>
+{% block content %}
+<div class="quiz-chapitre-container">
 
     {% if quiz is null %}
-        <div class="card" style="text-align: center; padding: var(--space-12);">
-            <i class="bi bi-patch-question" style="font-size: 80px; color: var(--gray-300); display: block; margin-bottom: var(--space-4);"></i>
-            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-3);">
-                Ce chapitre n'a pas encore de quiz
-            </h2>
-            <p style="color: var(--gray-600); margin-bottom: var(--space-6);">
-                Créez un quiz pour évaluer la compréhension après ce chapitre.
+        {# ── Pas de quiz ── #}
+        <div class="card empty-quiz-card">
+            <i class="bi bi-patch-question"></i>
+            <h2>Ce chapitre n'a pas encore de quiz</h2>
+            <p>
+                Le quiz permet de vérifier la compréhension de l'employé avant de passer au chapitre suivant.<br>
+                <strong>Chaque chapitre doit avoir 4 questions QCM avec 4 propositions de réponse.</strong>
             </p>
-            <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}?creer=1" class="btn btn-primary btn-lg">
-                <i class="bi bi-plus-circle"></i> Créer le quiz
+            <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}?creer=1" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Créer le quiz de ce chapitre
             </a>
         </div>
     {% else %}
 
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6);">
+        {# ── Grille principale : questions (gauche) + formulaire (droite) ── #}
+        <div class="quiz-grid">
 
-        {# Questions existantes #}
-        <div class="card">
-            <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100); display: flex; justify-content: space-between; align-items: center;">
-                <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-                    <i class="bi bi-list-ol" style="color: var(--primary-600);"></i>
-                    Questions ({{ quiz.questions|length }})
-                </h3>
-                <span class="badge badge-primary">Seuil réussite : {{ quiz.scoreMinimum }}%</span>
-            </div>
-            <div style="padding: var(--space-4);">
-                {% if quiz.questions is empty %}
-                    <div style="text-align: center; padding: var(--space-8); color: var(--gray-500);">
-                        Aucune question. Ajoutez-en une →
+            {# Colonne gauche : paramètres + liste des questions #}
+            <div class="quiz-left">
+
+                {# Paramètres du quiz #}
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3><i class="bi bi-gear" style="color: #E53E3E;"></i> Paramètres du quiz</h3>
+                        <div class="quiz-badges">
+                            <span class="badge badge-primary">Seuil : {{ quiz.scoreMinimum }}%</span>
+                            <span class="badge badge-secondary">{{ quiz.nombreTentativesMax }} tentative(s)</span>
+                            <span class="badge badge-info"><i class="bi bi-shuffle"></i> Questions aléatoires</span>
+                        </div>
                     </div>
-                {% else %}
-                    {% for question in quiz.questions %}
-                        <div style="padding: var(--space-4); border: 1px solid var(--gray-200); border-radius: var(--radius-lg); margin-bottom: var(--space-3);">
-                            <div style="display: flex; justify-content: space-between; gap: var(--space-3);">
-                                <div style="flex: 1;">
-                                    <div style="font-weight: var(--font-semibold); color: var(--gray-900); margin-bottom: var(--space-2);">
-                                        {{ loop.index }}. {{ question.question }}
+                    <form method="post" class="quiz-params-form">
+                        <input type="hidden" name="action" value="modifier_parametres">
+                        <div class="params-grid">
+                            <div class="form-group">
+                                <label class="form-label">Score minimum (%)</label>
+                                <input type="number" class="form-control" name="score_minimum" value="{{ quiz.scoreMinimum }}" min="0" max="100">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tentatives max</label>
+                                <input type="number" class="form-control" name="tentatives_max" value="{{ quiz.nombreTentativesMax }}" min="1" max="10">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-ghost btn-sm">
+                            <i class="bi bi-save"></i> Enregistrer
+                        </button>
+                    </form>
+                </div>
+
+                {# Liste des questions #}
+                <div class="card">
+                    <div class="card-header-flex">
+                        <h3><i class="bi bi-list-ol" style="color: #E53E3E;"></i> Questions ({{ quiz.questions|length }})</h3>
+                        {% if quiz.questions|length < 4 %}
+                            <span class="badge badge-warning">⚠️ Recommandé : 4 questions minimum</span>
+                        {% else %}
+                            <span class="badge badge-success">✅ {{ quiz.questions|length }} question(s)</span>
+                        {% endif %}
+                    </div>
+                    <div class="questions-list">
+                        {% if quiz.questions is empty %}
+                            <div class="empty-questions">
+                                <i class="bi bi-question-circle"></i>
+                                <p>Aucune question. Utilisez le formulaire à droite.</p>
+                            </div>
+                        {% else %}
+                            {% for question in quiz.questions %}
+                                <div class="question-card">
+                                    <div class="question-header">
+                                        <div class="question-title">
+                                            <span class="question-num">Q{{ loop.index }}</span>
+                                            <span class="question-text">{{ question.question }}</span>
+                                        </div>
+                                        <form method="post" action="{{ path('admin_chapitre_quiz_question_supprimer', {moduleId: module.id, id: chapitre.id, index: loop.index0}) }}"
+                                              onsubmit="return confirm('Supprimer cette question ?')" class="delete-form">
+                                            <button type="submit" class="btn-icon btn-danger-icon" title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
-                                    <div style="display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-2);">
-                                        {% for option in question.options %}
-                                            <span style="padding: 2px 8px; border-radius: var(--radius-full); font-size: var(--text-xs);
-                                                background: {{ option in question.reponsesCorrectes ? '#DCFCE7' : '#F3F4F6' }};
-                                                color: {{ option in question.reponsesCorrectes ? '#166534' : '#6B7280' }};
-                                                border: 1px solid {{ option in question.reponsesCorrectes ? '#BBF7D0' : '#E5E7EB' }};">
-                                                {{ option in question.reponsesCorrectes ? '✓ ' : '' }}{{ option }}
-                                            </span>
+                                    <div class="options-grid">
+                                        {% set letters = ['A', 'B', 'C', 'D'] %}
+                                        {% for i, option in question.options %}
+                                            {% set isCorrect = option in question.reponses_correctes %}
+                                            <div class="option-item {% if isCorrect %}option-correct{% else %}option-incorrect{% endif %}">
+                                                <span class="option-letter">{{ letters[i] ?? (i+1) }}</span>
+                                                <span class="option-text">{{ option }}</span>
+                                                {% if isCorrect %}
+                                                    <i class="bi bi-check-circle-fill correct-icon"></i>
+                                                {% endif %}
+                                            </div>
                                         {% endfor %}
                                     </div>
                                     {% if question.explication %}
-                                        <div style="font-size: var(--text-xs); color: var(--gray-500); font-style: italic;">
-                                            💡 {{ question.explication }}
+                                        <div class="question-explanation">
+                                            <i class="bi bi-lightbulb"></i> {{ question.explication }}
                                         </div>
                                     {% endif %}
+                                    <div class="question-footer">
+                                        <span class="badge badge-light">{{ question.type_question }}</span>
+                                        <span class="badge badge-light">{{ question.points }} pts</span>
+                                    </div>
                                 </div>
-                                <form method="post" action="{{ path('admin_chapitre_quiz_question_supprimer', {moduleId: module.id, id: chapitre.id, qId: question.id}) }}" onsubmit="return confirm('Supprimer ?')">
-                                    <button type="submit" class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
-                                </form>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {# Colonne droite : formulaire d'ajout de question #}
+            <div class="quiz-right">
+                <div class="card sticky-card">
+                    <div class="card-header">
+                        <h3><i class="bi bi-plus-circle" style="color: #E53E3E;"></i> Ajouter une question</h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="post" id="formQuestion">
+                            <input type="hidden" name="action" value="ajouter_question">
+
+                            <div class="form-group">
+                                <label class="form-label">Question *</label>
+                                <textarea class="form-control" name="question" id="questionText" rows="3" required placeholder="Ex: Quel est le principal signe d'un email phishing ?"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Type</label>
+                                <select class="form-control" name="type_question" id="typeQuestion" onchange="updateType()">
+                                    <option value="QCM_UNIQUE">QCM (1 bonne réponse)</option>
+                                    <option value="QCM_MULTIPLE">QCM Multiple</option>
+                                    <option value="VRAI_FAUX">Vrai / Faux</option>
+                                </select>
+                            </div>
+
+                            {# Conteneur des options #}
+                            <div class="form-group">
+                                <label class="form-label">Les 4 propositions * <span class="form-hint">(cochez la/les bonne(s))</span></label>
+                                <div id="optionsContainer" class="options-editor">
+                                    {% for lettre, placeholder in {'A': 'Première proposition', 'B': 'Deuxième proposition', 'C': 'Troisième proposition', 'D': 'Quatrième proposition'} %}
+                                    <div class="option-row" id="row_{{ lettre }}">
+                                        <div class="option-badge" id="badge_{{ lettre }}">{{ lettre }}</div>
+                                        <input type="text" class="form-control" name="options[]" id="opt_{{ lettre }}" placeholder="{{ placeholder }}" oninput="syncOption('{{ lettre }}')">
+                                        <div class="check-circle" id="checkBtn_{{ lettre }}" onclick="toggleCheck('{{ lettre }}')">
+                                            <i class="bi bi-check2"></i>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div id="hiddenReponses"></div>
+                                <p class="form-hint">Cliquez sur le cercle pour marquer la bonne réponse</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Explication <span class="form-hint">(optionnel)</span></label>
+                                <textarea class="form-control" name="explication" rows="2" placeholder="Explication affichée à l'employé après la correction..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Points</label>
+                                <input type="number" class="form-control" name="points" value="10" min="1" max="100">
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-block" id="btnAjouter" disabled>
+                                <i class="bi bi-plus-circle"></i> Ajouter la question
+                            </button>
+                        </form>
+
+                        <hr class="separator">
+
+                        <div class="suggestions-box">
+                            <div class="suggestions-title">💡 Exemples de questions pour ce chapitre</div>
+                            <div id="suggestions" class="suggestions-content">
+                                Remplissez la question pour voir des suggestions...
                             </div>
                         </div>
-                    {% endfor %}
-                {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
-
-        {# Ajouter une question #}
-        <div class="card">
-            <div style="padding: var(--space-6); border-bottom: 1px solid var(--gray-100);">
-                <h3 style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-                    <i class="bi bi-plus-circle" style="color: var(--success);"></i> Ajouter une question
-                </h3>
-            </div>
-            <div style="padding: var(--space-6);">
-                <form method="post">
-
-                    <div class="form-group">
-                        <label class="form-label">Question *</label>
-                        <textarea class="form-control" name="question" rows="3" required
-                            placeholder="Ex: Quel est le principal signe d'un email phishing ?"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Type de question</label>
-                        <select class="form-control" name="type_question" id="typeQuestion" onchange="updateType()">
-                            <option value="QCM">QCM (une seule bonne réponse)</option>
-                            <option value="QCM_MULTIPLE">QCM Multiple</option>
-                            <option value="VRAI_FAUX">Vrai / Faux</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Options *</label>
-                        <div id="optionsContainer">
-                            <input type="text" class="form-control" name="options[]" placeholder="Option A" style="margin-bottom:6px;" required>
-                            <input type="text" class="form-control" name="options[]" placeholder="Option B" style="margin-bottom:6px;" required>
-                            <input type="text" class="form-control" name="options[]" placeholder="Option C" style="margin-bottom:6px;">
-                            <input type="text" class="form-control" name="options[]" placeholder="Option D">
-                        </div>
-                        <button type="button" onclick="ajouterOption()" class="btn btn-sm btn-secondary" style="margin-top:6px;">
-                            + Option
-                        </button>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Bonne(s) réponse(s) *</label>
-                        <input type="text" class="form-control" name="reponses_correctes[]" required
-                            placeholder="Texte exact de la bonne option">
-                        <small style="color:var(--gray-500);font-size:var(--text-xs);">
-                            Doit correspondre exactement à une option ci-dessus
-                        </small>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Explication (optionnel)</label>
-                        <textarea class="form-control" name="explication" rows="2"
-                            placeholder="Explication affichée après la correction..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Points</label>
-                        <input type="number" class="form-control" name="points" value="10" min="1" max="100">
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" style="width:100%;">
-                        <i class="bi bi-plus"></i> Ajouter la question
-                    </button>
-                </form>
-            </div>
-        </div>
-
-    </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+      .quiz-chapitre-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Carte d'absence de quiz */
+    .empty-quiz-card {
+        text-align: center;
+        padding: 3rem 1.5rem;
+    }
+    .empty-quiz-card i {
+        font-size: 4rem;
+        color: #CBD5E1;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+    .empty-quiz-card h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin-bottom: 0.5rem;
+    }
+    .empty-quiz-card p {
+        color: #64748B;
+        margin-bottom: 1.5rem;
+    }
+    html.dark .empty-quiz-card h2 {
+        color: #F1F5F9;
+    }
+
+    /* Grille principale */
+    .quiz-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+        align-items: start;
+    }
+    @media (max-width: 900px) {
+        .quiz-grid {
+            grid-template-columns: 1fr;
+        }
+        .quiz-right {
+            position: static;
+        }
+    }
+
+    /* Cartes générales */
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header-flex {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-header-flex h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .card-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .card-subtitle {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin: 0;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    html.dark .card-header-flex h3,
+    html.dark .card-header h3 {
+        color: #F1F5F9;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-primary {
+        background: #EFF6FF;
+        color: #1D4ED8;
+    }
+    .badge-secondary {
+        background: #F1F5F9;
+        color: #475569;
+    }
+    .badge-success {
+        background: #DCFCE7;
+        color: #166534;
+    }
+    .badge-warning {
+        background: #FEF9C3;
+        color: #854D0E;
+    }
+    .badge-light {
+        background: #F8FAFC;
+        color: #475569;
+    }
+    html.dark .badge-primary { background: #1E3A8A; color: #60A5FA; }
+    html.dark .badge-secondary { background: #1E293B; color: #94A3B8; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-warning { background: #78350F; color: #FDE047; }
+    html.dark .badge-light { background: #0F172A; color: #94A3B8; }
+
+    /* Paramètres */
+    .params-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    @media (max-width: 640px) {
+        .params-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .checkbox-group {
+        display: flex;
+        align-items: flex-end;
+    }
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+    }
+    .quiz-params-form {
+        padding: 1rem 1.25rem;
+    }
+
+    /* Liste des questions */
+    .questions-list {
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .question-card {
+        border: 1px solid #E2E8F0;
+        border-radius: 0.75rem;
+        background: white;
+        padding: 1rem;
+        transition: all 0.15s;
+    }
+    html.dark .question-card {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+    }
+    .question-title {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .question-num {
+        background: #E53E3E;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .question-text {
+        font-weight: 600;
+        color: #0F172A;
+        font-size: 0.875rem;
+    }
+    html.dark .question-text {
+        color: #F1F5F9;
+    }
+    .options-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    @media (max-width: 640px) {
+        .options-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .option-item {
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .option-correct {
+        background: #DCFCE7;
+        color: #166534;
+        border: 1px solid #BBF7D0;
+        font-weight: 600;
+    }
+    .option-incorrect {
+        background: #F8FAFC;
+        color: #475569;
+        border: 1px solid #E2E8F0;
+    }
+    .option-letter {
+        width: 22px;
+        height: 22px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.65rem;
+        font-weight: 700;
+    }
+    .correct-icon {
+        margin-left: auto;
+        color: #166534;
+    }
+    .question-explanation {
+        font-size: 0.7rem;
+        color: #6D28D9;
+        background: #F5F3FF;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        margin: 0.5rem 0;
+    }
+    .question-footer {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+    .delete-form {
+        flex-shrink: 0;
+    }
+    .btn-icon {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        border-radius: 6px;
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #64748B;
+        transition: all 0.15s;
+    }
+    .btn-danger-icon {
+        border-color: #FECACA;
+        color: #DC2626;
+    }
+    .btn-danger-icon:hover {
+        background: #FEE2E2;
+        border-color: #FECACA;
+    }
+    .empty-questions {
+        text-align: center;
+        padding: 2rem;
+        color: #94A3B8;
+    }
+    .empty-questions i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Formulaire d'ajout (colonne droite) */
+    .quiz-right {
+        position: sticky;
+        top: 1.5rem;
+    }
+    .sticky-card {
+        position: sticky;
+        top: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.4rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background: white;
+        color: #0F172A;
+        transition: all 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #E53E3E;
+        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+    }
+    textarea.form-control {
+        resize: vertical;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    .form-hint {
+        font-size: 0.7rem;
+        color: #94A3B8;
+        margin-top: 0.25rem;
+        display: inline-block;
+    }
+    .options-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+    .option-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .option-badge {
+        width: 32px;
+        height: 32px;
+        background: #F1F5F9;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #475569;
+        flex-shrink: 0;
+    }
+    .check-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid #CBD5E1;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+    .check-circle i {
+        display: none;
+        font-size: 1rem;
+        color: white;
+    }
+    .check-circle.active {
+        background: #E53E3E;
+        border-color: #E53E3E;
+    }
+    .check-circle.active i {
+        display: block;
+    }
+    .btn-block {
+        width: 100%;
+    }
+    .separator {
+        margin: 1rem 0;
+        border: none;
+        border-top: 1px solid #E2E8F0;
+    }
+    .suggestions-box {
+        background: #F0F9FF;
+        border: 1px solid #BAE6FD;
+        border-radius: 0.75rem;
+        padding: 0.75rem;
+    }
+    .suggestions-title {
+        font-size: 0.7rem;
+        font-weight: 700;
+        color: #0369A1;
+        margin-bottom: 0.5rem;
+    }
+    .suggestions-content {
+        font-size: 0.7rem;
+        color: #0C4A6E;
+        line-height: 1.5;
+    }
+    html.dark .suggestions-box {
+        background: #164E63;
+        border-color: #06B6D4;
+    }
+    html.dark .suggestions-title {
+        color: #22D3EE;
+    }
+    html.dark .suggestions-content {
+        color: #CFFAFE;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 480px) {
+        .card-header-flex {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .option-row {
+            flex-wrap: wrap;
+        }
+        .check-circle {
+            margin-left: auto;
+        }
+    }
+</style>
 
 <script>
-function updateType() {
-    const type = document.getElementById('typeQuestion').value;
-    if (type === 'VRAI_FAUX') {
-        document.getElementById('optionsContainer').innerHTML = `
-            <input type="text" class="form-control" name="options[]" value="Vrai" readonly style="margin-bottom:6px;">
-            <input type="text" class="form-control" name="options[]" value="Faux">
-        `;
+    const lettres = ['A', 'B', 'C', 'D'];
+    let selectedChecks = new Set();
+
+    function syncOption(lettre) {
+        rebuildHidden();
+        validateForm();
     }
-}
-function ajouterOption() {
-    const c = document.getElementById('optionsContainer');
-    const i = document.createElement('input');
-    i.type = 'text'; i.className = 'form-control'; i.name = 'options[]';
-    i.placeholder = 'Nouvelle option'; i.style.marginTop = '6px';
-    c.appendChild(i);
-}
+
+    function rebuildHidden() {
+        const container = document.getElementById('hiddenReponses');
+        if (!container) return;
+        container.innerHTML = '';
+        selectedChecks.forEach(l => {
+            const input = document.getElementById('opt_' + l);
+            const val = input ? input.value.trim() : '';
+            if (val) {
+                const h = document.createElement('input');
+                h.type = 'hidden';
+                h.name = 'reponses_correctes[]';
+                h.value = val;
+                container.appendChild(h);
+            }
+        });
+    }
+
+    function toggleCheck(lettre) {
+        const input = document.getElementById('opt_' + lettre);
+        if (!input || !input.value.trim()) return;
+
+        const type = document.getElementById('typeQuestion').value;
+        if (type === 'QCM_UNIQUE' || type === 'VRAI_FAUX') {
+            selectedChecks.forEach(l => setCheckVisual(l, false));
+            selectedChecks.clear();
+        }
+
+        if (selectedChecks.has(lettre)) {
+            selectedChecks.delete(lettre);
+            setCheckVisual(lettre, false);
+        } else {
+            selectedChecks.add(lettre);
+            setCheckVisual(lettre, true);
+        }
+        rebuildHidden();
+        validateForm();
+    }
+
+    function setCheckVisual(lettre, checked) {
+        const btn = document.getElementById('checkBtn_' + lettre);
+        const badge = document.getElementById('badge_' + lettre);
+        if (checked) {
+            btn?.classList.add('active');
+            if (badge) badge.style.setProperty('background', '#E53E3E');
+            if (badge) badge.style.setProperty('color', 'white');
+        } else {
+            btn?.classList.remove('active');
+            if (badge) badge.style.setProperty('background', '#F1F5F9');
+            if (badge) badge.style.setProperty('color', '#475569');
+        }
+    }
+
+    function updateType() {
+        const type = document.getElementById('typeQuestion').value;
+        selectedChecks.clear();
+        rebuildHidden();
+
+        if (type === 'VRAI_FAUX') {
+            document.getElementById('optionsContainer').innerHTML = `
+                <div class="option-row" id="row_A">
+                    <div class="option-badge" id="badge_A">A</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_A" value="Vrai" readonly style="flex:1;">
+                    <div class="check-circle" id="checkBtn_A" onclick="toggleCheck('A')"><i class="bi bi-check2"></i></div>
+                </div>
+                <div class="option-row" id="row_B">
+                    <div class="option-badge" id="badge_B">B</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_B" value="Faux" readonly style="flex:1;">
+                    <div class="check-circle" id="checkBtn_B" onclick="toggleCheck('B')"><i class="bi bi-check2"></i></div>
+                </div>
+            `;
+        } else {
+            // Restaurer les 4 champs standards
+            document.getElementById('optionsContainer').innerHTML = `
+                <div class="option-row" id="row_A">
+                    <div class="option-badge" id="badge_A">A</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_A" placeholder="Première proposition" oninput="syncOption('A')">
+                    <div class="check-circle" id="checkBtn_A" onclick="toggleCheck('A')"><i class="bi bi-check2"></i></div>
+                </div>
+                <div class="option-row" id="row_B">
+                    <div class="option-badge" id="badge_B">B</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_B" placeholder="Deuxième proposition" oninput="syncOption('B')">
+                    <div class="check-circle" id="checkBtn_B" onclick="toggleCheck('B')"><i class="bi bi-check2"></i></div>
+                </div>
+                <div class="option-row" id="row_C">
+                    <div class="option-badge" id="badge_C">C</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_C" placeholder="Troisième proposition" oninput="syncOption('C')">
+                    <div class="check-circle" id="checkBtn_C" onclick="toggleCheck('C')"><i class="bi bi-check2"></i></div>
+                </div>
+                <div class="option-row" id="row_D">
+                    <div class="option-badge" id="badge_D">D</div>
+                    <input type="text" class="form-control" name="options[]" id="opt_D" placeholder="Quatrième proposition" oninput="syncOption('D')">
+                    <div class="check-circle" id="checkBtn_D" onclick="toggleCheck('D')"><i class="bi bi-check2"></i></div>
+                </div>
+            `;
+        }
+        validateForm();
+    }
+
+    function validateForm() {
+        const question = document.getElementById('questionText')?.value.trim();
+        const hasReponse = selectedChecks.size > 0;
+        let hasOpts = false;
+        for (let l of ['A','B','C','D']) {
+            const el = document.getElementById('opt_' + l);
+            if (el && el.value.trim()) { hasOpts = true; break; }
+        }
+        const btn = document.getElementById('btnAjouter');
+        if (btn) btn.disabled = !(question && hasReponse && hasOpts);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('questionText')?.addEventListener('input', validateForm);
+        validateForm();
+    });
 </script>
 {% endblock %}

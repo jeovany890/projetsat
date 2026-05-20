@@ -2,311 +2,907 @@
 
 {% block page_title %}{{ entreprise.nom }}{% endblock %}
 
-{% block header %}
-<div style="display: flex; justify-content: space-between; align-items: center;">
-    <div>
-        <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2);">
-            <a href="{{ path('admin_entreprises_liste') }}" style="color: var(--gray-500); text-decoration: none; font-size: var(--text-sm);">
-                <i class="bi bi-arrow-left"></i> Entreprises
-            </a>
-            <span style="color: var(--gray-300);">/</span>
-            <span style="color: var(--gray-700); font-size: var(--text-sm);">{{ entreprise.nom }}</span>
-        </div>
-        <h2 style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-            <i class="bi bi-building"></i> {{ entreprise.nom }}
-        </h2>
-    </div>
-
-    {# Actions selon le statut #}
-    <div style="display: flex; gap: var(--space-3);">
-        {% if entreprise.statut == 'ACTIF' %}
-            <span class="badge badge-success" style="font-size: var(--text-base); padding: var(--space-2) var(--space-4);">
-                <i class="bi bi-check-circle"></i> Active
-            </span>
-            <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" onsubmit="return confirm('Suspendre cette entreprise ?')">
-                <button type="submit" class="btn btn-outline" style="border-color: var(--warning); color: var(--warning);">
-                    <i class="bi bi-pause-circle"></i> Suspendre
-                </button>
-            </form>
-        {% elseif entreprise.statut == 'SUSPENDU' %}
-            <span class="badge badge-danger" style="font-size: var(--text-base); padding: var(--space-2) var(--space-4);">
-                <i class="bi bi-pause-circle"></i> Suspendue
-            </span>
-            <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}">
-                <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-play-circle"></i> Réactiver
-                </button>
-            </form>
-        {% elseif entreprise.statut == 'EN_ATTENTE' %}
-            <span class="badge badge-warning" style="font-size: var(--text-base); padding: var(--space-2) var(--space-4);">
-                <i class="bi bi-clock-history"></i> En attente
-            </span>
-        {% elseif entreprise.statut == 'REJETE' %}
-            <span class="badge badge-danger" style="font-size: var(--text-base); padding: var(--space-2) var(--space-4);">
-                <i class="bi bi-x-circle"></i> Rejetée
-            </span>
-        {% endif %}
-    </div>
-</div>
+{% block topbar_actions %}
+    <a href="{{ path('admin_entreprises_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
 {% endblock %}
 
 {% block content %}
+<div class="entreprise-detail-container">
 
-{# ── STATS RAPIDES ── #}
-<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-5); margin-bottom: var(--space-8);">
-
-    <div class="card" style="border-left: 4px solid var(--primary-500);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-size: var(--text-sm); color: var(--gray-500); margin-bottom: var(--space-1);">Employés</div>
-                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--primary-600);">{{ totalEmployes }}</div>
+    {# En-tête #}
+    <div class="entreprise-header">
+        <div>
+            <h1><i class="bi bi-building"></i> {{ entreprise.nom }}</h1>
+            <div class="entreprise-breadcrumb">
+                <a href="{{ path('admin_entreprises_liste') }}">Entreprises</a> / <span>{{ entreprise.nom }}</span>
             </div>
-            <i class="bi bi-people" style="font-size: var(--text-3xl); color: var(--primary-200);"></i>
         </div>
-        <div style="font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">
-            {{ employesActifs }} actifs
-        </div>
-    </div>
-
-    <div class="card" style="border-left: 4px solid var(--success);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-size: var(--text-sm); color: var(--gray-500); margin-bottom: var(--space-1);">Score vigilance</div>
-                <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">{{ scoreMoyen }}%</div>
-            </div>
-            <i class="bi bi-shield-check" style="font-size: var(--text-3xl); color: var(--success); opacity: 0.3;"></i>
-        </div>
-        <div style="font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">Moyenne équipe</div>
-    </div>
-
-    <div class="card" style="border-left: 4px solid var(--info);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-size: var(--text-sm); color: var(--gray-500); margin-bottom: var(--space-1);">Secteur</div>
-                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--info);">{{ entreprise.secteur }}</div>
-            </div>
-            <i class="bi bi-briefcase" style="font-size: var(--text-3xl); color: var(--info); opacity: 0.3;"></i>
-        </div>
-        <div style="font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">Domaine d'activité</div>
-    </div>
-
-    <div class="card" style="border-left: 4px solid var(--secondary-500);">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-size: var(--text-sm); color: var(--gray-500); margin-bottom: var(--space-1);">Inscrite le</div>
-                <div style="font-size: var(--text-lg); font-weight: var(--font-bold); color: var(--secondary-600);">{{ entreprise.dateCreation|date('d/m/Y') }}</div>
-            </div>
-            <i class="bi bi-calendar-check" style="font-size: var(--text-3xl); color: var(--secondary-200);"></i>
-        </div>
-        {% if entreprise.dateValidation %}
-            <div style="font-size: var(--text-xs); color: var(--gray-500); margin-top: var(--space-2);">
-                Validée le {{ entreprise.dateValidation|date('d/m/Y') }}
-            </div>
-        {% endif %}
-    </div>
-
-</div>
-
-{# ── INFOS ENTREPRISE + RSSI ── #}
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8);">
-
-    {# Informations entreprise #}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-building"></i> Informations légales</h3>
-        </div>
-        <div class="card-body" style="padding: var(--space-6);">
-            <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm); width: 40%;">Nom</td>
-                    <td style="padding: var(--space-3) 0; font-weight: var(--font-semibold); color: var(--gray-900);">{{ entreprise.nom }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">IFU</td>
-                    <td style="padding: var(--space-3) 0; font-family: var(--font-mono); color: var(--gray-900);">{{ entreprise.ifu }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">RCCM</td>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ entreprise.rccm }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Email</td>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ entreprise.email }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Téléphone</td>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ entreprise.telephone }}</td>
-                </tr>
-                <tr style="border-bottom: 1px solid var(--gray-100);">
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Taille</td>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ entreprise.nombreEmployes }} employés déclarés</td>
-                </tr>
-                {% if entreprise.adresse %}
-                <tr>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Adresse</td>
-                    <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ entreprise.adresse }}</td>
-                </tr>
-                {% endif %}
-            </table>
-        </div>
-    </div>
-
-    {# RSSI associé #}
-    <div class="card">
-        <div class="card-header">
-            <h3 class="card-title"><i class="bi bi-person-badge"></i> RSSI Responsable</h3>
-        </div>
-        <div class="card-body" style="padding: var(--space-6);">
-            {% if rssi %}
-                {# Avatar + nom #}
-                <div style="display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4); background: var(--gray-50); border-radius: var(--radius-lg); margin-bottom: var(--space-6);">
-                    <div style="width: 56px; height: 56px; background: linear-gradient(135deg, var(--primary-600), var(--secondary-600)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-xl); font-weight: var(--font-bold);">
-                        {{ rssi.prenom|slice(0,1) }}{{ rssi.nom|slice(0,1) }}
-                    </div>
-                    <div>
-                        <div style="font-weight: var(--font-bold); font-size: var(--text-lg); color: var(--gray-900);">
-                            {{ rssi.prenom }} {{ rssi.nom }}
-                        </div>
-                        <div style="font-size: var(--text-sm); color: var(--gray-500);">RSSI</div>
-                    </div>
-                    {% if rssi.estActif %}
-                        <span class="badge badge-success" style="margin-left: auto;">Actif</span>
-                    {% else %}
-                        <span class="badge badge-warning" style="margin-left: auto;">Inactif</span>
-                    {% endif %}
-                </div>
-
-                <table style="width: 100%; border-collapse: collapse;">
-                    <tr style="border-bottom: 1px solid var(--gray-100);">
-                        <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm); width: 40%;">Email</td>
-                        <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ rssi.email }}</td>
-                    </tr>
-                    {% if rssi.telephone %}
-                    <tr style="border-bottom: 1px solid var(--gray-100);">
-                        <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Téléphone</td>
-                        <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ rssi.telephone }}</td>
-                    </tr>
-                    {% endif %}
-                    <tr style="border-bottom: 1px solid var(--gray-100);">
-                        <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Compte créé</td>
-                        <td style="padding: var(--space-3) 0; color: var(--gray-900);">{{ rssi.dateCreation|date('d/m/Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: var(--space-3) 0; color: var(--gray-500); font-size: var(--text-sm);">Dernière connexion</td>
-                        <td style="padding: var(--space-3) 0; color: var(--gray-900);">
-                            {% if rssi.dateDerniereConnexion %}
-                                {{ rssi.dateDerniereConnexion|date('d/m/Y à H:i') }}
-                            {% else %}
-                                <span style="color: var(--gray-400); font-style: italic;">Jamais connecté</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
-
-                {# Renvoi email activation si RSSI jamais connecté #}
-                {% if not rssi.estActif %}
-                <div style="margin-top: var(--space-4); padding: var(--space-4); background: var(--warning-50, #FFFBEB); border: 1px solid var(--warning); border-radius: var(--radius-lg);">
-                    <p style="margin: 0 0 var(--space-3); font-size: var(--text-sm); color: var(--gray-700);">
-                        <i class="bi bi-exclamation-triangle"></i> Ce RSSI n'a pas encore activé son compte.
-                    </p>
-                    <form method="post" action="{{ path('admin_entreprise_valider', {id: entreprise.id}) }}">
-                        <button type="submit" class="btn btn-outline" style="font-size: var(--text-sm);">
-                            <i class="bi bi-envelope-arrow-up"></i> Renvoyer l'email d'activation
-                        </button>
-                    </form>
-                </div>
-                {% endif %}
-
-            {% else %}
-                <div style="text-align: center; padding: var(--space-10); color: var(--gray-400);">
-                    <i class="bi bi-person-x" style="font-size: 48px; margin-bottom: var(--space-4); display: block;"></i>
-                    <p>Aucun RSSI associé à cette entreprise.</p>
-                </div>
+        <div class="entreprise-actions-top">
+            {% if entreprise.statut == 'ACTIF' %}
+                <span class="badge badge-success">Active</span>
+                <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" id="form-susp-entrep-{{ entreprise.id }}" class="inline-form">
+                    <button type="submit" class="btn btn-ghost btn-sm btn-warning"
+                            data-confirm="Suspendre cette entreprise ?"
+                            data-form="form-susp-entrep-{{ entreprise.id }}">
+                        <i class="bi bi-pause-circle"></i> Suspendre
+                    </button>
+                </form>
+            {% elseif entreprise.statut == 'SUSPENDU' %}
+                <span class="badge badge-danger">Suspendue</span>
+                <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" class="inline-form">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-play-circle"></i> Réactiver
+                    </button>
+                </form>
+            {% elseif entreprise.statut == 'EN_ATTENTE' %}
+                <span class="badge badge-warning">En attente</span>
+            {% elseif entreprise.statut == 'REJETE' %}
+                <span class="badge badge-danger">Rejetée</span>
             {% endif %}
         </div>
     </div>
 
-</div>
-
-{# ── LISTE DES EMPLOYÉS ── #}
-<div class="card">
-    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <h3 class="card-title"><i class="bi bi-people"></i> Employés ({{ totalEmployes }})</h3>
-        <div style="display: flex; gap: var(--space-2);">
-            <span class="badge" style="background: var(--success-100, #D1FAE5); color: var(--success);">{{ employesActifs }} actifs</span>
-            <span class="badge" style="background: var(--gray-100); color: var(--gray-600);">{{ totalEmployes - employesActifs }} inactifs</span>
+    {# Statistiques #}
+    <div class="stats-grid stats-grid-4">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ totalEmployes }}</div>
+                <div class="stat-label">Employés</div>
+                <div class="stat-sub">{{ employesActifs }} actifs</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="bi bi-shield-check"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ scoreMoyen }}%</div>
+                <div class="stat-label">Score vigilance</div>
+                <div class="stat-sub">Moyenne équipe</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon info"><i class="bi bi-briefcase-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprise.secteur }}</div>
+                <div class="stat-label">Secteur</div>
+                <div class="stat-sub">Domaine d'activité</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon secondary"><i class="bi bi-calendar-check-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ entreprise.dateCreation|date('d/m/Y') }}</div>
+                <div class="stat-label">Inscrite le</div>
+                {% if entreprise.dateValidation %}
+                    <div class="stat-sub">Validée le {{ entreprise.dateValidation|date('d/m/Y') }}</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
-    {% if employes|length == 0 %}
-        <div style="text-align: center; padding: var(--space-16); color: var(--gray-400);">
-            <i class="bi bi-people" style="font-size: 48px; margin-bottom: var(--space-4); display: block;"></i>
-            <p>Aucun employé enregistré pour cette entreprise.</p>
-            <p style="font-size: var(--text-sm);">Le RSSI peut ajouter des employés depuis son tableau de bord.</p>
+    {# Informations entreprise + RSSI #}
+    <div class="details-grid">
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="bi bi-building"></i> Informations légales</h3>
+            </div>
+            <div class="card-body">
+                <div class="info-table">
+                    <div class="info-row">
+                        <span class="info-label">Nom</span>
+                        <span class="info-value">{{ entreprise.nom }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">IFU</span>
+                        <span class="info-value">{{ entreprise.ifu }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">RCCM</span>
+                        <span class="info-value">{{ entreprise.rccm }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">{{ entreprise.email }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Téléphone</span>
+                        <span class="info-value">{{ entreprise.telephone }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Taille</span>
+                        <span class="info-value">{{ entreprise.nombreEmployes }} employés déclarés</span>
+                    </div>
+                    {% if entreprise.adresse %}
+                        <div class="info-row">
+                            <span class="info-label">Adresse</span>
+                            <span class="info-value">{{ entreprise.adresse }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-    {% else %}
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: var(--gray-50); border-bottom: 2px solid var(--gray-200);">
-                    <tr>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: left; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Employé</th>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: left; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Poste</th>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: left; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Département</th>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: center; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Score vigilance</th>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: center; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Points</th>
-                        <th style="padding: var(--space-3) var(--space-4); text-align: center; font-size: var(--text-sm); color: var(--gray-600); font-weight: var(--font-semibold);">Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for employe in employes %}
-                    <tr style="border-bottom: 1px solid var(--gray-100);" onmouseover="this.style.background='var(--gray-50)'" onmouseout="this.style.background='white'">
-                        <td style="padding: var(--space-3) var(--space-4);">
-                            <div style="display: flex; align-items: center; gap: var(--space-3);">
-                                <div style="width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary-400), var(--secondary-400)); border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; color: white; font-size: var(--text-sm); font-weight: var(--font-bold); flex-shrink: 0;">
-                                    {{ employe.prenom|slice(0,1) }}{{ employe.nom|slice(0,1) }}
-                                </div>
-                                <div>
-                                    <div style="font-weight: var(--font-semibold); color: var(--gray-900);">{{ employe.prenom }} {{ employe.nom }}</div>
-                                    <div style="font-size: var(--text-xs); color: var(--gray-500);">{{ employe.email }}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td style="padding: var(--space-3) var(--space-4); color: var(--gray-600); font-size: var(--text-sm);">
-                            {{ employe.poste ?? '—' }}
-                        </td>
-                        <td style="padding: var(--space-3) var(--space-4); color: var(--gray-600); font-size: var(--text-sm);">
-                            {{ employe.departement ? employe.departement.nom : '—' }}
-                        </td>
-                        <td style="padding: var(--space-3) var(--space-4); text-align: center;">
-                            {% set score = employe.scoreVigilance %}
-                            {% set couleur = score >= 80 ? 'var(--success)' : (score >= 60 ? 'var(--info)' : (score >= 40 ? 'var(--warning)' : 'var(--danger)')) %}
-                            <div style="display: flex; flex-direction: column; align-items: center; gap: var(--space-1);">
-                                <span style="font-weight: var(--font-bold); color: {{ couleur }};">{{ score }}%</span>
-                                <div style="width: 60px; height: 4px; background: var(--gray-200); border-radius: 2px;">
-                                    <div style="width: {{ score }}%; height: 100%; background: {{ couleur }}; border-radius: 2px;"></div>
-                                </div>
-                                <span style="font-size: var(--text-xs); color: var(--gray-500);">{{ employe.niveauVigilance }}</span>
-                            </div>
-                        </td>
-                        <td style="padding: var(--space-3) var(--space-4); text-align: center;">
-                            <span style="display: inline-flex; align-items: center; gap: var(--space-1); font-weight: var(--font-semibold); color: var(--primary-600);">
-                                ⭐ {{ employe.totalEtoiles }}
-                                <span style="color: var(--gray-400); font-size: var(--text-xs); font-weight: normal;">({{ employe.totalPoints }} pts)</span>
-                            </span>
-                        </td>
-                        <td style="padding: var(--space-3) var(--space-4); text-align: center;">
-                            {% if employe.estActif %}
-                                <span class="badge badge-success">Actif</span>
-                            {% else %}
-                                <span class="badge badge-warning">Inactif</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    {% endif %}
-</div>
 
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="bi bi-person-badge"></i> RSSI Responsable</h3>
+            </div>
+            <div class="card-body">
+                {% if rssi %}
+                    <div class="rssi-profile">
+                        <div class="rssi-avatar">{{ rssi.prenom|slice(0,1) }}{{ rssi.nom|slice(0,1) }}</div>
+                        <div>
+                            <div class="rssi-name">{{ rssi.prenom }} {{ rssi.nom }}</div>
+                            <div class="rssi-role">RSSI</div>
+                        </div>
+                        {% if rssi.estActif %}
+                            <span class="badge badge-success">Actif</span>
+                        {% else %}
+                            <span class="badge badge-warning">Inactif</span>
+                        {% endif %}
+                    </div>
+                    <div class="info-table">
+                        <div class="info-row">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ rssi.email }}</span>
+                        </div>
+                        {% if rssi.telephone %}
+                            <div class="info-row">
+                                <span class="info-label">Téléphone</span>
+                                <span class="info-value">{{ rssi.telephone }}</span>
+                            </div>
+                        {% endif %}
+                        <div class="info-row">
+                            <span class="info-label">Compte créé</span>
+                            <span class="info-value">{{ rssi.dateCreation|date('d/m/Y') }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Dernière connexion</span>
+                            <span class="info-value">
+                                {% if rssi.dateDerniereConnexion %}
+                                    {{ rssi.dateDerniereConnexion|date('d/m/Y à H:i') }}
+                                {% else %}
+                                    <em>Jamais connecté</em>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    {% if not rssi.estActif %}
+                        <div class="activation-warning">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            Ce RSSI n'a pas encore activé son compte.
+                            <form method="post" action="{{ path('admin_entreprise_valider', {id: entreprise.id}) }}" class="inline-form">
+                                <button type="submit" class="btn btn-ghost btn-sm">
+                                    <i class="bi bi-envelope-arrow-up"></i> Renvoyer l'email d'activation
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="empty-rssi">
+                        <i class="bi bi-person-x"></i>
+                        <p>Aucun RSSI associé à cette entreprise.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# Liste des employés #}
+    <div class="card">
+        <div class="card-header-flex">
+            <h3><i class="bi bi-people-fill"></i> Employés ({{ totalEmployes }})</h3>
+            <div class="employes-stats">
+                <span class="badge badge-success">{{ employesActifs }} actifs</span>
+                <span class="badge badge-gray">{{ totalEmployes - employesActifs }} inactifs</span>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if employes|length == 0 %}
+                <div class="empty-employes">
+                    <i class="bi bi-people"></i>
+                    <p>Aucun employé enregistré pour cette entreprise.</p>
+                    <small>Le RSSI peut ajouter des employés depuis son tableau de bord.</small>
+                </div>
+            {% else %}
+                <div class="table-responsive">
+                    <table class="employes-table">
+                        <thead>
+                            <tr>
+                                <th>Employé</th>
+                                <th>Poste</th>
+                                <th>Département</th>
+                                <th class="text-center">Score vigilance</th>
+                                <th class="text-center">Points</th>
+                                <th class="text-center">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for employe in employes %}
+                                <tr>
+                                    <td>
+                                        <div class="employe-avatar">{{ employe.prenom|slice(0,1) }}{{ employe.nom|slice(0,1) }}</div>
+                                        <div>
+                                            <div class="employe-name">{{ employe.prenom }} {{ employe.nom }}</div>
+                                            <div class="employe-email">{{ employe.email }}</div>
+                                        </div>
+                                    </td>
+                                    <td>{{ employe.poste ?? '—' }}</td>
+                                    <td>{{ employe.departement ? employe.departement.nom : '—' }}</td>
+                                    <td class="text-center">
+                                        {% set score = employe.scoreVigilance %}
+                                        <div class="score-cell">
+                                            <span class="score-value" data-score="{{ score }}">{{ score }}%</span>
+                                            <div class="progress-bar-bg small">
+                                                <div class="progress-bar-fill" data-score="{{ score }}"></div>
+                                            </div>
+                                            <span class="score-level">{{ employe.niveauVigilance }}</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="stars">{{ employe.nombreEtoiles }}/5 ★</span>
+                                        <span class="points">({{ employe.totalPoints }} pts)</span>
+                                    </td>
+                                    <td class="text-center">
+                                        {% if employe.estActif %}
+                                            <span class="badge badge-success">Actif</span>
+                                        {% else %}
+                                            <span class="badge badge-warning">Inactif</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .entreprise-detail-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* En-tête */
+    .entreprise-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .entreprise-header h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .entreprise-breadcrumb {
+        font-size: 0.75rem;
+        color: #64748B;
+    }
+    .entreprise-breadcrumb a {
+        color: #64748B;
+        text-decoration: none;
+    }
+    .entreprise-breadcrumb a:hover {
+        color: #E53E3E;
+    }
+    .entreprise-actions-top {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .inline-form {
+        display: inline;
+    }
+    .btn-warning {
+        color: #D97706;
+        border-color: #FDE68A;
+    }
+    .btn-warning:hover {
+        background: #FEF9C3;
+        border-color: #FDE68A;
+        color: #B45309;
+    }
+    html.dark .entreprise-header h1 {
+        color: #F1F5F9;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .stats-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 900px) {
+        .stats-grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 550px) {
+        .stats-grid-4 {
+            grid-template-columns: 1fr;
+        }
+    }
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #F1F5F9;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .stat-icon.success { background: #DCFCE7; color: #166534; }
+    .stat-icon.info    { background: #DBEAFE; color: #1D4ED8; }
+    .stat-icon.secondary { background: #FEF9C3; color: #D97706; }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+    .stat-sub {
+        font-size: 0.65rem;
+        color: #94A3B8;
+        margin-top: 0.1rem;
+    }
+    html.dark .stat-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Grille détails */
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+    @media (max-width: 900px) {
+        .details-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        background: #F8FAFC;
+    }
+    .card-header h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    html.dark .card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .card-header h3 {
+        color: #F1F5F9;
+    }
+    .card-body {
+        padding: 1.25rem;
+    }
+    .info-table {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .info-row {
+        display: flex;
+        flex-wrap: wrap;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #E2E8F0;
+        font-size: 0.8125rem;
+    }
+    .info-label {
+        width: 35%;
+        font-weight: 600;
+        color: #475569;
+    }
+    .info-value {
+        width: 65%;
+        color: #0F172A;
+    }
+    html.dark .info-row {
+        border-color: #334155;
+    }
+    html.dark .info-label {
+        color: #94A3B8;
+    }
+    html.dark .info-value {
+        color: #F1F5F9;
+    }
+
+    /* RSSI */
+    .rssi-profile {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: #F8FAFC;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+    }
+    .rssi-avatar {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #E53E3E, #C53030);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: white;
+    }
+    .rssi-name {
+        font-weight: 700;
+        font-size: 1rem;
+        color: #0F172A;
+    }
+    .rssi-role {
+        font-size: 0.75rem;
+        color: #64748B;
+    }
+    .activation-warning {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+        border-radius: 0.75rem;
+        font-size: 0.75rem;
+        color: #854D0E;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .empty-rssi {
+        text-align: center;
+        padding: 2rem;
+        color: #94A3B8;
+    }
+    .empty-rssi i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    html.dark .rssi-profile {
+        background: #0F172A;
+    }
+    html.dark .rssi-name {
+        color: #F1F5F9;
+    }
+
+    /* Tableau employés */
+    .card-header-flex {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .card-header-flex h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .employes-stats {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-warning { background: #FEF9C3; color: #854D0E; }
+    .badge-danger  { background: #FEE2E2; color: #991B1B; }
+    .badge-gray    { background: #F1F5F9; color: #475569; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-warning { background: #78350F; color: #FDE047; }
+    html.dark .badge-danger  { background: #7F1D1D; color: #FCA5A5; }
+    html.dark .badge-gray    { background: #1E293B; color: #94A3B8; }
+
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .employes-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+    }
+    .employes-table th {
+        text-align: left;
+        padding: 0.75rem 1rem;
+        background: #F8FAFC;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .employes-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #E2E8F0;
+        vertical-align: middle;
+    }
+    .employes-table tr:hover td {
+        background: #F8FAFC;
+    }
+    html.dark .employes-table th {
+        background: #1E293B;
+        color: #94A3B8;
+        border-bottom-color: #334155;
+    }
+    html.dark .employes-table td {
+        border-bottom-color: #334155;
+    }
+    html.dark .employes-table tr:hover td {
+        background: #0F172A;
+    }
+    .employe-avatar {
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #E53E3E, #C53030);
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: white;
+        margin-right: 0.75rem;
+        flex-shrink: 0;
+    }
+    .employe-name {
+        font-weight: 600;
+        color: #0F172A;
+    }
+    .employe-email {
+        font-size: 0.65rem;
+        color: #64748B;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .score-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .score-value {
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    .score-value[data-score="0"] { color: #EF4444; }
+    .score-value[data-score="1"] { color: #EF4444; }
+    .score-value[data-score="2"] { color: #EF4444; }
+    .score-value[data-score="3"] { color: #EF4444; }
+    .score-value[data-score="4"] { color: #EF4444; }
+    .score-value[data-score="5"] { color: #EF4444; }
+    .score-value[data-score="6"] { color: #EF4444; }
+    .score-value[data-score="7"] { color: #EF4444; }
+    .score-value[data-score="8"] { color: #EF4444; }
+    .score-value[data-score="9"] { color: #EF4444; }
+    .score-value[data-score="10"] { color: #EF4444; }
+    .score-value[data-score="11"] { color: #EF4444; }
+    .score-value[data-score="12"] { color: #EF4444; }
+    .score-value[data-score="13"] { color: #EF4444; }
+    .score-value[data-score="14"] { color: #EF4444; }
+    .score-value[data-score="15"] { color: #EF4444; }
+    .score-value[data-score="16"] { color: #EF4444; }
+    .score-value[data-score="17"] { color: #EF4444; }
+    .score-value[data-score="18"] { color: #EF4444; }
+    .score-value[data-score="19"] { color: #EF4444; }
+    .score-value[data-score="20"] { color: #EF4444; }
+    .score-value[data-score="21"] { color: #EF4444; }
+    .score-value[data-score="22"] { color: #EF4444; }
+    .score-value[data-score="23"] { color: #EF4444; }
+    .score-value[data-score="24"] { color: #EF4444; }
+    .score-value[data-score="25"] { color: #EF4444; }
+    .score-value[data-score="26"] { color: #EF4444; }
+    .score-value[data-score="27"] { color: #EF4444; }
+    .score-value[data-score="28"] { color: #EF4444; }
+    .score-value[data-score="29"] { color: #EF4444; }
+    .score-value[data-score="30"] { color: #EF4444; }
+    .score-value[data-score="31"] { color: #EF4444; }
+    .score-value[data-score="32"] { color: #EF4444; }
+    .score-value[data-score="33"] { color: #EF4444; }
+    .score-value[data-score="34"] { color: #EF4444; }
+    .score-value[data-score="35"] { color: #EF4444; }
+    .score-value[data-score="36"] { color: #EF4444; }
+    .score-value[data-score="37"] { color: #EF4444; }
+    .score-value[data-score="38"] { color: #EF4444; }
+    .score-value[data-score="39"] { color: #EF4444; }
+    .score-value[data-score="40"] { color: #D97706; }
+    .score-value[data-score="41"] { color: #D97706; }
+    .score-value[data-score="42"] { color: #D97706; }
+    .score-value[data-score="43"] { color: #D97706; }
+    .score-value[data-score="44"] { color: #D97706; }
+    .score-value[data-score="45"] { color: #D97706; }
+    .score-value[data-score="46"] { color: #D97706; }
+    .score-value[data-score="47"] { color: #D97706; }
+    .score-value[data-score="48"] { color: #D97706; }
+    .score-value[data-score="49"] { color: #D97706; }
+    .score-value[data-score="50"] { color: #D97706; }
+    .score-value[data-score="51"] { color: #D97706; }
+    .score-value[data-score="52"] { color: #D97706; }
+    .score-value[data-score="53"] { color: #D97706; }
+    .score-value[data-score="54"] { color: #D97706; }
+    .score-value[data-score="55"] { color: #D97706; }
+    .score-value[data-score="56"] { color: #D97706; }
+    .score-value[data-score="57"] { color: #D97706; }
+    .score-value[data-score="58"] { color: #D97706; }
+    .score-value[data-score="59"] { color: #D97706; }
+    .score-value[data-score="60"] { color: #1D4ED8; }
+    .score-value[data-score="61"] { color: #1D4ED8; }
+    .score-value[data-score="62"] { color: #1D4ED8; }
+    .score-value[data-score="63"] { color: #1D4ED8; }
+    .score-value[data-score="64"] { color: #1D4ED8; }
+    .score-value[data-score="65"] { color: #1D4ED8; }
+    .score-value[data-score="66"] { color: #1D4ED8; }
+    .score-value[data-score="67"] { color: #1D4ED8; }
+    .score-value[data-score="68"] { color: #1D4ED8; }
+    .score-value[data-score="69"] { color: #1D4ED8; }
+    .score-value[data-score="70"] { color: #1D4ED8; }
+    .score-value[data-score="71"] { color: #1D4ED8; }
+    .score-value[data-score="72"] { color: #1D4ED8; }
+    .score-value[data-score="73"] { color: #1D4ED8; }
+    .score-value[data-score="74"] { color: #1D4ED8; }
+    .score-value[data-score="75"] { color: #1D4ED8; }
+    .score-value[data-score="76"] { color: #1D4ED8; }
+    .score-value[data-score="77"] { color: #1D4ED8; }
+    .score-value[data-score="78"] { color: #1D4ED8; }
+    .score-value[data-score="79"] { color: #1D4ED8; }
+    .score-value[data-score="80"] { color: #166534; }
+    .score-value[data-score="81"] { color: #166534; }
+    .score-value[data-score="82"] { color: #166534; }
+    .score-value[data-score="83"] { color: #166534; }
+    .score-value[data-score="84"] { color: #166534; }
+    .score-value[data-score="85"] { color: #166534; }
+    .score-value[data-score="86"] { color: #166534; }
+    .score-value[data-score="87"] { color: #166534; }
+    .score-value[data-score="88"] { color: #166534; }
+    .score-value[data-score="89"] { color: #166534; }
+    .score-value[data-score="90"] { color: #166534; }
+    .score-value[data-score="91"] { color: #166534; }
+    .score-value[data-score="92"] { color: #166534; }
+    .score-value[data-score="93"] { color: #166534; }
+    .score-value[data-score="94"] { color: #166534; }
+    .score-value[data-score="95"] { color: #166534; }
+    .score-value[data-score="96"] { color: #166534; }
+    .score-value[data-score="97"] { color: #166534; }
+    .score-value[data-score="98"] { color: #166534; }
+    .score-value[data-score="99"] { color: #166534; }
+    .score-value[data-score="100"] { color: #166534; }
+
+    .progress-bar-bg.small {
+        width: 70px;
+        height: 4px;
+        background: #E2E8F0;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.3s;
+    }
+    .progress-bar-fill[data-score="0"] { width: 0%; background: #EF4444; }
+    .progress-bar-fill[data-score="1"] { width: 1%; background: #EF4444; }
+    .progress-bar-fill[data-score="2"] { width: 2%; background: #EF4444; }
+    .progress-bar-fill[data-score="3"] { width: 3%; background: #EF4444; }
+    .progress-bar-fill[data-score="4"] { width: 4%; background: #EF4444; }
+    .progress-bar-fill[data-score="5"] { width: 5%; background: #EF4444; }
+    .progress-bar-fill[data-score="6"] { width: 6%; background: #EF4444; }
+    .progress-bar-fill[data-score="7"] { width: 7%; background: #EF4444; }
+    .progress-bar-fill[data-score="8"] { width: 8%; background: #EF4444; }
+    .progress-bar-fill[data-score="9"] { width: 9%; background: #EF4444; }
+    .progress-bar-fill[data-score="10"] { width: 10%; background: #EF4444; }
+    .progress-bar-fill[data-score="11"] { width: 11%; background: #EF4444; }
+    .progress-bar-fill[data-score="12"] { width: 12%; background: #EF4444; }
+    .progress-bar-fill[data-score="13"] { width: 13%; background: #EF4444; }
+    .progress-bar-fill[data-score="14"] { width: 14%; background: #EF4444; }
+    .progress-bar-fill[data-score="15"] { width: 15%; background: #EF4444; }
+    .progress-bar-fill[data-score="16"] { width: 16%; background: #EF4444; }
+    .progress-bar-fill[data-score="17"] { width: 17%; background: #EF4444; }
+    .progress-bar-fill[data-score="18"] { width: 18%; background: #EF4444; }
+    .progress-bar-fill[data-score="19"] { width: 19%; background: #EF4444; }
+    .progress-bar-fill[data-score="20"] { width: 20%; background: #EF4444; }
+    .progress-bar-fill[data-score="21"] { width: 21%; background: #EF4444; }
+    .progress-bar-fill[data-score="22"] { width: 22%; background: #EF4444; }
+    .progress-bar-fill[data-score="23"] { width: 23%; background: #EF4444; }
+    .progress-bar-fill[data-score="24"] { width: 24%; background: #EF4444; }
+    .progress-bar-fill[data-score="25"] { width: 25%; background: #EF4444; }
+    .progress-bar-fill[data-score="26"] { width: 26%; background: #EF4444; }
+    .progress-bar-fill[data-score="27"] { width: 27%; background: #EF4444; }
+    .progress-bar-fill[data-score="28"] { width: 28%; background: #EF4444; }
+    .progress-bar-fill[data-score="29"] { width: 29%; background: #EF4444; }
+    .progress-bar-fill[data-score="30"] { width: 30%; background: #EF4444; }
+    .progress-bar-fill[data-score="31"] { width: 31%; background: #EF4444; }
+    .progress-bar-fill[data-score="32"] { width: 32%; background: #EF4444; }
+    .progress-bar-fill[data-score="33"] { width: 33%; background: #EF4444; }
+    .progress-bar-fill[data-score="34"] { width: 34%; background: #EF4444; }
+    .progress-bar-fill[data-score="35"] { width: 35%; background: #EF4444; }
+    .progress-bar-fill[data-score="36"] { width: 36%; background: #EF4444; }
+    .progress-bar-fill[data-score="37"] { width: 37%; background: #EF4444; }
+    .progress-bar-fill[data-score="38"] { width: 38%; background: #EF4444; }
+    .progress-bar-fill[data-score="39"] { width: 39%; background: #EF4444; }
+    .progress-bar-fill[data-score="40"] { width: 40%; background: #D97706; }
+    .progress-bar-fill[data-score="41"] { width: 41%; background: #D97706; }
+    .progress-bar-fill[data-score="42"] { width: 42%; background: #D97706; }
+    .progress-bar-fill[data-score="43"] { width: 43%; background: #D97706; }
+    .progress-bar-fill[data-score="44"] { width: 44%; background: #D97706; }
+    .progress-bar-fill[data-score="45"] { width: 45%; background: #D97706; }
+    .progress-bar-fill[data-score="46"] { width: 46%; background: #D97706; }
+    .progress-bar-fill[data-score="47"] { width: 47%; background: #D97706; }
+    .progress-bar-fill[data-score="48"] { width: 48%; background: #D97706; }
+    .progress-bar-fill[data-score="49"] { width: 49%; background: #D97706; }
+    .progress-bar-fill[data-score="50"] { width: 50%; background: #D97706; }
+    .progress-bar-fill[data-score="51"] { width: 51%; background: #D97706; }
+    .progress-bar-fill[data-score="52"] { width: 52%; background: #D97706; }
+    .progress-bar-fill[data-score="53"] { width: 53%; background: #D97706; }
+    .progress-bar-fill[data-score="54"] { width: 54%; background: #D97706; }
+    .progress-bar-fill[data-score="55"] { width: 55%; background: #D97706; }
+    .progress-bar-fill[data-score="56"] { width: 56%; background: #D97706; }
+    .progress-bar-fill[data-score="57"] { width: 57%; background: #D97706; }
+    .progress-bar-fill[data-score="58"] { width: 58%; background: #D97706; }
+    .progress-bar-fill[data-score="59"] { width: 59%; background: #D97706; }
+    .progress-bar-fill[data-score="60"] { width: 60%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="61"] { width: 61%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="62"] { width: 62%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="63"] { width: 63%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="64"] { width: 64%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="65"] { width: 65%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="66"] { width: 66%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="67"] { width: 67%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="68"] { width: 68%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="69"] { width: 69%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="70"] { width: 70%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="71"] { width: 71%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="72"] { width: 72%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="73"] { width: 73%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="74"] { width: 74%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="75"] { width: 75%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="76"] { width: 76%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="77"] { width: 77%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="78"] { width: 78%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="79"] { width: 79%; background: #1D4ED8; }
+    .progress-bar-fill[data-score="80"] { width: 80%; background: #166534; }
+    .progress-bar-fill[data-score="81"] { width: 81%; background: #166534; }
+    .progress-bar-fill[data-score="82"] { width: 82%; background: #166534; }
+    .progress-bar-fill[data-score="83"] { width: 83%; background: #166534; }
+    .progress-bar-fill[data-score="84"] { width: 84%; background: #166534; }
+    .progress-bar-fill[data-score="85"] { width: 85%; background: #166534; }
+    .progress-bar-fill[data-score="86"] { width: 86%; background: #166534; }
+    .progress-bar-fill[data-score="87"] { width: 87%; background: #166534; }
+    .progress-bar-fill[data-score="88"] { width: 88%; background: #166534; }
+    .progress-bar-fill[data-score="89"] { width: 89%; background: #166534; }
+    .progress-bar-fill[data-score="90"] { width: 90%; background: #166534; }
+    .progress-bar-fill[data-score="91"] { width: 91%; background: #166534; }
+    .progress-bar-fill[data-score="92"] { width: 92%; background: #166534; }
+    .progress-bar-fill[data-score="93"] { width: 93%; background: #166534; }
+    .progress-bar-fill[data-score="94"] { width: 94%; background: #166534; }
+    .progress-bar-fill[data-score="95"] { width: 95%; background: #166534; }
+    .progress-bar-fill[data-score="96"] { width: 96%; background: #166534; }
+    .progress-bar-fill[data-score="97"] { width: 97%; background: #166534; }
+    .progress-bar-fill[data-score="98"] { width: 98%; background: #166534; }
+    .progress-bar-fill[data-score="99"] { width: 99%; background: #166534; }
+    .progress-bar-fill[data-score="100"] { width: 100%; background: #166534; }
+
+    .score-level {
+        font-size: 0.6rem;
+        color: #64748B;
+    }
+    .stars {
+        font-weight: 700;
+        color: #F59E0B;
+    }
+    .points {
+        font-size: 0.65rem;
+        color: #94A3B8;
+        margin-left: 0.25rem;
+    }
+    .empty-employes {
+        text-align: center;
+        padding: 2rem;
+        color: #94A3B8;
+    }
+    .empty-employes i {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .entreprise-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .info-row {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .info-label, .info-value {
+            width: 100%;
+        }
+        .employes-table th, .employes-table td {
+            padding: 0.5rem;
+        }
+    }
+    @media (max-width: 480px) {
+        .employe-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 0.65rem;
+        }
+        .score-cell {
+            min-width: 80px;
+        }
+    }
+</style>
 {% endblock %}

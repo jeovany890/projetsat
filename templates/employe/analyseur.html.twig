@@ -1,0 +1,728 @@
+{# templates/employe/analyseur.html.twig #}
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Analyser un lien / fichier{% endblock %}
+
+{% block content %}
+
+<div class="ana-container">
+
+    {# Carte d'introduction #}
+    <div class="ana-card ana-card-intro">
+        <div class="ana-card-body">
+            <div class="ana-intro-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <h2>Analyser un lien ou un fichier</h2>
+                <p>Vous avez reçu un élément suspect ? Analysez-le ici avant de l'ouvrir. L'analyse est réalisée par <strong>VirusTotal</strong> avec plus de 70 moteurs antivirus.</p>
+            </div>
+        </div>
+    </div>
+
+    {# Onglets #}
+    <div class="ana-tabs">
+        <button id="tab-url" class="ana-tab active" onclick="switchTab('url')">
+            <i class="bi bi-link-45deg"></i> Analyser un lien
+        </button>
+        <button id="tab-fichier" class="ana-tab" onclick="switchTab('fichier')">
+            <i class="bi bi-file-earmark-check"></i> Analyser un fichier
+        </button>
+    </div>
+
+    {# Zone URL #}
+    <div id="zone-url" class="ana-card">
+        <div class="ana-card-body">
+            <div class="ana-form-group">
+                <label for="urlInput">Collez le lien à analyser</label>
+                <div class="ana-input-group">
+                    <input type="url" id="urlInput" class="ana-input" 
+                           placeholder="https://exemple-suspect.com/lien..."
+                           onkeydown="if(event.key==='Enter'){analyserUrl();}">
+                    <button onclick="analyserUrl()" id="btnUrl" class="ana-btn ana-btn-primary">
+                        <i class="bi bi-search"></i> Analyser
+                    </button>
+                </div>
+                <div class="ana-hint">Exemples : liens reçus par email, SMS, WhatsApp — liens raccourcis, sites inconnus</div>
+            </div>
+        </div>
+    </div>
+
+    {# Zone Fichier #}
+    <div id="zone-fichier" class="ana-card" style="display:none;">
+        <div class="ana-card-body">
+            <div class="ana-form-group">
+                <label>Choisir le fichier à analyser</label>
+                <div id="dropzone" class="ana-dropzone" onclick="document.getElementById('fichierInput').click()"
+                     ondragover="event.preventDefault();this.classList.add('drag-over')"
+                     ondragleave="this.classList.remove('drag-over')"
+                     ondrop="handleDrop(event)">
+                    <i class="bi bi-cloud-upload"></i>
+                    <p>Cliquez ou glissez votre fichier ici</p>
+                    <span class="ana-hint">Max 32 Mo — .pdf, .docx, .xlsx, .zip, .exe, etc.</span>
+                    <div id="fichierNom" class="ana-file-name" style="display:none;"></div>
+                </div>
+                <input type="file" id="fichierInput" style="display:none;" onchange="fichierSelectionne(this)">
+                <button onclick="analyserFichier()" id="btnFichier" class="ana-btn ana-btn-primary ana-btn-block" disabled>
+                    <i class="bi bi-search"></i> Analyser le fichier
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# Chargement #}
+    <div id="zone-chargement" class="ana-loading" style="display:none;">
+        <div class="ana-spinner"></div>
+        <p id="texteChargement">Analyse en cours...</p>
+        <p class="ana-hint">Connexion à VirusTotal — cela peut prendre quelques secondes</p>
+    </div>
+
+    {# Résultat #}
+    <div id="zone-resultat" style="display:none;"></div>
+
+</div>
+
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTÈME ANALYSEUR ===== */
+    .ana-container {
+        max-width: 720px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Cartes */
+    .ana-card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid var(--sat-border, #E2E8F0);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03);
+        overflow: hidden;
+    }
+    .ana-card-body {
+        padding: 1.5rem;
+    }
+    .ana-card-intro {
+        border-left: 4px solid #10B981;
+    }
+    .ana-intro-icon {
+        width: 48px;
+        height: 48px;
+        background: #ECFDF5;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        flex-shrink: 0;
+    }
+    .ana-intro-icon i {
+        font-size: 1.5rem;
+        color: #10B981;
+    }
+    .ana-card-intro .ana-card-body {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    .ana-card-intro h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+        color: #0F172A;
+    }
+    .ana-card-intro p {
+        font-size: 0.875rem;
+        color: #475569;
+        margin: 0;
+    }
+    html.dark .ana-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .ana-card-intro h2 {
+        color: #F1F5F9;
+    }
+    html.dark .ana-card-intro p {
+        color: #94A3B8;
+    }
+    html.dark .ana-intro-icon {
+        background: #064E3B;
+    }
+    html.dark .ana-intro-icon i {
+        color: #4ADE80;
+    }
+
+    /* Onglets */
+    .ana-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        background: #F8FAFC;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    .ana-tab {
+        flex: 1;
+        padding: 0.65rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        font-family: inherit;
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid transparent;
+        color: #64748B;
+        cursor: pointer;
+        transition: all 0.15s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .ana-tab i {
+        font-size: 1rem;
+    }
+    .ana-tab.active {
+        background: white;
+        color: #10B981;
+        border-bottom-color: #10B981;
+    }
+    .ana-tab:hover:not(.active) {
+        background: #F1F5F9;
+        color: #1E293B;
+    }
+    html.dark .ana-tabs {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .ana-tab {
+        color: #94A3B8;
+    }
+    html.dark .ana-tab.active {
+        background: #1E293B;
+        color: #34D399;
+        border-bottom-color: #34D399;
+    }
+    html.dark .ana-tab:hover:not(.active) {
+        background: #334155;
+        color: #F1F5F9;
+    }
+
+    /* Formulaires */
+    .ana-form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .ana-form-group label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #475569;
+    }
+    html.dark .ana-form-group label {
+        color: #94A3B8;
+    }
+    .ana-input-group {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .ana-input {
+        flex: 1;
+        padding: 0.6rem 1rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        background: white;
+        transition: border-color 0.15s;
+    }
+    .ana-input:focus {
+        outline: none;
+        border-color: #10B981;
+        box-shadow: 0 0 0 2px rgba(16,185,129,0.1);
+    }
+    html.dark .ana-input {
+        background: #0F172A;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    .ana-hint {
+        font-size: 0.7rem;
+        color: #94A3B8;
+    }
+
+    /* Dropzone */
+    .ana-dropzone {
+        border: 2px dashed #CBD5E1;
+        border-radius: 0.75rem;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.15s;
+        background: #FAFAFA;
+    }
+    .ana-dropzone i {
+        font-size: 2rem;
+        color: #94A3B8;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .ana-dropzone p {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #475569;
+        margin: 0 0 0.25rem 0;
+    }
+    .ana-dropzone.drag-over {
+        border-color: #10B981;
+        background: #F0FDF4;
+    }
+    .ana-file-name {
+        margin-top: 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #10B981;
+    }
+    html.dark .ana-dropzone {
+        background: #0F172A;
+        border-color: #475569;
+    }
+    html.dark .ana-dropzone p {
+        color: #94A3B8;
+    }
+    html.dark .ana-dropzone.drag-over {
+        background: #064E3B;
+        border-color: #34D399;
+    }
+
+    /* Boutons */
+    .ana-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.2rem;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+    }
+    .ana-btn-primary {
+        background: #10B981;
+        color: white;
+    }
+    .ana-btn-primary:hover:not(:disabled) {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+    .ana-btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .ana-btn-block {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+    html.dark .ana-btn-primary {
+        background: #059669;
+    }
+    html.dark .ana-btn-primary:hover:not(:disabled) {
+        background: #10B981;
+    }
+
+    /* Loading */
+    .ana-loading {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        padding: 2rem;
+        text-align: center;
+    }
+    .ana-spinner {
+        width: 2rem;
+        height: 2rem;
+        border: 3px solid #D1FAE5;
+        border-top-color: #10B981;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .ana-loading p {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1E293B;
+        margin: 0 0 0.25rem;
+    }
+    html.dark .ana-loading {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .ana-loading p {
+        color: #F1F5F9;
+    }
+
+    /* Résultat */
+    .result-card {
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border-left-width: 4px;
+        border-left-style: solid;
+        background: white;
+        border: 1px solid #E2E8F0;
+    }
+    .result-header {
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+    .result-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+    .result-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+    }
+    .result-message {
+        font-size: 0.875rem;
+        opacity: 0.85;
+    }
+    .result-element {
+        background: #F8FAFC;
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid #E2E8F0;
+    }
+    .result-element-label {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-bottom: 0.25rem;
+    }
+    .result-element-value {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #0F172A;
+        word-break: break-all;
+    }
+    .result-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    .stat-box {
+        text-align: center;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+    }
+    .stat-box-danger {
+        background: #FEF2F2;
+        border: 1px solid #FCA5A5;
+    }
+    .stat-box-warning {
+        background: #FFFBEB;
+        border: 1px solid #FDE68A;
+    }
+    .stat-box-success {
+        background: #F0FDF4;
+        border: 1px solid #86EFAC;
+    }
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .stat-label {
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+    .stat-box-danger .stat-number { color: #DC2626; }
+    .stat-box-danger .stat-label { color: #991B1B; }
+    .stat-box-warning .stat-number { color: #D97706; }
+    .stat-box-warning .stat-label { color: #92400E; }
+    .stat-box-success .stat-number { color: #059669; }
+    .stat-box-success .stat-label { color: #166534; }
+    .result-footer {
+        text-align: center;
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-top: 0.75rem;
+    }
+    .result-actions {
+        text-align: center;
+        margin-top: 1rem;
+    }
+    html.dark .result-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .result-element {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .result-element-value {
+        color: #F1F5F9;
+    }
+    html.dark .stat-box-danger {
+        background: #7F1D1D;
+        border-color: #991B1B;
+    }
+    html.dark .stat-box-danger .stat-number { color: #FCA5A5; }
+    html.dark .stat-box-danger .stat-label { color: #FEE2E2; }
+    html.dark .stat-box-warning {
+        background: #78350F;
+        border-color: #92400E;
+    }
+    html.dark .stat-box-warning .stat-number { color: #FDE68A; }
+    html.dark .stat-box-warning .stat-label { color: #FEF3C7; }
+    html.dark .stat-box-success {
+        background: #064E3B;
+        border-color: #065F46;
+    }
+    html.dark .stat-box-success .stat-number { color: #6EE7B7; }
+    html.dark .stat-box-success .stat-label { color: #D1FAE5; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 640px) {
+        .ana-container {
+            gap: 1rem;
+        }
+        .ana-card-body {
+            padding: 1rem;
+        }
+        .ana-tabs {
+            flex-direction: column;
+            border-radius: 0.5rem;
+        }
+        .ana-tab {
+            justify-content: center;
+            padding: 0.5rem;
+            border-bottom: none;
+            border-left: 2px solid transparent;
+        }
+        .ana-tab.active {
+            border-bottom: none;
+            border-left-color: #10B981;
+            background: white;
+        }
+        html.dark .ana-tab.active {
+            border-left-color: #34D399;
+            background: #1E293B;
+        }
+        .ana-input-group {
+            flex-direction: column;
+        }
+        .ana-btn-primary {
+            width: 100%;
+        }
+        .result-stats {
+            gap: 0.5rem;
+            grid-template-columns: 1fr;
+        }
+        .stat-number {
+            font-size: 1.25rem;
+        }
+        .ana-card-intro .ana-card-body {
+            flex-direction: column;
+            text-align: center;
+        }
+        .ana-intro-icon {
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+        .ana-dropzone {
+            padding: 1rem;
+        }
+        .result-card {
+            padding: 1rem;
+        }
+        .result-header {
+            margin-bottom: 0.75rem;
+        }
+        .result-title {
+            font-size: 1.2rem;
+        }
+    }
+    @media (max-width: 480px) {
+        .ana-hint {
+            font-size: 0.65rem;
+        }
+        .ana-btn {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+var fichierEnAttente = null;
+
+function switchTab(tab) {
+    document.getElementById('zone-url').style.display = tab === 'url' ? 'block' : 'none';
+    document.getElementById('zone-fichier').style.display = tab === 'fichier' ? 'block' : 'none';
+    document.getElementById('zone-resultat').style.display = 'none';
+    document.getElementById('zone-chargement').style.display = 'none';
+
+    var tu = document.getElementById('tab-url');
+    var tf = document.getElementById('tab-fichier');
+    if (tab === 'url') {
+        tu.classList.add('active');
+        tf.classList.remove('active');
+    } else {
+        tf.classList.add('active');
+        tu.classList.remove('active');
+    }
+}
+
+function fichierSelectionne(input) {
+    if (input.files && input.files[0]) {
+        fichierEnAttente = input.files[0];
+        var nomDiv = document.getElementById('fichierNom');
+        nomDiv.textContent = fichierEnAttente.name + ' (' + (fichierEnAttente.size / 1024).toFixed(0) + ' Ko)';
+        nomDiv.style.display = '';
+        var btn = document.getElementById('btnFichier');
+        btn.disabled = false;
+    }
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    var dropzone = document.getElementById('dropzone');
+    dropzone.classList.remove('drag-over');
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        document.getElementById('fichierInput').files = e.dataTransfer.files;
+        fichierSelectionne(document.getElementById('fichierInput'));
+    }
+}
+
+function afficherChargement(texte) {
+    document.getElementById('zone-resultat').style.display = 'none';
+    document.getElementById('zone-chargement').style.display = 'block';
+    var texteElement = document.getElementById('texteChargement');
+    if (texteElement) texteElement.textContent = texte || 'Analyse en cours...';
+}
+
+function afficherResultat(data, sujet) {
+    document.getElementById('zone-chargement').style.display = 'none';
+    var zone = document.getElementById('zone-resultat');
+    zone.style.display = 'block';
+
+    if (data.erreur) {
+        zone.innerHTML = `
+            <div class="ana-card" style="border-left:4px solid #EF4444;">
+                <div class="ana-card-body" style="text-align:center;">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size:2rem;color:#EF4444;display:block;margin-bottom:0.5rem;"></i>
+                    <div style="font-weight:700;color:#991B1B;">Erreur d'analyse</div>
+                    <div style="font-size:0.875rem;color:#B91C1C;">${data.erreur}</div>
+                </div>
+            </div>`;
+        return;
+    }
+
+    var cfg = {
+        danger:  { emoji:'<i class="bi bi-shield-exclamation" style="font-size:2rem;"></i>', titre:'Dangereux',    border:'#FCA5A5', bg:'#FEF2F2', color:'#991B1B' },
+        warning: { emoji:'<i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i>', titre:'Suspect',      border:'#FDE68A', bg:'#FFFBEB', color:'#92400E' },
+        safe:    { emoji:'<i class="bi bi-shield-check" style="font-size:2rem;"></i>', titre:'Sans danger',   border:'#86EFAC', bg:'#F0FDF4', color:'#166534' }
+    }[data.niveau] || {};
+
+    var nom = data.url ? ('🔗 ' + (data.url.length > 60 ? data.url.slice(0,60)+'...' : data.url)) : ('📎 ' + (data.nom || ''));
+
+    zone.innerHTML = `
+        <div class="result-card" style="background:${cfg.bg};border-left-color:${cfg.border};">
+            <div class="result-header">
+                <span class="result-icon">${cfg.emoji}</span>
+                <div class="result-title" style="color:${cfg.color};">${cfg.titre}</div>
+                <div class="result-message" style="color:${cfg.color};">${data.message}</div>
+            </div>
+            <div class="result-element">
+                <div class="result-element-label">Élément analysé</div>
+                <div class="result-element-value">${nom}</div>
+            </div>
+            <div class="result-stats">
+                <div class="stat-box stat-box-danger">
+                    <div class="stat-number">${data.malveillant}</div>
+                    <div class="stat-label">Malveillant</div>
+                </div>
+                <div class="stat-box stat-box-warning">
+                    <div class="stat-number">${data.suspect}</div>
+                    <div class="stat-label">Suspect</div>
+                </div>
+                <div class="stat-box stat-box-success">
+                    <div class="stat-number">${data.propre}</div>
+                    <div class="stat-label">Moteurs d'antivirus consultés</div>
+                </div>
+            </div>
+            <div class="result-footer">
+                ${data.total} moteurs antivirus consultés via VirusTotal
+            </div>
+        </div>
+        <div class="result-actions">
+            <button onclick="nouvelleAnalyse()" class="ana-btn ana-btn-primary">Nouvelle analyse</button>
+        </div>
+    `;
+}
+
+function analyserUrl() {
+    var url = document.getElementById('urlInput').value.trim();
+    if (!url) {
+        document.getElementById('urlInput').focus();
+        return;
+    }
+    afficherChargement('Analyse du lien en cours...');
+    var btn = document.getElementById('btnUrl');
+    btn.disabled = true;
+
+    var fd = new FormData();
+    fd.append('url', url);
+
+    fetch('{{ path("employe_analyseur_url") }}', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => afficherResultat(d, url))
+        .catch(e => afficherResultat({ erreur: 'Erreur réseau : ' + e.message }))
+        .finally(() => btn.disabled = false);
+}
+
+function analyserFichier() {
+    if (!fichierEnAttente) return;
+    afficherChargement('Envoi et analyse du fichier...');
+    var btn = document.getElementById('btnFichier');
+    btn.disabled = true;
+
+    var fd = new FormData();
+    fd.append('fichier', fichierEnAttente);
+
+    fetch('{{ path("employe_analyseur_fichier") }}', { method: 'POST', body: fd })
+        .then(r => r.json())
+        .then(d => afficherResultat(d))
+        .catch(e => afficherResultat({ erreur: 'Erreur réseau : ' + e.message }))
+        .finally(() => btn.disabled = false);
+}
+
+function nouvelleAnalyse() {
+    document.getElementById('zone-resultat').style.display = 'none';
+    document.getElementById('urlInput').value = '';
+    document.getElementById('urlInput').focus();
+    document.getElementById('fichierInput').value = '';
+    document.getElementById('fichierNom').style.display = 'none';
+    fichierEnAttente = null;
+    document.getElementById('btnFichier').disabled = true;
+}
+</script>
+{% endblock %}

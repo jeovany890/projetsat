@@ -1,0 +1,645 @@
+{% extends 'admin/layout.html.twig' %}
+{% block page_title %}Nouvelle simulation{% endblock %}
+
+{% block content %}
+<div style="max-width:960px;margin:0 auto;">
+
+    <div style="margin-bottom:var(--space-6);">
+        <a href="{{ path('admin_simulations_liste') }}"
+           style="color:var(--gray-600);display:inline-flex;align-items:center;gap:var(--space-2);font-size:var(--text-sm);">
+            <i class="bi bi-arrow-left"></i> Retour aux simulations
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding:var(--space-8);">
+
+            <h2 style="font-size:var(--text-2xl);font-weight:var(--font-bold);margin-bottom:var(--space-2);">
+                Créer une simulation
+            </h2>
+            <p style="color:var(--gray-600);margin-bottom:var(--space-8);">
+                Construisez le contenu que l'employé devra analyser.
+            </p>
+
+            <form method="post" id="formSim" onsubmit="prepareSubmit()">
+
+                {# ── INFOS GÉNÉRALES ── #}
+                <div style="margin-bottom:var(--space-8);padding-bottom:var(--space-8);border-bottom:2px solid var(--gray-100);">
+                    <h3 style="font-size:var(--text-lg);font-weight:var(--font-bold);margin-bottom:var(--space-6);">
+                        Informations générales
+                    </h3>
+
+                    <div class="form-group">
+                        <label class="form-label">Titre *</label>
+                        <input type="text" class="form-control" name="titre" required
+                               placeholder="Ex: Boîte mail Gmail — Détection de phishing">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" name="description" rows="2"
+                                  placeholder="Description pédagogique courte..."></textarea>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Type de simulation *</label>
+                            <select class="form-control" name="type_simulation"
+                                    id="typeSimulation" onchange="changerType()" required>
+                                <option value="">Choisir...</option>
+                                <option value="GMAIL">Gmail — Boîte email</option>
+                                <option value="SMS">SMS — Messagerie mobile</option>
+                                <option value="WHATSAPP">WhatsApp — Messagerie</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Difficulté</label>
+                            <select class="form-control" name="difficulte">
+                                <option value="facile">Facile</option>
+                                <option value="moyen" selected>Moyen</option>
+                                <option value="difficile">Difficile</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Durée estimée (min)</label>
+                            <input type="number" class="form-control" name="duree_estimee"
+                                   value="10" min="1" max="60">
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr;gap:var(--space-4);">
+                        <div class="form-group">
+                            <label class="form-label">Points si réussite</label>
+                            <input type="number" class="form-control" name="points_reussite" value="100" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                {# ── ÉDITEUR DYNAMIQUE ── #}
+                <div id="editeurZone" style="margin-bottom:var(--space-8);display:none;">
+
+                    {# En-tête de section + bouton ajouter #}
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-6);">
+                        <h3 id="editeurTitre" style="font-size:var(--text-lg);font-weight:var(--font-bold);"></h3>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="ajouterItem()">
+                            <i class="bi bi-plus-circle"></i>
+                            <span id="btnAjouterLabel">Ajouter</span>
+                        </button>
+                    </div>
+
+                    <div style="font-size:var(--text-sm);color:var(--gray-500);margin-bottom:var(--space-4);"
+                         id="editeurInfo"></div>
+
+                    {# Liste des items #}
+                    <div id="itemsContainer"></div>
+
+                    {# Hidden field — JSON final #}
+                    <input type="hidden" name="contenu_simulation_json" id="contenuJson">
+                </div>
+
+                {# Placeholder quand aucun type sélectionné #}
+                <div id="editeurPlaceholder"
+                     style="text-align:center;padding:var(--space-12);color:var(--gray-400);border:2px dashed var(--gray-200);border-radius:var(--radius-lg);margin-bottom:var(--space-8);">
+                    <i class="bi bi-arrow-up-circle" style="font-size:40px;display:block;margin-bottom:var(--space-3);"></i>
+                    Sélectionnez un type de simulation pour commencer
+                </div>
+
+                {# ── PUBLICATION ── #}
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:var(--space-3);cursor:pointer;
+                                  padding:var(--space-4);background:var(--gray-50);border-radius:var(--radius-lg);
+                                  border:2px solid var(--gray-200);">
+                        <input type="checkbox" name="est_publie" style="width:20px;height:20px;">
+                        <div>
+                            <div style="font-weight:var(--font-semibold);">Publier immédiatement</div>
+                            <div style="font-size:var(--text-sm);color:var(--gray-600);">
+                                La simulation sera disponible pour les employés
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div style="display:flex;gap:var(--space-4);margin-top:var(--space-6);">
+                    <button type="submit" class="btn btn-primary btn-lg" style="flex:1;">
+                        <i class="bi bi-check-circle"></i> Créer la simulation
+                    </button>
+                    <a href="{{ path('admin_simulations_liste') }}" class="btn btn-secondary btn-lg">
+                        Annuler
+                    </a>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.item-card{
+    border:2px solid var(--gray-200);border-radius:var(--radius-lg);
+    margin-bottom:var(--space-4);overflow:hidden;
+    transition:border-color .2s;
+}
+.item-card.phishing{border-color:#FCA5A5;}
+.item-card.legitime{border-color:#86EFAC;}
+.item-header{
+    display:flex;align-items:center;gap:var(--space-3);
+    padding:var(--space-3) var(--space-4);
+    background:var(--gray-50);border-bottom:1px solid var(--gray-200);
+    cursor:pointer;user-select:none;
+}
+.item-header.phishing{background:#FEF2F2;border-color:#FCA5A5;}
+.item-header.legitime{background:#F0FDF4;border-color:#86EFAC;}
+.item-num{
+    width:24px;height:24px;border-radius:50%;
+    background:var(--gray-300);color:white;
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:700;flex-shrink:0;
+}
+.item-num.phishing{background:#EF4444;}
+.item-num.legitime{background:#22C55E;}
+.item-label{font-size:var(--text-sm);font-weight:var(--font-semibold);color:var(--gray-700);flex:1;}
+.item-body{padding:var(--space-5);}
+.item-body.collapsed{display:none;}
+.type-toggle{
+    display:flex;border-radius:var(--radius-md);overflow:hidden;
+    border:1px solid var(--gray-200);width:fit-content;margin-bottom:var(--space-4);
+}
+.type-toggle button{
+    padding:var(--space-2) var(--space-4);border:none;background:white;
+    font-size:var(--text-sm);cursor:pointer;font-family:inherit;
+    transition:all .15s;
+}
+.type-toggle button.on{background:#EF4444;color:white;font-weight:700;}
+.type-toggle button.on.legit{background:#22C55E;}
+.delete-btn{
+    background:transparent;border:none;cursor:pointer;
+    color:var(--gray-400);font-size:16px;padding:4px;
+    transition:color .15s;
+}
+.delete-btn:hover{color:#EF4444;}
+.collapse-btn{
+    background:transparent;border:none;cursor:pointer;
+    color:var(--gray-400);font-size:14px;padding:4px;
+    transition:color .15s;
+}
+</style>
+
+<script>
+let currentType = '';
+let items = [];       // tableau d'objets selon le type
+
+// ── Changer de type ──
+function changerType(){
+    currentType = document.getElementById('typeSimulation').value;
+    items = [];
+
+    if(!currentType){
+        document.getElementById('editeurZone').style.display = 'none';
+        document.getElementById('editeurPlaceholder').style.display = '';
+        return;
+    }
+
+    document.getElementById('editeurZone').style.display = '';
+    document.getElementById('editeurPlaceholder').style.display = 'none';
+
+    const configs = {
+        GMAIL: {
+            titre:'Emails de la boîte Gmail',
+            info:'Ajoutez entre 4 et 10 emails. Au moins 2 phishing et 2 légitimes. L\'employé devra identifier les phishing.',
+            btnLabel:'Ajouter un email'
+        },
+        SMS: {
+            titre:'SMS de la messagerie',
+            info:'Ajoutez entre 4 et 8 SMS. Mélangez smishing et SMS légitimes. L\'employé devra identifier les arnaques.',
+            btnLabel:'Ajouter un SMS'
+        },
+        WHATSAPP: {
+            titre:'Conversations WhatsApp',
+            info:'Ajoutez entre 3 et 6 conversations. Mélangez phishing et conversations légitimes.',
+            btnLabel:'Ajouter une conversation'
+        }
+    };
+
+    const cfg = configs[currentType];
+    document.getElementById('editeurTitre').textContent = cfg.titre;
+    document.getElementById('editeurInfo').textContent  = cfg.info;
+    document.getElementById('btnAjouterLabel').textContent = cfg.btnLabel;
+    document.getElementById('itemsContainer').innerHTML = '';
+
+    // Ajouter 2 items vides pour démarrer
+    ajouterItem(); ajouterItem();
+}
+
+// ── Ajouter un item ──
+function ajouterItem(){
+    const idx = items.length;
+    let item = {};
+
+    if(currentType === 'GMAIL'){
+        item = {
+            is_phishing:true, sender_name:'', sender_email:'',
+            subject:'', body:'', explication:'',
+            avatar_color:'#EA4335', avatar_text:'',
+            time:'Aujourd\'hui', preview:''
+        };
+    } else if(currentType === 'SMS'){
+        item = {
+            is_phishing:true, name:'', num:'',
+            message:'', date:'Aujourd\'hui', hasLink:false,
+            link:'', explication:''
+        };
+    } else if(currentType === 'WHATSAPP'){
+        item = {
+            is_phishing:true, name:'', status:'en ligne',
+            avatarBg:'#25D366', avatarText:'',
+            messages:[], explication:''
+        };
+    }
+
+    items.push(item);
+    renderItem(idx);
+}
+
+// ── Rendre un item ──
+function renderItem(idx){
+    const item  = items[idx];
+    const isP   = item.is_phishing;
+    const cls   = isP ? 'phishing' : 'legitime';
+    const label = currentType === 'GMAIL' ? `Email ${idx+1}` :
+                  currentType === 'SMS'   ? `SMS ${idx+1}` :
+                                            `Conversation ${idx+1}`;
+    let bodyHtml = '';
+
+    if(currentType === 'GMAIL'){
+        bodyHtml = `
+        <div class="type-toggle" style="margin-bottom:var(--space-4);">
+            <button type="button" class="on ${isP?'':'legit'}" onclick="toggleType(${idx},${!isP})">
+                ${isP ? '🚨 Phishing' : '✅ Légitime'}
+            </button>
+            <button type="button" class="${isP?'':'on legit'}" onclick="toggleType(${idx},${isP?false:true})">
+                ${isP ? '✅ Marquer légitime' : '🚨 Marquer phishing'}
+            </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3);">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Nom expéditeur *
+                </label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.sender_name)}"
+                    placeholder="Ex: BOA Service Client"
+                    oninput="updateField(${idx},'sender_name',this.value)">
+            </div>
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Email expéditeur *
+                    ${isP ? '<span style="color:#EF4444;font-size:11px;"> — mettez le faux domaine !</span>' : ''}
+                </label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.sender_email)}"
+                    placeholder="${isP ? 'support@boa-beniin.com' : 'rh@lescourssonou.bj'}"
+                    oninput="updateField(${idx},'sender_email',this.value)">
+            </div>
+        </div>
+        <div style="margin-bottom:var(--space-3);">
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Sujet *</label>
+            <input type="text" class="form-control" style="height:38px;"
+                value="${escHtml(item.subject)}"
+                placeholder="${isP ? 'Ex: ⚠️ Votre compte sera suspendu dans 24h' : 'Ex: Votre fiche de paie — Mars 2025'}"
+                oninput="updateField(${idx},'subject',this.value)">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3);">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Heure affichée
+                </label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.time)}"
+                    placeholder="Ex: 09:14 ou Mar 24"
+                    oninput="updateField(${idx},'time',this.value)">
+            </div>
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Couleur avatar (hex)
+                </label>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <input type="color" value="${item.avatar_color||'#EA4335'}"
+                        style="width:38px;height:38px;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;"
+                        oninput="updateField(${idx},'avatar_color',this.value)">
+                    <input type="text" class="form-control" style="height:38px;flex:1;"
+                        value="${escHtml(item.avatar_text||item.sender_name.substring(0,2).toUpperCase())}"
+                        placeholder="Ex: BO"
+                        oninput="updateField(${idx},'avatar_text',this.value)">
+                </div>
+            </div>
+        </div>
+        <div style="margin-bottom:var(--space-3);">
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                Corps de l'email (HTML accepté)
+                <span style="color:var(--gray-400);"> — Utilisez {{PRENOM}} pour personnaliser</span>
+            </label>
+            <textarea class="form-control" rows="5"
+                placeholder="<p>Bonjour {{PRENOM}},</p><br><p>...</p>"
+                oninput="updateField(${idx},'body',this.value)">${escHtml(item.body)}</textarea>
+        </div>
+        <div>
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                Explication pédagogique (affichée dans les résultats) *
+            </label>
+            <textarea class="form-control" rows="2"
+                placeholder="Ex: Cet email est un phishing. Indice 1: le domaine boa-beniin.com..."
+                oninput="updateField(${idx},'explication',this.value)">${escHtml(item.explication)}</textarea>
+        </div>`;
+
+    } else if(currentType === 'SMS'){
+        bodyHtml = `
+        <div class="type-toggle" style="margin-bottom:var(--space-4);">
+            <button type="button" class="on ${isP?'':'legit'}" onclick="toggleType(${idx},${!isP})">
+                ${isP ? '🚨 Smishing' : '✅ Légitime'}
+            </button>
+            <button type="button" class="${isP?'':'on legit'}" onclick="toggleType(${idx},${isP?false:true})">
+                ${isP ? '✅ Marquer légitime' : '🚨 Marquer smishing'}
+            </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3);">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Expéditeur affiché *
+                </label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.name)}"
+                    placeholder="${isP ? 'Ex: MTNBenin (usurpé)' : 'Ex: MOOVAFRICA'}"
+                    oninput="updateField(${idx},'name',this.value)">
+            </div>
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                    Numéro / Info expéditeur
+                </label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.num)}"
+                    placeholder="${isP ? '+229 0145XXXXXX (Inconnu)' : 'MOOVAFRICA (Opérateur)'}"
+                    oninput="updateField(${idx},'num',this.value)">
+            </div>
+        </div>
+        <div style="margin-bottom:var(--space-3);">
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                Contenu du SMS *
+                <span style="color:var(--gray-400);"> — Utilisez {{PRENOM}} et {{TELEPHONE}}</span>
+            </label>
+            <textarea class="form-control" rows="3"
+                placeholder="${isP
+                    ? 'Ex: URGENT! Votre compte MoMo a enregistre une transaction de 85000F... bit.ly/arnaque'
+                    : 'Ex: Votre recharge de 1000F a ete effectuee. Nouveau solde: 2350F.'}"
+                oninput="updateField(${idx},'message',this.value)">${escHtml(item.message)}</textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3);">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Date affichée</label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.date)}"
+                    placeholder="Ex: Mar 20"
+                    oninput="updateField(${idx},'date',this.value)">
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;padding-top:20px;">
+                <input type="checkbox" id="hasLink${idx}" style="width:18px;height:18px;accent-color:#EF4444;"
+                    ${item.hasLink?'checked':''} onchange="updateField(${idx},'hasLink',this.checked)">
+                <label for="hasLink${idx}" style="font-size:13px;cursor:pointer;">Contient un lien suspect</label>
+            </div>
+        </div>
+        <div>
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                Explication pédagogique *
+            </label>
+            <textarea class="form-control" rows="2"
+                placeholder="Ex: SMS smishing. Indice 1: MTN n'envoie jamais de liens bit.ly..."
+                oninput="updateField(${idx},'explication',this.value)">${escHtml(item.explication)}</textarea>
+        </div>`;
+
+    } else if(currentType === 'WHATSAPP'){
+        const msgsJson = JSON.stringify(item.messages||[]);
+        bodyHtml = `
+        <div class="type-toggle" style="margin-bottom:var(--space-4);">
+            <button type="button" class="on ${isP?'':'legit'}" onclick="toggleType(${idx},${!isP})">
+                ${isP ? '🚨 Phishing' : '✅ Légitime'}
+            </button>
+            <button type="button" class="${isP?'':'on legit'}" onclick="toggleType(${idx},${isP?false:true})">
+                ${isP ? '✅ Marquer légitime' : '🚨 Marquer phishing'}
+            </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-3);">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Nom conversation *</label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.name)}"
+                    placeholder="${isP ? 'Ex: Recruteur CFAO Bénin' : 'Ex: Famille Worou 🏠'}"
+                    oninput="updateField(${idx},'name',this.value)">
+            </div>
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Statut / Info</label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.status)}"
+                    placeholder="Ex: en ligne / Groupe · 8 membres"
+                    oninput="updateField(${idx},'status',this.value)">
+            </div>
+        </div>
+        <div style="display:grid;grid-template-columns:80px 1fr;gap:var(--space-3);margin-bottom:var(--space-3);align-items:end;">
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Couleur avatar</label>
+                <input type="color" value="${item.avatarBg||'#25D366'}"
+                    style="width:100%;height:38px;border:1px solid var(--gray-200);border-radius:6px;cursor:pointer;"
+                    oninput="updateField(${idx},'avatarBg',this.value)">
+            </div>
+            <div>
+                <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">Texte / icône avatar</label>
+                <input type="text" class="form-control" style="height:38px;"
+                    value="${escHtml(item.avatarText)}"
+                    placeholder="Ex: CF ou 👨‍👩‍👧‍👦"
+                    oninput="updateField(${idx},'avatarText',this.value)">
+            </div>
+        </div>
+        <div style="margin-bottom:var(--space-3);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-2);">
+                <label style="font-size:12px;color:var(--gray-600);">Messages de la conversation *</label>
+                <button type="button" onclick="ajouterMessage(${idx})"
+                        style="font-size:12px;background:var(--gray-100);border:1px solid var(--gray-200);
+                               border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--gray-700);">
+                    + Ajouter message
+                </button>
+            </div>
+            <div id="msgs${idx}" style="display:flex;flex-direction:column;gap:6px;">
+                ${(item.messages||[]).map((m,mi)=>renderMessageRow(idx,mi,m)).join('')}
+            </div>
+        </div>
+        <div>
+            <label style="font-size:12px;color:var(--gray-600);display:block;margin-bottom:4px;">
+                Explication pédagogique *
+            </label>
+            <textarea class="form-control" rows="2"
+                placeholder="Ex: Cette conversation est un phishing. Indice 1: aucun recruteur légitime..."
+                oninput="updateField(${idx},'explication',this.value)">${escHtml(item.explication)}</textarea>
+        </div>`;
+    }
+
+    // Créer ou mettre à jour la carte
+    let card = document.getElementById('item-card-'+idx);
+    if(!card){
+        card = document.createElement('div');
+        card.id = 'item-card-'+idx;
+        card.className = `item-card ${cls}`;
+        document.getElementById('itemsContainer').appendChild(card);
+    } else {
+        card.className = `item-card ${cls}`;
+    }
+
+    card.innerHTML = `
+    <div class="item-header ${cls}" onclick="toggleCollapse(${idx})">
+        <div class="item-num ${cls}">${idx+1}</div>
+        <span class="item-label" id="item-label-${idx}">${label} — ${isP ? '🚨 Phishing' : '✅ Légitime'}</span>
+        <button type="button" class="collapse-btn" title="Réduire/développer">
+            <i class="bi bi-chevron-down" id="chevron-${idx}"></i>
+        </button>
+        <button type="button" class="delete-btn" onclick="event.stopPropagation();supprimerItem(${idx})"
+                title="Supprimer">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+    <div class="item-body" id="item-body-${idx}">
+        ${bodyHtml}
+    </div>`;
+}
+
+// ── Ligne message WhatsApp ──
+function renderMessageRow(convIdx, msgIdx, m){
+    return `<div style="display:flex;gap:6px;align-items:flex-start;background:var(--gray-50);
+                         border-radius:8px;padding:8px 10px;border:1px solid var(--gray-200);"
+                  id="msg-row-${convIdx}-${msgIdx}">
+        <select style="height:32px;border:1px solid var(--gray-200);border-radius:6px;font-size:12px;
+                        padding:0 6px;background:white;color:var(--gray-700);cursor:pointer;"
+                onchange="updateMessage(${convIdx},${msgIdx},'out',this.value==='out')">
+            <option value="in"  ${!m.out?'selected':''}>↓ Reçu</option>
+            <option value="out" ${m.out?'selected':''}>↑ Envoyé</option>
+        </select>
+        <input type="text" style="height:32px;flex:1;border:1px solid var(--gray-200);border-radius:6px;
+                                   font-size:13px;padding:0 8px;background:white;"
+            placeholder="${m.out?'Votre réponse...':'Contenu du message reçu...'}"
+            value="${escHtml(m.text||'')}"
+            oninput="updateMessage(${convIdx},${msgIdx},'text',this.value)">
+        <input type="text" style="height:32px;width:65px;border:1px solid var(--gray-200);border-radius:6px;
+                                   font-size:12px;padding:0 6px;background:white;"
+            placeholder="14:30"
+            value="${escHtml(m.time||'')}"
+            oninput="updateMessage(${convIdx},${msgIdx},'time',this.value)">
+        ${!m.out?`<input type="text" style="height:32px;width:100px;border:1px solid var(--gray-200);border-radius:6px;
+                                   font-size:12px;padding:0 6px;background:white;"
+            placeholder="Expéditeur"
+            value="${escHtml(m.sender||'')}"
+            oninput="updateMessage(${convIdx},${msgIdx},'sender',this.value)">`:``}
+        <button type="button" onclick="supprimerMessage(${convIdx},${msgIdx})"
+                style="height:32px;width:32px;background:transparent;border:1px solid var(--gray-200);
+                        border-radius:6px;cursor:pointer;color:var(--gray-400);font-size:14px;
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ×
+        </button>
+    </div>`;
+}
+
+// ── Ajouter un message WhatsApp ──
+function ajouterMessage(convIdx){
+    if(!items[convIdx].messages) items[convIdx].messages=[];
+    const msgIdx = items[convIdx].messages.length;
+    items[convIdx].messages.push({out:false, text:'', time:'', sender:''});
+    const container = document.getElementById('msgs'+convIdx);
+    const div = document.createElement('div');
+    div.innerHTML = renderMessageRow(convIdx, msgIdx, items[convIdx].messages[msgIdx]);
+    container.appendChild(div.firstElementChild);
+}
+
+function supprimerMessage(convIdx, msgIdx){
+    items[convIdx].messages.splice(msgIdx,1);
+    rerenderMessages(convIdx);
+}
+
+function rerenderMessages(convIdx){
+    const container = document.getElementById('msgs'+convIdx);
+    container.innerHTML = (items[convIdx].messages||[]).map((m,mi)=>renderMessageRow(convIdx,mi,m)).join('');
+}
+
+function updateMessage(convIdx, msgIdx, field, value){
+    if(!items[convIdx].messages) items[convIdx].messages=[];
+    items[convIdx].messages[msgIdx][field] = value;
+    if(field==='out') rerenderMessages(convIdx);
+}
+
+// ── Bascule phishing/légitime ──
+function toggleType(idx, newIsPhishing){
+    items[idx].is_phishing = newIsPhishing;
+    renderItem(idx);
+}
+
+// ── Mettre à jour un champ ──
+function updateField(idx, field, value){
+    items[idx][field] = value;
+    // Mettre à jour le label
+    const label = document.getElementById('item-label-'+idx);
+    if(label){
+        const base = currentType==='GMAIL' ? `Email ${idx+1}` :
+                     currentType==='SMS'   ? `SMS ${idx+1}` : `Conversation ${idx+1}`;
+        const name = items[idx].sender_name || items[idx].name || '';
+        label.textContent = `${base}${name?' — '+name:''} — ${items[idx].is_phishing?'🚨 Phishing':'✅ Légitime'}`;
+    }
+}
+
+// ── Supprimer un item ──
+function supprimerItem(idx){
+    if(items.length<=1){ alert('Gardez au moins 1 item.'); return; }
+    items.splice(idx,1);
+    document.getElementById('itemsContainer').innerHTML='';
+    items.forEach((_,i)=>renderItem(i));
+}
+
+// ── Collapse ──
+function toggleCollapse(idx){
+    const body = document.getElementById('item-body-'+idx);
+    const chev = document.getElementById('chevron-'+idx);
+    body.classList.toggle('collapsed');
+    if(body.classList.contains('collapsed')){
+        chev.className='bi bi-chevron-right';
+    } else {
+        chev.className='bi bi-chevron-down';
+    }
+}
+
+// ── Préparer la soumission — construire le JSON ──
+function prepareSubmit(){
+    if(!currentType || items.length < 2){
+        alert('Ajoutez au moins 2 éléments avant de créer.');
+        event.preventDefault();
+        return false;
+    }
+
+    const hasPhishing = items.some(i=>i.is_phishing);
+    const hasLegit    = items.some(i=>!i.is_phishing);
+    if(!hasPhishing || !hasLegit){
+        alert('Incluez au moins 1 élément phishing ET 1 élément légitime.');
+        event.preventDefault();
+        return false;
+    }
+
+    let contenu = {};
+    if(currentType === 'GMAIL'){
+        contenu = { type:'gmail_banque', nb_a_tirer: Math.min(items.length, 5), emails: items };
+    } else if(currentType === 'SMS'){
+        contenu = { type:'sms_banque', nb_a_tirer: Math.min(items.length, 5), sms: items };
+    } else if(currentType === 'WHATSAPP'){
+        contenu = { type:'whatsapp_banque', nb_a_tirer: Math.min(items.length, 5), conversations: items };
+    }
+
+    document.getElementById('contenuJson').value = JSON.stringify(contenu);
+    return true;
+}
+
+function escHtml(s){
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+{% endblock %}

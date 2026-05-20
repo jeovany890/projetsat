@@ -49,6 +49,15 @@ class ResultatSimulation
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?SimulationInteractive $simulation = null;
 
+    /**
+     * Lien vers la progression active au moment du résultat.
+     * Permet d'isoler le résultat par session (reprise, phishing, campagne).
+     * nullable=true pour compatibilité avec les anciennes données.
+     */
+    #[ORM\ManyToOne(targetEntity: ProgressionModule::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?ProgressionModule $progression = null;
+
     public function getId(): ?int { return $this->id; }
     public function getScore(): ?int { return $this->score; }
     public function setScore(int $score): static { $this->score = $score; return $this; }
@@ -72,4 +81,7 @@ class ResultatSimulation
     public function setEmploye(?Employe $employe): static { $this->employe = $employe; return $this; }
     public function getSimulation(): ?SimulationInteractive { return $this->simulation; }
     public function setSimulation(?SimulationInteractive $simulation): static { $this->simulation = $simulation; return $this; }
+
+    public function getProgression(): ?ProgressionModule { return $this->progression; }
+    public function setProgression(?ProgressionModule $progression): static { $this->progression = $progression; return $this; }
 }

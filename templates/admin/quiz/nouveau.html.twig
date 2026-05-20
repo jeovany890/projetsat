@@ -2,106 +2,303 @@
 
 {% block page_title %}Créer un quiz{% endblock %}
 
-{% block content %}
-
-<div style="max-width: 640px;">
-
-    <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost btn-sm" style="margin-bottom: var(--space-6);">
-        <i class="bi bi-arrow-left"></i> Retour aux quiz
+{% block topbar_actions %}
+    <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
     </a>
+{% endblock %}
 
+{% block content %}
+<div class="form-container">
     <div class="card">
-        <div class="card-body" style="padding: var(--space-8);">
-
-            <h2 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-6);">
-                <i class="bi bi-patch-plus" style="color: var(--primary);"></i>
+        <div class="card-header">
+            <h2>
+                <i class="bi bi-patch-plus" style="color: #E53E3E;"></i>
                 Créer un nouveau quiz
             </h2>
+        </div>
+        <div class="card-body">
 
             {% if modules|length == 0 %}
-            <div class="alert alert-warning">
-                <i class="bi bi-exclamation-triangle"></i>
-                Tous les modules ont déjà un quiz. Créez un nouveau module pour ajouter un quiz.
-            </div>
+                <div class="alert-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Tous les modules ont déjà un quiz. Créez un nouveau module pour ajouter un quiz.
+                </div>
             {% else %}
+                <form method="post">
 
-            <form method="post">
-
-                {# Module cible #}
-                <div class="form-group" style="margin-bottom: var(--space-5);">
-                    <label class="form-label">Module de formation *</label>
-                    <select name="module_id" class="form-control" required>
-                        <option value="">— Sélectionner un module —</option>
-                        {% for module in modules %}
-                        <option value="{{ module.id }}">
-                            {{ module.titre }} ({{ module.categorie.titre }})
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <small style="color: var(--gray-500);">Seuls les modules sans quiz sont affichés.</small>
-                </div>
-
-                {# Titre #}
-                <div class="form-group" style="margin-bottom: var(--space-5);">
-                    <label class="form-label">Titre du quiz *</label>
-                    <input type="text" name="titre" class="form-control"
-                        placeholder="Ex: Quiz — Sécurité des mots de passe" required>
-                </div>
-
-                {# Description #}
-                <div class="form-group" style="margin-bottom: var(--space-5);">
-                    <label class="form-label">Description</label>
-                    <textarea name="description" class="form-control" rows="3"
-                        placeholder="Instructions ou contexte du quiz..."></textarea>
-                </div>
-
-                {# Paramètres en grille #}
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-5); margin-bottom: var(--space-5);">
-
-                    <div class="form-group">
-                        <label class="form-label">Score minimum pour réussir (%)</label>
-                        <input type="number" name="score_minimum" class="form-control"
-                            value="70" min="0" max="100">
-                        <small style="color: var(--gray-500);">Ex: 70 = 70% de bonnes réponses requis</small>
+                    {# Module cible #}
+                    <div class="form-section">
+                        <h3 class="section-title">Module associé</h3>
+                        <div class="form-group">
+                            <label class="form-label">Module de formation *</label>
+                            <select name="module_id" class="form-control" required>
+                                <option value="">— Sélectionner un module —</option>
+                                {% for module in modules %}
+                                    <option value="{{ module.id }}">
+                                        {{ module.titre }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <small class="form-hint">Seuls les modules sans quiz sont affichés.</small>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Tentatives maximum</label>
-                        <input type="number" name="tentatives_max" class="form-control"
-                            value="3" min="1" max="10">
-                        <small style="color: var(--gray-500);">Nombre d'essais autorisés par employé</small>
+                    {# Titre et description #}
+                    <div class="form-section">
+                        <h3 class="section-title">Informations du quiz</h3>
+                        <div class="form-group">
+                            <label class="form-label">Titre du quiz *</label>
+                            <input type="text" name="titre" class="form-control" placeholder="Ex: Quiz — Sécurité des mots de passe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="Instructions ou contexte du quiz..."></textarea>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Temps limite (minutes)</label>
-                        <input type="number" name="temps_limite" class="form-control"
-                            placeholder="Laisser vide = illimité" min="1">
-                        <small style="color: var(--gray-500);">Laisser vide pour aucune limite</small>
+                    {# Paramètres #}
+                    <div class="form-section">
+                        <h3 class="section-title">Paramètres</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Score minimum (%)</label>
+                                <input type="number" name="score_minimum" class="form-control" value="70" min="0" max="100">
+                                <small class="form-hint">Ex: 70 = 70% de bonnes réponses requis</small>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tentatives maximum</label>
+                                <input type="number" name="tentatives_max" class="form-control" value="3" min="1" max="10">
+                                <small class="form-hint">Nombre d'essais autorisés par employé</small>
+                            </div>
+                            <div class="form-hint info-hint" style="margin-top:8px;">
+                                <i class="bi bi-shuffle"></i> Les questions sont présentées dans un ordre aléatoire automatiquement.
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">Ordre des questions</label>
-                        <select name="melanger_questions" class="form-control">
-                            <option value="1">Aléatoire (recommandé)</option>
-                            <option value="0">Ordre fixe</option>
-                        </select>
+                    {# Actions #}
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Créer le quiz
+                        </button>
+                        <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost">
+                            <i class="bi bi-x-lg"></i> Annuler
+                        </a>
                     </div>
 
-                </div>
-
-                <div style="display: flex; gap: var(--space-3); padding-top: var(--space-6); border-top: 1px solid var(--gray-200);">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle"></i> Créer le quiz
-                    </button>
-                    <a href="{{ path('admin_quiz_liste') }}" class="btn btn-ghost">Annuler</a>
-                </div>
-
-            </form>
-
+                </form>
             {% endif %}
         </div>
     </div>
-
 </div>
+{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+     .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        overflow: hidden;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .card-header {
+        padding: 1.5rem 1.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        background: #F8FAFC;
+    }
+    html.dark .card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    .card-header h2 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 0.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .card-subtitle {
+        font-size: 0.75rem;
+        color: #64748B;
+        margin: 0;
+    }
+    html.dark .card-header h2 {
+        color: #F1F5F9;
+    }
+    .card-body {
+        padding: 1.75rem;
+    }
+    .form-section {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    html.dark .form-section {
+        border-color: #334155;
+    }
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .section-title:before {
+        content: '';
+        width: 4px;
+        height: 18px;
+        background: #E53E3E;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    html.dark .section-title {
+        color: #F1F5F9;
+    }
+    .form-group {
+        margin-bottom: 1rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+    .form-label {
+        display: block;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.4rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background: white;
+        color: #0F172A;
+        transition: all 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #E53E3E;
+        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+    }
+    textarea.form-control {
+        resize: vertical;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    .form-hint {
+        display: block;
+        margin-top: 0.25rem;
+        font-size: 0.7rem;
+        color: #94A3B8;
+    }
+    .alert-warning {
+        background: #FEF9C3;
+        border: 1px solid #FDE68A;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+        font-size: 0.8125rem;
+        color: #92400E;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .alert-warning i {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    html.dark .alert-warning {
+        background: #422006;
+        border-color: #713F12;
+        color: #FDE047;
+    }
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    @media (max-width: 480px) {
+        .card-body {
+            padding: 1rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
 {% endblock %}

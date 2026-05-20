@@ -49,6 +49,15 @@ class TentativeQuiz
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Quiz $quiz = null;
 
+    /**
+     * Lien vers la progression active au moment de la tentative.
+     * Permet d'isoler les tentatives par session (reprise, phishing, campagne).
+     * nullable=true pour compatibilité avec les anciennes données.
+     */
+    #[ORM\ManyToOne(targetEntity: ProgressionModule::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?ProgressionModule $progression = null;
+
     public function getId(): ?int { return $this->id; }
     public function getNumeroTentative(): ?int { return $this->numeroTentative; }
     public function setNumeroTentative(int $numeroTentative): static { $this->numeroTentative = $numeroTentative; return $this; }
@@ -72,4 +81,7 @@ class TentativeQuiz
     public function setEmploye(?Employe $employe): static { $this->employe = $employe; return $this; }
     public function getQuiz(): ?Quiz { return $this->quiz; }
     public function setQuiz(?Quiz $quiz): static { $this->quiz = $quiz; return $this; }
+
+    public function getProgression(): ?ProgressionModule { return $this->progression; }
+    public function setProgression(?ProgressionModule $progression): static { $this->progression = $progression; return $this; }
 }

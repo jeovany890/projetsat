@@ -54,7 +54,7 @@ class ActivationController extends AbstractController
 
                 $entityManager->flush();
 
-                $this->addFlash('success', '✅ Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.');
+                $this->addFlash('success', ' Votre compte a été activé avec succès ! Vous pouvez maintenant vous connecter.');
                 return $this->redirectToRoute('app_login');
             }
         }

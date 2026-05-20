@@ -4,254 +4,629 @@
 
 {% block topbar_actions %}
     {% if campagne.statut == 'PLANIFIEE' %}
-        <form method="post" action="{{ path('rssi_phishing_lancer', {id: campagne.id}) }}"
-              onsubmit="return confirm('Lancer maintenant la campagne « {{ campagne.titre }} » et envoyer les emails phishing ?')">
+        <form method="post" action="{{ path('rssi_phishing_lancer', {id: campagne.id}) }}" id="form-lancer-campagne">
             <input type="hidden" name="_token" value="{{ csrf_token('lancer_' ~ campagne.id) }}">
-            <button type="submit" class="r-btn r-btn-primary" style="background:linear-gradient(135deg,#D97706,#B45309);">
-                <i class="bi bi-send-fill"></i> Lancer la campagne
+            <button type="submit" class="btn btn-primary btn-sm"
+                    data-confirm="Lancer maintenant la campagne « {{ campagne.titre }} » ?"
+                    data-form="form-lancer-campagne">
+                <i class="bi bi-envelope-paper-fill"></i> Lancer la campagne
             </button>
         </form>
         <form method="post" action="{{ path('rssi_phishing_annuler', {id: campagne.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('annuler_' ~ campagne.id) }}">
-            <button type="submit" class="r-btn r-btn-danger">
-                <i class="bi bi-x-circle"></i> Annuler
-            </button>
+            <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-x-circle"></i> Annuler</button>
         </form>
     {% elseif campagne.statut == 'EN_COURS' %}
-        <span class="r-badge r-badge-orange" style="padding:8px 16px;font-size:13px;">
-            <i class="bi bi-hourglass-split"></i> Envoi en cours...
-        </span>
+       <form method="post" action="{{ path('rssi_phishing_terminer', {id: campagne.id}) }}" id="form-terminer-campagne" class="inline-form" style="display:inline;">
+        <button type="submit" class="btn btn-warning btn-sm"
+                data-confirm="Terminer cette campagne ? Les employés ne pourront plus interagir."
+                data-form="form-terminer-campagne">
+            <i class="bi bi-check2-circle"></i> Terminer la campagne
+        </button>
+    </form>
     {% endif %}
-    <a href="{{ path('rssi_phishing_liste') }}" class="r-btn r-btn-ghost">
+    <a href="{{ path('rssi_phishing_liste') }}" class="btn btn-ghost btn-sm">
         <i class="bi bi-arrow-left"></i> Retour
     </a>
 {% endblock %}
 
 {% block content %}
+<div class="campaign-detail-container">
 
-{# ── En-tête campagne ── #}
-<div class="r-card" style="margin-bottom:20px;padding:24px;">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;">
-        <div>
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
-                <h2 style="margin:0;font-size:20px;color:#0F172A;">{{ campagne.titre }}</h2>
-                {% if campagne.statut == 'PLANIFIEE' %}
-                    <span class="r-badge r-badge-blue">Planifiée</span>
-                {% elseif campagne.statut == 'EN_COURS' %}
-                    <span class="r-badge r-badge-orange">En cours</span>
-                {% elseif campagne.statut == 'TERMINEE' %}
-                    <span class="r-badge r-badge-green">Terminée</span>
-                {% elseif campagne.statut == 'ANNULEE' %}
-                    <span class="r-badge r-badge-gray">Annulée</span>
-                {% endif %}
+    {# En-tête campagne #}
+    <div class="campaign-header">
+        <div class="campaign-header-content">
+            <div class="campaign-title-section">
+                <h1>{{ campagne.titre }}</h1>
+                <div class="campaign-badges">
+                    <span class="badge badge-{{ campagne.statut|lower|replace({'_': '-'}) }}">
+                        <i class="bi bi-{% if campagne.statut == 'PLANIFIEE' %}calendar-clock{% elseif campagne.statut == 'EN_COURS' %}play-circle{% elseif campagne.statut == 'TERMINEE' %}check-circle{% else %}x-circle{% endif %}"></i>
+                        {{ campagne.statut|replace({'_': ' '}) }}
+                    </span>
+                    <span class="badge badge-email"><i class="bi bi-envelope"></i> Phishing Email</span>
+                </div>
             </div>
             {% if campagne.description %}
-                <div style="font-size:13px;color:#64748B;">{{ campagne.description }}</div>
+                <p class="campaign-description">{{ campagne.description }}</p>
             {% endif %}
-            <div style="margin-top:10px;display:flex;gap:16px;font-size:12px;color:#94A3B8;flex-wrap:wrap;">
-                <span><i class="bi bi-envelope"></i> Gabarit : <strong style="color:#475569;">{{ campagne.gabarit.titre }}</strong></span>
+            <div class="campaign-meta">
+                <span><i class="bi bi-grid"></i> Gabarit : <strong>{{ campagne.gabarit.titre }}</strong></span>
                 <span><i class="bi bi-person"></i> {{ campagne.gabarit.nomExpediteur }} &lt;{{ campagne.gabarit.emailExpediteur }}&gt;</span>
-                <span><i class="bi bi-calendar3"></i> Planifiée le {{ campagne.datePlanifiee|date('d/m/Y à H:i') }}</span>
-                {% if campagne.dateDebut %}
-                    <span><i class="bi bi-play-circle"></i> Lancée le {{ campagne.dateDebut|date('d/m/Y à H:i') }}</span>
-                {% endif %}
-                {% if campagne.dateTermine %}
-                    <span><i class="bi bi-check-circle"></i> Terminée le {{ campagne.dateTermine|date('d/m/Y à H:i') }}</span>
-                {% endif %}
+                <span><i class="bi bi-calendar3"></i> Créée le {{ campagne.dateCreation|date('d/m/Y à H:i') }}</span>
+                {% if campagne.dateDebut %}<span><i class="bi bi-play-circle"></i> Lancée le {{ campagne.dateDebut|date('d/m/Y à H:i') }}</span>{% endif %}
+                {% if campagne.dateTermine %}<span><i class="bi bi-check-circle"></i> Terminée le {{ campagne.dateTermine|date('d/m/Y à H:i') }}</span>{% endif %}
             </div>
             {% if campagne.autorisationConfirmee %}
-            <div style="margin-top:10px;font-size:12px;color:#166534;background:#DCFCE7;display:inline-block;padding:4px 10px;border-radius:6px;">
-                <i class="bi bi-shield-check-fill"></i> Autorisé par {{ campagne.nomAutorisateur }} le {{ campagne.dateAutorisation|date('d/m/Y') }}
-            </div>
+                <div class="authorisation-badge">
+                    <i class="bi bi-shield-check"></i> Autorisé par {{ campagne.nomAutorisateur }} le {{ campagne.dateAutorisation|date('d/m/Y') }}
+                </div>
             {% endif %}
         </div>
     </div>
-</div>
 
-{# ── KPIs ── #}
-<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px;">
+    {# KPIs : 4 cartes statistiques — calculées depuis le Repository #}
+    {% set totalCibles      = stats.totalCibles ?? 0 %}
+    {% set emailsEnvoyes    = stats.emailsEnvoyes ?? 0 %}
+    {% set liensCliques     = stats.liensCliques ?? 0 %}
+    {% set emailsSignales   = stats.emailsSignales ?? 0 %}
+    {% set tauxClic         = emailsEnvoyes > 0 ? ((liensCliques / emailsEnvoyes) * 100)|round(1) : 0 %}
+    {% set tauxSignalement  = emailsEnvoyes > 0 ? ((emailsSignales / emailsEnvoyes) * 100)|round(1) : 0 %}
 
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#0F172A;">{{ campagne.totalCibles }}</div>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">Cibles</div>
-    </div>
-
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#0891B2;">{{ campagne.emailsEnvoyes }}</div>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">Envoyés</div>
-        {% if campagne.totalCibles > 0 %}
-        <div style="font-size:11px;color:#94A3B8;">{{ ((campagne.emailsEnvoyes/campagne.totalCibles)*100)|round }}%</div>
-        {% endif %}
-    </div>
-
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#8B5CF6;">{{ campagne.emailsOuverts }}</div>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">Ouverts</div>
-        {% if campagne.emailsEnvoyes > 0 %}
-        <div style="font-size:11px;color:#94A3B8;">{{ campagne.tauxOuverture|round(1) }}%</div>
-        {% endif %}
-    </div>
-
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:{% if campagne.tauxClic > 30 %}#DC2626{% elseif campagne.tauxClic > 10 %}#D97706{% else %}#166534{% endif %};">
-            {{ campagne.liensCliques }}
-        </div>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">Liens cliqués</div>
-        {% if campagne.emailsEnvoyes > 0 %}
-        <div style="font-size:11px;color:{% if campagne.tauxClic > 30 %}#DC2626{% elseif campagne.tauxClic > 10 %}#D97706{% else %}#166534{% endif %};">
-            {{ campagne.tauxClic|round(1) }}%
-        </div>
-        {% endif %}
-    </div>
-
-    <div class="r-card" style="padding:20px;text-align:center;">
-        <div style="font-size:28px;font-weight:800;color:#166534;">{{ campagne.emailsSignales }}</div>
-        <div style="font-size:11px;color:#64748B;margin-top:4px;">Signalés ✅</div>
-        {% if campagne.emailsEnvoyes > 0 %}
-        <div style="font-size:11px;color:#166534;">{{ campagne.tauxSignalement|round(1) }}%</div>
-        {% endif %}
-    </div>
-
-</div>
-
-{# ── Barres de progression visuelles ── #}
-{% if campagne.emailsEnvoyes > 0 %}
-<div class="r-card" style="padding:24px;margin-bottom:20px;">
-    <div style="font-size:14px;font-weight:700;color:#1E293B;margin-bottom:18px;">Analyse des comportements</div>
-
-    {% set metrics = [
-        {label: 'Taux d\'ouverture',   val: campagne.tauxOuverture,  color: '#8B5CF6', icon: 'envelope-open'},
-        {label: 'Taux de clic',        val: campagne.tauxClic,        color: '#EF4444', icon: 'cursor'},
-        {label: 'Données soumises',    val: campagne.emailsEnvoyes > 0 ? (campagne.donneesSubmises / campagne.emailsEnvoyes * 100) : 0, color: '#DC2626', icon: 'clipboard-data'},
-        {label: 'Taux de signalement', val: campagne.tauxSignalement, color: '#22C55E', icon: 'shield-check'},
-    ] %}
-
-    {% for m in metrics %}
-    <div style="margin-bottom:14px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <div style="font-size:13px;color:#475569;display:flex;align-items:center;gap:6px;">
-                <i class="bi bi-{{ m.icon }}" style="color:{{ m.color }};"></i>
-                {{ m.label }}
+    <div class="stats-grid stats-grid-4">
+        <div class="stat-card">
+            <div class="stat-icon gray"><i class="bi bi-people"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ totalCibles }}</div>
+                <div class="stat-label">Cibles</div>
             </div>
-            <span style="font-size:13px;font-weight:700;color:{{ m.color }};">{{ m.val|round(1) }}%</span>
         </div>
-        <div style="height:8px;background:#F1F5F9;border-radius:99px;overflow:hidden;">
-            <div style="height:100%;width:{{ m.val }}%;background:{{ m.color }};border-radius:99px;transition:width 0.8s ease;"></div>
+        <div class="stat-card">
+            <div class="stat-icon cyan"><i class="bi bi-envelope-paper"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ emailsEnvoyes }}</div>
+                <div class="stat-label">Emails envoyés</div>
+                {% if totalCibles > 0 %}
+                    <div class="stat-sub">{{ ((emailsEnvoyes / totalCibles) * 100)|round }}%</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="bi bi-hand-index"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ liensCliques }}</div>
+                <div class="stat-label">Liens cliqués (simple clic)</div>
+                {% if emailsEnvoyes > 0 %}
+                    <div class="stat-sub stat-sub-danger">{{ tauxClic }}%</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="bi bi-flag"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ emailsSignales }}</div>
+                <div class="stat-label">Signalés</div>
+                {% if emailsEnvoyes > 0 %}
+                    <div class="stat-sub stat-sub-success">{{ tauxSignalement }}%</div>
+                {% endif %}
+            </div>
         </div>
     </div>
-    {% endfor %}
 
-    {# Niveau de risque global #}
-    {% set risque = campagne.tauxClic %}
-    <div style="margin-top:20px;padding:14px 18px;border-radius:10px;
-        {% if risque > 40 %}background:#FEE2E2;border:1px solid #FECACA;
-        {% elseif risque > 20 %}background:#FEF9C3;border:1px solid #FEF08A;
-        {% else %}background:#DCFCE7;border:1px solid #BBF7D0;{% endif %}">
-        <div style="font-weight:700;font-size:13px;
-            {% if risque > 40 %}color:#991B1B;
-            {% elseif risque > 20 %}color:#854D0E;
-            {% else %}color:#166534;{% endif %}">
-            {% if risque > 40 %}
-                🔴 Niveau de risque ÉLEVÉ — {{ risque|round(1) }}% des employés ont cliqué. Formation urgente recommandée.
-            {% elseif risque > 20 %}
-                🟡 Niveau de risque MODÉRÉ — {{ risque|round(1) }}% de clic. Des actions de sensibilisation sont nécessaires.
-            {% else %}
-                🟢 Niveau de risque FAIBLE — Vos équipes font preuve de vigilance ({{ risque|round(1) }}% de clic).
-            {% endif %}
-        </div>
-    </div>
-</div>
-{% endif %}
-
-{# ── Tableau individuel des résultats ── #}
-{% if campagne.resultats|length > 0 %}
+   {# Analyse des comportements (barres) #}
+{% if emailsEnvoyes > 0 %}
 <div class="r-card">
     <div class="r-card-header">
-        <div class="r-card-title"><i class="bi bi-list-ul"></i> Résultats par employé</div>
-        <span style="font-size:12px;color:#94A3B8;">{{ campagne.resultats|length }} employé(s) ciblé(s)</span>
+        <div class="r-card-title"><i class="bi bi-bar-chart-steps" style="color:#3B82F6;"></i> Analyse des comportements</div>
     </div>
-    <table class="r-table">
-        <thead>
-            <tr>
-                <th>Employé</th>
-                <th>Département</th>
-                <th style="text-align:center;">Envoyé</th>
-                <th style="text-align:center;">Ouvert</th>
-                <th style="text-align:center;">Cliqué 🎣</th>
-                <th style="text-align:center;">Données soumises</th>
-                <th style="text-align:center;">Signalé ✅</th>
-                <th>Résultat</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for r in campagne.resultats %}
-        <tr>
-            <td>
-                <div style="font-weight:600;color:#1E293B;">{{ r.employe.prenom }} {{ r.employe.nom }}</div>
-                <div style="font-size:11px;color:#94A3B8;">{{ r.employe.email }}</div>
-            </td>
-            <td style="font-size:12px;color:#64748B;">{{ r.employe.departement ? r.employe.departement.nom : '—' }}</td>
-            <td style="text-align:center;">
-                {% if r.emailEnvoye %}
-                    <i class="bi bi-check-circle-fill" style="color:#22C55E;"></i>
-                {% else %}
-                    <i class="bi bi-clock" style="color:#94A3B8;"></i>
-                {% endif %}
-            </td>
-            <td style="text-align:center;">
-                {% if r.emailOuvert %}
-                    <span title="{{ r.dateOuverture|date('d/m/Y H:i') }}">
-                        <i class="bi bi-envelope-open-fill" style="color:#8B5CF6;"></i>
-                    </span>
-                {% else %}
-                    <span style="color:#CBD5E1;">—</span>
-                {% endif %}
-            </td>
-            <td style="text-align:center;">
-                {% if r.lienClique %}
-                    <span class="r-badge r-badge-red" title="{{ r.dateClic|date('d/m/Y H:i') }}">
-                        <i class="bi bi-cursor-fill"></i> Piégé
-                    </span>
-                {% else %}
-                    <span style="color:#CBD5E1;">—</span>
-                {% endif %}
-            </td>
-            <td style="text-align:center;">
-                {% if r.donneesSubmises %}
-                    <span class="r-badge r-badge-red">
-                        <i class="bi bi-exclamation-triangle-fill"></i> Oui
-                    </span>
-                {% else %}
-                    <span style="color:#CBD5E1;">—</span>
-                {% endif %}
-            </td>
-            <td style="text-align:center;">
-                {% if r.emailSignale %}
-                    <span class="r-badge r-badge-green">
-                        <i class="bi bi-shield-check-fill"></i> Signalé
-                    </span>
-                {% else %}
-                    <span style="color:#CBD5E1;">—</span>
-                {% endif %}
-            </td>
-            <td>
-                {% if r.emailSignale and not r.lienClique %}
-                    <span style="color:#166534;font-size:12px;font-weight:600;">✅ Vigilant</span>
-                {% elseif r.donneesSubmises %}
-                    <span style="color:#DC2626;font-size:12px;font-weight:600;">🔴 Critique</span>
-                {% elseif r.lienClique %}
-                    <span style="color:#D97706;font-size:12px;font-weight:600;">🟡 À risque</span>
-                {% elseif r.emailEnvoye %}
-                    <span style="color:#64748B;font-size:12px;">En attente</span>
-                {% else %}
-                    <span style="color:#CBD5E1;font-size:12px;">—</span>
-                {% endif %}
-            </td>
-        </tr>
+    <div class="r-card-body">
+        {# Calcul du nombre d’employés ayant soumis des données #}
+        {% set soumissionsCount = campagne.resultats|filter(r => r.soumissionDonnees)|length %}
+        {% set tauxSoumission = emailsEnvoyes > 0 ? (soumissionsCount / emailsEnvoyes) * 100|round(1) : 0 %}
+
+        {% set metrics = [
+            {label: 'Taux de clic (simple clic sur le lien piège)',     val: tauxClic,        color: '#EF4444', icon: 'hand-index'},
+            {label: 'Taux de soumission de données sensibles',          val: tauxSoumission,  color: '#F97316', icon: 'exclamation-triangle'},
+            {label: 'Taux de signalement (bonne réaction)',             val: tauxSignalement, color: '#22C55E', icon: 'flag'}
+        ] %}
+
+        {% for m in metrics %}
+        <div class="metric-item">
+            <div class="metric-header">
+                <div class="metric-label">
+                    <i class="bi bi-{{ m.icon }}" style="color:{{ m.color }};"></i>
+                    {{ m.label }}
+                </div>
+                <span class="metric-value" style="color:{{ m.color }};">{{ m.val|round(1) }}%</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: {{ min(m.val, 100) }}%; background: {{ m.color }};"></div>
+            </div>
+        </div>
         {% endfor %}
-        </tbody>
-    </table>
+
+        {# Niveau de risque – basé sur le taux de soumission (plus significatif que le simple clic) #}
+        {% set risque = tauxSoumission %}
+        <div class="risk-level risk-level-{{ risque > 30 ? 'high' : (risque > 15 ? 'medium' : 'low') }}">
+            <i class="bi bi-{% if risque > 30 %}exclamation-triangle{% elseif risque > 15 %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+            {% if risque > 30 %}
+                Niveau de risque ÉLEVÉ — {{ risque|round(1) }}% ont saisi des données sensibles. Sensibilisation urgente.
+            {% elseif risque > 15 %}
+                Niveau de risque MODÉRÉ — {{ risque|round(1) }}% de soumissions. Renforcer les formations.
+            {% else %}
+                Niveau de risque FAIBLE — Peu de données sensibles saisies ({{ risque|round(1) }}%). Vigilance bonne.
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endif %}
 
+    {# Tableau des résultats par employé #}
+    {% if campagne.resultats|length > 0 %}
+    <div class="r-card">
+        <div class="r-card-header">
+            <div class="r-card-title"><i class="bi bi-table" style="color:#3B82F6;"></i> Résultats par employé</div>
+        </div>
+        <div class="table-responsive">
+            <table class="r-table">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Département</th>
+                        <th class="text-center">Envoyé</th>
+                        <th class="text-center">Cliqué</th>
+                        <th class="text-center">Soumission</th>
+                        <th class="text-center">Signalé</th>
+                        <th class="text-center">Comportement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for r in campagne.resultats %}
+                <tr>
+                    <td>
+                        <div class="employee-name">{{ r.employe.prenom }} {{ r.employe.nom }}</div>
+                        <div class="employee-email">{{ r.employe.email }}</div>
+                    </td>
+                    <td>{{ r.employe.departement ? r.employe.departement.nom : '—' }}</td>
+                    <td class="text-center">
+                        {% if r.emailEnvoye %}
+                            <i class="bi bi-check-circle text-success" title="{{ r.dateEnvoi ? r.dateEnvoi|date('d/m/Y H:i') : '' }}"></i>
+                        {% else %}
+                            <i class="bi bi-clock text-muted"></i>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if r.lienClique %}
+                            <span class="badge badge-red" title="Cliqué le {{ r.dateClic ? r.dateClic|date('d/m/Y H:i') : '' }}">
+                                <i class="bi bi-hand-index"></i> Oui
+                            </span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if r.soumissionDonnees %}
+                            <span class="badge badge-danger" title="A soumis des données">
+                                <i class="bi bi-exclamation-triangle"></i> Oui
+                            </span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if r.signale %}
+                            <span class="badge badge-green">
+                                <i class="bi bi-flag"></i> Oui
+                            </span>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if r.signale %}
+                            <span class="badge badge-success"><i class="bi bi-shield-check"></i> Utilisateur vigilant</span>
+                        {% elseif r.soumissionDonnees %}
+                            <span class="badge badge-danger"><i class="bi bi-exclamation-triangle"></i> Utilisateur à haut risque</span>
+                        {% elseif r.lienClique %}
+                            <span class="badge badge-orange"><i class="bi bi-hand-index"></i> Utilisateur vulnérable</span>
+                        {% else %}
+                            <span class="badge badge-gray"><i class="bi bi-check-circle"></i> Utilisateur prudent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* (Le CSS reste strictement identique à l'original que vous avez posté) */
+    :root {
+        --r-accent: #3B82F6;
+        --r-accent-dim: rgba(59,130,246,0.12);
+    }
+    .r-brand-icon, .r-user-avatar {
+        background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+        box-shadow: 0 2px 8px rgba(59,130,246,0.2) !important;
+    }
+    .r-brand-role, .r-nav-link.active {
+        color: #3B82F6 !important;
+    }
+    .r-nav-link.active {
+        background: rgba(59,130,246,0.12) !important;
+    }
+    .r-topbar-company {
+        background: #EFF6FF !important;
+        border-color: #BFDBFE !important;
+        color: #1E40AF !important;
+    }
+
+    .campaign-detail-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .campaign-header {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        padding: 1.5rem;
+    }
+    .campaign-title-section {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+    .campaign-title-section h1 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin: 0;
+    }
+    .campaign-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .campaign-description {
+        font-size: 0.875rem;
+        color: #475569;
+        margin: 0.5rem 0 0.75rem;
+    }
+    .campaign-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.75rem;
+        color: #94A3B8;
+        margin-bottom: 0.75rem;
+    }
+    .campaign-meta i {
+        margin-right: 0.25rem;
+    }
+    .authorisation-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        background: #DCFCE7;
+        color: #166534;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+    }
+    html.dark .campaign-header {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .campaign-title-section h1 {
+        color: #F1F5F9;
+    }
+    html.dark .campaign-description {
+        color: #94A3B8;
+    }
+
+    /* KPIs - grille responsive */
+    .stats-grid {
+        display: grid;
+        gap: 1rem;
+    }
+    .stats-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 900px) {
+        .stats-grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .stats-grid-4 {
+            grid-template-columns: 1fr;
+        }
+    }
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        padding: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .stat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .stat-icon.gray { background: #F1F5F9; color: #475569; }
+    .stat-icon.cyan { background: #CFFAFE; color: #0891B2; }
+    .stat-icon.red { background: #FEE2E2; color: #DC2626; }
+    .stat-icon.green { background: #DCFCE7; color: #166534; }
+    .stat-info {
+        flex: 1;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0F172A;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+    .stat-sub {
+        font-size: 0.65rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+    .stat-sub-danger { color: #DC2626; }
+    .stat-sub-success { color: #166534; }
+    html.dark .stat-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .stat-value {
+        color: #F1F5F9;
+    }
+
+    /* Analyse comportements */
+    .metric-item {
+        margin-bottom: 1rem;
+    }
+    .metric-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.25rem;
+    }
+    .metric-label {
+        font-size: 0.8125rem;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .metric-value {
+        font-size: 0.8125rem;
+        font-weight: 700;
+    }
+    .progress-bar-bg {
+        width: 100%;
+        height: 0.5rem;
+        background: #E2E8F0;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.5s;
+    }
+    html.dark .progress-bar-bg {
+        background: #334155;
+    }
+    .risk-level {
+        margin-top: 1.25rem;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .risk-level-high { background: #FEE2E2; border: 1px solid #FECACA; color: #991B1B; }
+    .risk-level-medium { background: #FEF9C3; border: 1px solid #FEF08A; color: #854D0E; }
+    .risk-level-low { background: #DCFCE7; border: 1px solid #BBF7D0; color: #166534; }
+    html.dark .risk-level-high { background: #7F1D1D; color: #FCA5A5; border-color: #7F1D1D; }
+    html.dark .risk-level-medium { background: #78350F; color: #FDE047; border-color: #78350F; }
+    html.dark .risk-level-low { background: #14532D; color: #4ADE80; border-color: #14532D; }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-planifiee, .badge-blue { background: #DBEAFE; color: #1E40AF; }
+    .badge-en-cours, .badge-orange { background: #FEF3C7; color: #B45309; }
+    .badge-terminee, .badge-green { background: #DCFCE7; color: #166534; }
+    .badge-annulee, .badge-gray { background: #F1F5F9; color: #475569; }
+    .badge-red { background: #FEE2E2; color: #991B1B; }
+    .badge-email { background: #DBEAFE; color: #1D4ED8; }
+    html.dark .badge-planifiee { background: #1E3A8A; color: #60A5FA; }
+    html.dark .badge-en-cours { background: #78350F; color: #FBBF24; }
+    html.dark .badge-terminee { background: #14532D; color: #4ADE80; }
+    html.dark .badge-annulee { background: #1E293B; color: #94A3B8; }
+    html.dark .badge-red { background: #7F1D1D; color: #FCA5A5; }
+    html.dark .badge-email { background: #1E3A8A; color: #60A5FA; }
+
+    /* Tableau responsive */
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .r-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+        min-width: 600px;
+    }
+    .r-table th {
+        text-align: left;
+        padding: 0.75rem;
+        background-color: #F8FAFC;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .r-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        vertical-align: middle;
+    }
+    .text-center {
+        text-align: center;
+    }
+    .employee-name {
+        font-weight: 600;
+        color: #1E293B;
+    }
+    .employee-email {
+        font-size: 0.65rem;
+        color: #94A3B8;
+    }
+    .text-success { color: #22C55E; }
+    .text-muted { color: #94A3B8; }
+    html.dark .r-table th {
+        background-color: #1E293B;
+        color: #94A3B8;
+        border-bottom-color: #334155;
+    }
+    html.dark .r-table td {
+        border-bottom-color: #334155;
+    }
+    html.dark .employee-name {
+        color: #F1F5F9;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        padding: 0.25rem 0.75rem;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #3B82F6;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #2563EB;
+    }
+    .btn-danger {
+        background: #EF4444;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #DC2626;
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+
+    /* Responsive fine */
+    @media (max-width: 768px) {
+        .campaign-title-section {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .campaign-meta {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        .r-table th, .r-table td {
+            padding: 0.5rem;
+        }
+        .stat-card {
+            padding: 0.5rem;
+        }
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            font-size: 1rem;
+        }
+        .stat-value {
+            font-size: 1.25rem;
+        }
+    }
+    @media (max-width: 480px) {
+        .stats-grid-4 {
+            grid-template-columns: 1fr;
+        }
+        .stat-card {
+            justify-content: center;
+            text-align: center;
+            flex-direction: column;
+        }
+        .metric-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.25rem;
+        }
+        .employee-cell {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+</style>
 {% endblock %}

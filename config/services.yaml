@@ -1,9 +1,7 @@
 # config/services.yaml
-
 parameters:
-    # Emails phishing
-    mailer.phishing.boa: '%env(MAILER_PHISHING_BOA)%'
-    mailer.phishing.sbee: '%env(MAILER_PHISHING_SBEE)%'
+    mailer.phishing.boa:    '%env(MAILER_PHISHING_BOA)%'
+    mailer.phishing.sbee:   '%env(MAILER_PHISHING_SBEE)%'
     mailer.phishing.unicef: '%env(MAILER_PHISHING_UNICEF)%'
 
 services:
@@ -17,3 +15,7 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\EventSubscriber\AccessDeniedListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }

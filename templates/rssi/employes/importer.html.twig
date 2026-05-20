@@ -2,99 +2,455 @@
 
 {% block page_title %}Importer des employés (CSV){% endblock %}
 
+{% block topbar_actions %}
+    <a href="{{ path('rssi_employes_liste') }}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Retour
+    </a>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:720px;display:flex;flex-direction:column;gap:20px;">
+<div class="import-container">
 
-    {# Formulaire import #}
-    <div class="r-card">
-        <div class="r-card-header">
-            <div class="r-card-title"><i class="bi bi-file-earmark-arrow-up"></i> Importer depuis un fichier CSV</div>
+    {# Formulaire d'import #}
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon">
+                <i class="fas fa-file-upload"></i>
+            </div>
+            <div>
+                <h1>Importer des employés</h1>
+                <p>Importez en masse vos employés via un fichier CSV</p>
+            </div>
         </div>
-        <div class="r-card-body">
-            <form method="post" enctype="multipart/form-data">
 
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
-                        Fichier CSV *
-                    </label>
-                    <input type="file" name="fichier_csv" accept=".csv,.txt" required
-                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;background:white;">
-                    <div style="font-size:11px;color:#94A3B8;margin-top:4px;">Formats acceptés : .csv, .txt — Encodage UTF-8 recommandé</div>
+        <div class="form-card-body">
+            <form method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="fichier_csv">Fichier CSV <span class="required">*</span></label>
+                    <input type="file" id="fichier_csv" name="fichier_csv" accept=".csv,.txt" class="form-control" required>
+                    <div class="form-hint">Formats acceptés : .csv, .txt — Encodage UTF-8 recommandé</div>
                 </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">
-                        Département par défaut <span style="color:#94A3B8;font-weight:400;">(si non spécifié dans le CSV)</span>
-                    </label>
-                    <select name="departement_defaut"
-                            style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-group">
+                    <label for="departement_defaut">Département par défaut</label>
+                    <select id="departement_defaut" name="departement_defaut" class="form-control">
                         <option value="">-- Aucun département par défaut --</option>
                         {% for dept in departements %}
                             <option value="{{ dept.id }}">{{ dept.nom }}</option>
                         {% endfor %}
                     </select>
+                    <div class="form-hint">Utilisé si le département n'est pas spécifié dans le CSV</div>
                 </div>
 
-                <div style="background:#FEF9C3;padding:14px 16px;border-radius:8px;border:1px solid #FEF08A;margin-bottom:20px;font-size:13px;color:#854D0E;">
-                    <i class="bi bi-exclamation-triangle-fill"></i>
-
+                <div class="info-block">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Les employés seront créés avec un mot de passe temporaire envoyé par email.</span>
                 </div>
 
-                <div style="display:flex;gap:10px;">
-                    <button type="submit" class="r-btn r-btn-primary">
-                        <i class="bi bi-upload"></i> Importer et envoyer les emails
+                <div class="form-actions">
+                    <a href="{{ path('rssi_employes_liste') }}" class="btn btn-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> Importer et envoyer les emails
                     </button>
-                    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
                 </div>
             </form>
         </div>
     </div>
 
     {# Format attendu #}
-    <div class="r-card">
-        <div class="r-card-header">
-            <div class="r-card-title"><i class="bi bi-info-circle"></i> Format du fichier CSV</div>
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon-secondary">
+                <i class="fas fa-info-circle"></i>
+            </div>
+            <div>
+                <h2>Format du fichier CSV</h2>
+                <p>Structure attendue pour une importation réussie</p>
+            </div>
         </div>
-        <div class="r-card-body">
-            <p style="font-size:13px;color:#475569;margin:0 0 14px;">
+
+        <div class="form-card-body">
+            <p class="format-description">
                 La première ligne est ignorée (en-tête). Séparateur : virgule <code>,</code> ou point-virgule <code>;</code>.
             </p>
 
-            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;margin-bottom:16px;overflow-x:auto;">
-                <div style="color:#94A3B8;margin-bottom:8px;">// En-tête (ignorée)</div>
-                <div style="color:#64748B;">prenom;nom;email;telephone;poste;departement</div>
-                <div style="margin-top:8px;color:#1E293B;">Jean;Dupont;jean.dupont@gmail.com;+22997000001;Comptable;Comptabilité</div>
-                <div style="color:#1E293B;">Marie;Koto;marie.koto@gmail.com;+22997000002;RH;</div>
-                <div style="color:#1E293B;">Paul;Ahounou;paul.ahounou@gmail.com;;;Informatique</div>
+            <div class="code-example">
+                <div class="code-header">// En-tête (ignorée)</div>
+                <div class="code-line">prenom;nom;email;telephone;poste;departement</div>
+                <div class="code-line">Jean;Dupont;jean.dupont@gmail.com;+22997000001;Comptable;Comptabilité</div>
+                <div class="code-line">Marie;Koto;marie.koto@gmail.com;+22997000002;RH;</div>
+                <div class="code-line">Paul;Ahounou;paul.ahounou@gmail.com;;;Informatique</div>
             </div>
 
-            <table class="r-table">
-                <thead>
-                    <tr>
-                        <th>Colonne</th>
-                        <th>Champ</th>
-                        <th>Obligatoire</th>
-                        <th>Notes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>1</td><td>Prénom</td><td><span class="r-badge r-badge-red">Oui</span></td><td>—</td></tr>
-                    <tr><td>2</td><td>Nom</td><td><span class="r-badge r-badge-red">Oui</span></td><td>—</td></tr>
-                    <tr><td>3</td><td>Email</td><td><span class="r-badge r-badge-red">Oui</span></td><td>Doit être unique</td></tr>
-                    <tr><td>4</td><td>Téléphone</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Peut être vide</td></tr>
-                    <tr><td>5</td><td>Poste</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Peut être vide</td></tr>
-                    <tr><td>6</td><td>Département</td><td><span class="r-badge r-badge-gray">Non</span></td><td>Nom exact du département, sinon département par défaut</td></tr>
-                </tbody>
-            </table>
+            <div class="table-responsive-wrapper">
+                <table class="format-table">
+                    <thead>
+                        <tr>
+                            <th>Colonne</th>
+                            <th>Champ</th>
+                            <th>Obligatoire</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>Prénom</td><td><span class="badge badge-required">Oui</span></td><td>—</td></tr>
+                        </td><td>2</td><td>Nom</td><td><span class="badge badge-required">Oui</span></td><td>—</td></tr>
+                        <tr><td>3</td><td>Email</td><td><span class="badge badge-required">Oui</span></td><td>Doit être unique</td></tr>
+                        <tr><td>4</td><td>Téléphone</td><td><span class="badge badge-optional">Non</span></td><td>Peut être vide</td></tr>
+                        <tr><td>5</td><td>Poste</td><td><span class="badge badge-optional">Non</span></td><td>Peut être vide</td></tr>
+                        <tr><td>6</td><td>Département</td><td><span class="badge badge-optional">Non</span></td><td>Nom exact du département, sinon département par défaut</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-            <div style="margin-top:16px;text-align:center;">
+            <div class="download-link">
                 <a href="data:text/csv;charset=utf-8,prenom;nom;email;telephone;poste;departement%0AJean;Dupont;jean.dupont@exemple.com;%2B22997000001;Comptable;Comptabilit%C3%A9"
-                   download="modele_employes.csv" class="r-btn r-btn-ghost">
-                    <i class="bi bi-download"></i> Télécharger le modèle CSV
+                   download="modele_employes.csv" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-download"></i> Télécharger le modèle CSV
                 </a>
             </div>
         </div>
     </div>
 
 </div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTÈME ÉPURÉ ===== */
+    :root {
+        --bg: #F8FAFC;
+        --surface: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-light: #EFF6FF;
+        --accent-dark: #1E293B;
+        --danger: #EF4444;
+        --warning: #F59E0B;
+        --success: #10B981;
+    }
+
+    .import-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: 820px;
+        margin: 0 auto;
+        padding: 0.5rem 0;
+    }
+
+    /* Cartes */
+    .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+
+    .form-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: var(--accent-light);
+        border-bottom: 1px solid var(--border);
+    }
+    .form-card-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--accent);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+    .form-card-icon-secondary {
+        width: 48px;
+        height: 48px;
+        background: var(--bg);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--accent);
+        font-size: 1.25rem;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+    }
+    .form-card-header h1, .form-card-header h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0 0 0.2rem 0;
+    }
+    .form-card-header p {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+    html.dark .form-card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .form-card-header h1,
+    html.dark .form-card-header h2 {
+        color: #F1F5F9;
+    }
+
+    .form-card-body {
+        padding: 1.5rem;
+    }
+
+    /* Formulaires */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+    .required {
+        color: var(--danger);
+        margin-left: 0.15rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.65rem 1rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        font-family: inherit;
+        background: var(--surface);
+        color: var(--text-primary);
+        transition: all 0.15s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+    }
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 14px;
+    }
+    .form-hint {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    html.dark select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+
+    /* Info block */
+    .info-block {
+        background: var(--accent-light);
+        border: 1px solid #BFDBFE;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 0.8rem;
+        color: #1E40AF;
+        flex-wrap: wrap;
+    }
+    .info-block i {
+        font-size: 1rem;
+        flex-shrink: 0;
+        color: var(--accent);
+    }
+    html.dark .info-block {
+        background: #1E3A8A;
+        border-color: #3B82F6;
+        color: #BFDBFE;
+    }
+
+    /* Code example */
+    .code-example {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        padding: 1rem;
+        font-family: monospace;
+        font-size: 0.75rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+    }
+    .code-header {
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+        font-size: 0.7rem;
+    }
+    .code-line {
+        color: var(--text-primary);
+        line-height: 1.5;
+        font-family: monospace;
+        white-space: pre;
+    }
+    html.dark .code-line {
+        color: #E2E8F0;
+    }
+    .format-description {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    /* Tableau format */
+    .table-responsive-wrapper {
+        overflow-x: auto;
+    }
+    .format-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        min-width: 500px;
+    }
+    .format-table th, .format-table td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        text-align: left;
+    }
+    .format-table th {
+        background: var(--bg);
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    html.dark .format-table th {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .format-table td {
+        border-color: #334155;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.65rem;
+        font-weight: 600;
+    }
+    .badge-required {
+        background: var(--danger);
+        color: white;
+    }
+    .badge-optional {
+        background: #F1F5F9;
+        color: #475569;
+    }
+    html.dark .badge-optional {
+        background: #334155;
+        color: #CBD5E1;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: 40px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        font-family: inherit;
+    }
+    .btn-primary {
+        background: var(--accent);
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #2563EB;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(59,130,246,0.3);
+    }
+    .btn-secondary {
+        background: #F1F5F9;
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+    .btn-sm {
+        padding: 0.3rem 0.9rem;
+        font-size: 0.7rem;
+    }
+    html.dark .btn-secondary {
+        background: #334155;
+        border-color: #475569;
+        color: #E2E8F0;
+    }
+    html.dark .btn-secondary:hover {
+        background: #475569;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+
+    .download-link {
+        margin-top: 1.25rem;
+        text-align: center;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .form-card-header {
+            flex-direction: column;
+            text-align: center;
+            padding: 1.25rem;
+        }
+        .form-card-body {
+            padding: 1.25rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .info-block {
+            flex-direction: column;
+            text-align: center;
+        }
+        .code-line {
+            white-space: normal;
+            word-break: break-all;
+        }
+    }
+</style>
 {% endblock %}

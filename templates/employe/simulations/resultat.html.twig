@@ -1,0 +1,125 @@
+{% extends 'employe/layout.html.twig' %}
+{% block page_title %}Résultat — {{ simulation.titre }}{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto;padding:24px 16px;">
+
+    <a href="{{ path('employe_simulations') }}"
+       style="display:inline-flex;align-items:center;gap:6px;color:var(--gray-600);
+              font-size:var(--text-sm);text-decoration:none;margin-bottom:24px;">
+        ← Retour aux simulations
+    </a>
+
+    {% set pct = resultat.score %}
+    {% set color = pct == 100 ? '#4CAF50' : pct >= 75 ? '#2196F3' : pct >= 50 ? '#FF9800' : '#F44336' %}
+    {% set bgColor = pct == 100 ? '#E8F5E9' : pct >= 75 ? '#E3F2FD' : pct >= 50 ? '#FFF3E0' : '#FDE8E8' %}
+
+    {# ── Score card ── #}
+    <div class="card" style="padding:32px;text-align:center;margin-bottom:20px;">
+        <div style="width:110px;height:110px;border-radius:50%;background:{{ bgColor }};border:4px solid {{ color }};
+                    display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 20px;">
+            <span style="font-size:32px;font-weight:900;color:{{ color }};line-height:1;">
+                {{ resultat.nombreReponsesCorrectes }}/{{ resultat.nombreTotalQuestions }}
+            </span>
+            <span style="font-size:13px;font-weight:700;color:{{ color }};">{{ pct }}%</span>
+        </div>
+
+        <h2 style="font-size:var(--text-2xl);font-weight:var(--font-bold);color:var(--gray-900);margin-bottom:6px;">
+            {% if pct == 100 %}Résultat excellent
+            {% elseif pct >= 75 %}Bon niveau
+            {% elseif pct >= 50 %}Niveau moyen
+            {% else %}Risque élevé
+            {% endif %}
+        </h2>
+
+        <p style="color:var(--gray-600);font-size:var(--text-sm);margin-bottom:4px;">
+            Simulation : <strong>{{ simulation.titre }}</strong>
+        </p>
+
+        {# Stats #}
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0;
+                    padding:16px;background:var(--gray-50);border-radius:var(--radius-lg);">
+            <div style="text-align:center;">
+                <div style="font-size:22px;font-weight:900;color:{{ color }};">{{ pct }}%</div>
+                <div style="font-size:12px;color:var(--gray-500);">Score</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:22px;font-weight:900;color:var(--gray-800);">
+                    {% if resultat.tempsPasseSecondes < 60 %}
+                        {{ resultat.tempsPasseSecondes }}s
+                    {% else %}
+                        {{ (resultat.tempsPasseSecondes / 60)|round(0,'floor') }}m {{ resultat.tempsPasseSecondes % 60 }}s
+                    {% endif %}
+                </div>
+                <div style="font-size:12px;color:var(--gray-500);">Durée</div>
+            </div>
+            <div style="text-align:center;">
+                <div style="font-size:22px;font-weight:900;
+                    color:{% if resultat.aReussi %}var(--success){% else %}var(--danger){% endif %};">
+                    +{{ resultat.pointsGagnes }}
+                </div>
+                <div style="font-size:12px;color:var(--gray-500);">Points</div>
+            </div>
+        </div>
+
+        {# Badge réussite/échec #}
+        {% if resultat.aReussi %}
+        <div style="background:#DCFCE7;border:1px solid #BBF7D0;border-radius:10px;
+                    padding:12px 20px;font-size:14px;color:#166534;font-weight:600;">
+            ✔ Simulation réussie — vigilance correcte
+        </div>
+        {% else %}
+        <div style="background:#FEE2E2;border:1px solid #FECACA;border-radius:10px;
+                    padding:12px 20px;font-size:14px;color:#991B1B;font-weight:600;">
+            ✖ Simulation échouée — formation recommandée
+        </div>
+        {% endif %}
+    </div>
+
+    {# ── Détail des réponses ── #}
+    {% if resultat.reponses is not empty %}
+    <div class="card" style="padding:24px;margin-bottom:20px;">
+        <h3 style="font-size:var(--text-lg);font-weight:var(--font-bold);margin-bottom:16px;">
+            Détail des réponses
+        </h3>
+        {% for rep in resultat.reponses %}
+        <div style="padding:12px;border-radius:10px;margin-bottom:8px;border:1px solid transparent;
+                    background:{% if rep.correct %}#F0FDF4{% else %}#FEF2F2{% endif %};
+                    border-color:{% if rep.correct %}#BBF7D0{% else %}#FECACA{% endif %};">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;font-weight:bold;">
+                    {% if rep.correct %}✔{% else %}✖{% endif %}
+                </span>
+                <span style="font-size:13px;font-weight:600;color:var(--gray-800);">
+                    Élément {{ loop.index }}
+                </span>
+                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;margin-left:auto;
+                    background:{% if rep.correct %}#DCFCE7{% else %}#FEE2E2{% endif %};
+                    color:{% if rep.correct %}#166534{% else %}#991B1B{% endif %};">
+                    {% if rep.correct %}Correct{% else %}Incorrect{% endif %}
+                </span>
+            </div>
+            {% if rep.choice is defined %}
+            <div style="font-size:12px;color:var(--gray-500);margin-top:4px;margin-left:26px;">
+                Votre réponse : <strong>{{ rep.choice == 'phishing' ? 'Phishing' : 'Légitime' }}</strong>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# ── Actions ── #}
+    <div style="display:flex;gap:12px;">
+        <a href="{{ path('employe_simulation_jouer', {id: simulation.id}) }}"
+           class="btn btn-ghost" style="flex:1;text-align:center;">
+            ↻ Recommencer
+        </a>
+        <a href="{{ path('employe_formations') }}"
+           class="btn btn-primary" style="flex:1;text-align:center;">
+          Autres formations
+        </a>
+    </div>
+
+</div>
+{% endblock %}

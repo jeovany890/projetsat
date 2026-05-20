@@ -2,126 +2,390 @@
 
 {% block page_title %}Modules de formation{% endblock %}
 
+{% block topbar_actions %}
+    <div class="flex items-center gap-3">
+        <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i> Nouveau module
+        </a>
+    </div>
+{% endblock %}
+
 {% block content %}
+<div class="modules-container">
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
-    <div>
-        <p style="color: var(--gray-600); margin: 0;">{{ modules|length }} modules créés</p>
-    </div>
-    <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> Créer un module
-    </a>
-</div>
-
-{# Stats rapides #}
-<div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); margin-bottom: var(--space-8);">
-    <div class="card" style="border-left: 4px solid var(--success);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Modules publiés</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--success);">
-                {{ modules|filter(m => m.estPublie)|length }}
+    {# Statistiques rapides #}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ modules|filter(m => m.estPublie)|length }}</div>
+                <div class="stat-label">Publiés</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon warning"><i class="bi bi-pencil-square"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ modules|filter(m => not m.estPublie)|length }}</div>
+                <div class="stat-label">Brouillons</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon info"><i class="bi bi-folder-fill"></i></div>
+            <div class="stat-info">
+                <div class="stat-value">{{ modules|filter(m => m.categorie is empty)|length }}</div>
+                <div class="stat-label">Sans catégorie</div>
             </div>
         </div>
     </div>
 
-    <div class="card" style="border-left: 4px solid var(--warning);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Brouillons</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--warning);">
-                {{ modules|filter(m => not m.estPublie)|length }}
-            </div>
+    {% if modules|length == 0 %}
+        <div class="empty-state">
+            <i class="bi bi-book"></i>
+            <p>Aucun module créé</p>
+            <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary btn-md">
+                <i class="bi bi-plus-lg"></i> Créer un module
+            </a>
         </div>
-    </div>
-
-    <div class="card" style="border-left: 4px solid var(--info);">
-        <div style="padding: var(--space-5);">
-            <div style="font-size: var(--text-sm); color: var(--gray-600); margin-bottom: var(--space-2);">Catégories</div>
-            <div style="font-size: var(--text-3xl); font-weight: var(--font-bold); color: var(--info);">
-                {{ categories|length }}
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Liste modules #}
-<div style="display: grid; gap: var(--space-6);">
-    {% for module in modules %}
-    <div class="card">
-        <div class="card-body" style="padding: var(--space-6);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-4);">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3);">
-                        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin: 0;">
-                            {{ module.titre }}
-                        </h3>
-                        {% if module.estPublie %}
-                            <span class="badge badge-success">Publié</span>
-                        {% else %}
-                            <span class="badge" style="background: var(--gray-400); color: white;">Brouillon</span>
-                        {% endif %}
+    {% else %}
+        <div class="modules-list">
+            {% for module in modules %}
+            <div class="module-card">
+                <div class="module-card-body">
+                    <div class="module-header">
+                        <div>
+                            <h3>{{ module.titre }}</h3>
+                            <div class="module-meta">
+                                <span><i class="bi bi-folder"></i> {{ module.categorie ?: 'Non catégorisé' }}</span>
+                                <span><i class="bi bi-signal"></i> {{ module.difficulte|capitalize }}</span>
+                                <span><i class="bi bi-clock"></i> {{ module.dureeEstimee }} min</span>
+                                <span><i class="bi bi-trophy"></i> {{ module.pointsReussite }} pts</span>
+                                <span><i class="bi bi-book"></i> {{ module.chapitres|length }} chapitre(s)</span>
+                            </div>
+                        </div>
+                        <div class="module-badges">
+                            {% if module.estPublie %}
+                                <span class="badge badge-success">Publié</span>
+                            {% else %}
+                                <span class="badge badge-gray">Brouillon</span>
+                            {% endif %}
+                        </div>
                     </div>
-                    <p style="color: var(--gray-600); margin-bottom: var(--space-4);">
-                        {{ module.description }}
-                    </p>
-                    <div style="display: flex; gap: var(--space-6); flex-wrap: wrap; font-size: var(--text-sm); color: var(--gray-600);">
-                        <span>
-                            <i class="bi bi-folder"></i> {{ module.categorie.titre }}
-                        </span>
-                        <span>
-                            <i class="bi bi-signal"></i> {{ module.difficulte|capitalize }}
-                        </span>
-                        <span>
-                            <i class="bi bi-clock"></i> {{ module.dureeEstimee }} min
-                        </span>
-                        <span>
-                            <i class="bi bi-trophy"></i> {{ module.pointsReussite }} points
-                        </span>
-                        <span>
-                            <i class="bi bi-star-fill" style="color: var(--warning);"></i> {{ module.etoilesReussite }} étoiles
-                        </span>
-                        <span>
-                            <i class="bi bi-book"></i> {{ module.chapitres|length }} chapitres
-                        </span>
+
+                    <p class="module-description">{{ module.description|slice(0, 150) }}{% if module.description|length > 150 %}…{% endif %}</p>
+
+                    <div class="module-actions">
+                        <a href="{{ path('admin_module_details', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Voir">
+                            <i class="bi bi-eye"></i> <span class="action-label">Voir</span>
+                        </a>
+                        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm" title="Chapitres">
+                            <i class="bi bi-journal-text"></i> <span class="action-label">Chapitres ({{ module.chapitres|length }})</span>
+                        </a>
+                        <a href="{{ path('admin_module_lier_simulation', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Associer une simulation">
+                            <i class="bi bi-joystick"></i> <span class="action-label">Simulation</span>
+                        </a>
+                        <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Modifier">
+                            <i class="bi bi-pencil"></i> <span class="action-label">Modifier</span>
+                        </a>
+                        <form method="post" action="{{ path('admin_module_toggle_publication', {id: module.id}) }}" class="action-form">
+                            <button type="submit" class="btn btn-ghost btn-sm" title="{{ module.estPublie ? 'Dépublier' : 'Publier' }}">
+                                <i class="bi bi-{{ module.estPublie ? 'eye-slash' : 'check-circle' }}"></i>
+                                <span class="action-label">{{ module.estPublie ? 'Dépublier' : 'Publier' }}</span>
+                            </button>
+                        </form>
+                        <form method="post" action="{{ path('admin_module_supprimer', {id: module.id}) }}" id="form-supp-mod-{{ module.id }}" class="action-form">
+                            <button type="submit" class="btn btn-ghost btn-sm btn-danger" title="Supprimer"
+                                    data-confirm="Supprimer ce module ? Cette action est irréversible."
+                                    data-form="form-supp-mod-{{ module.id }}">
+                                <i class="bi bi-trash"></i> <span class="action-label">Supprimer</span>
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
-
-            <div style="display: flex; gap: var(--space-3); padding-top: var(--space-4); border-top: 1px solid var(--gray-200);">
-                <a href="{{ path('admin_module_details', {id: module.id}) }}" class="btn btn-ghost btn-sm">
-                    <i class="bi bi-eye"></i> Voir
-                </a>
-                <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm">
-    <i class="bi bi-journal-text"></i> Chapitres ({{ module.chapitres|length }})
-</a>
-                <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm">
-                    <i class="bi bi-pencil"></i> Modifier
-                </a>
-                <form method="post" action="{{ path('admin_module_toggle_publication', {id: module.id}) }}" style="display: inline;">
-                    <button type="submit" class="btn btn-ghost btn-sm" style="color: {{ module.estPublie ? 'var(--warning)' : 'var(--success)' }};">
-                        <i class="bi bi-{{ module.estPublie ? 'eye-slash' : 'check-circle' }}"></i>
-                        {{ module.estPublie ? 'Dépublier' : 'Publier' }}
-                    </button>
-                </form>
-                <form method="post" action="{{ path('admin_module_supprimer', {id: module.id}) }}" style="display: inline; margin-left: auto;">
-                    <button type="submit" class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="return confirm('Supprimer ce module ? Cette action est irréversible.')">
-                        <i class="bi bi-trash"></i> Supprimer
-                    </button>
-                </form>
-            </div>
+            {% endfor %}
         </div>
-    </div>
-    {% else %}
-    <div class="card" style="text-align: center; padding: var(--space-16);">
-        <i class="bi bi-book" style="font-size: 80px; color: var(--gray-300); margin-bottom: var(--space-4);"></i>
-        <h3 style="font-size: var(--text-2xl); font-weight: var(--font-bold); color: var(--gray-900); margin-bottom: var(--space-2);">
-            Aucun module créé
-        </h3>
-        <p style="color: var(--gray-600); margin-bottom: var(--space-6);">Créez votre premier module de formation</p>
-        <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Créer un module
-        </a>
-    </div>
-    {% endfor %}
+    {% endif %}
 </div>
+{% endblock %}
 
+{% block stylesheets %}
+{{ parent() }}
+<style>
+      .modules-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.75rem;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+    }
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .stat-card {
+        background: white;
+        border-radius: 0.75rem;
+        border: 1px solid #E2E8F0;
+        padding: 0.875rem;
+        display: flex;
+        align-items: center;
+        gap: 0.875rem;
+    }
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: #F1F5F9;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    .stat-icon.success { background: #DCFCE7; color: #166534; }
+    .stat-icon.warning { background: #FEF9C3; color: #D97706; }
+    .stat-icon.info    { background: #DBEAFE; color: #1D4ED8; }
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: #0F172A;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #64748B;
+        margin-top: 0.2rem;
+    }
+    html.dark .stat-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Liste modules */
+    .modules-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .module-card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        transition: all 0.2s;
+    }
+    .module-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #CBD5E1;
+    }
+    .module-card-body {
+        padding: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    html.dark .module-card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+
+    /* En-tête de la carte */
+    .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .module-header h3 {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+        word-break: break-word;
+    }
+    .module-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.7rem;
+        font-weight: 500;
+        color: #64748B;
+        margin-top: 0.25rem;
+    }
+    .module-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-gray    { background: #F1F5F9; color: #475569; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-gray    { background: #1E293B; color: #94A3B8; }
+
+    .module-description {
+        font-size: 0.8125rem;
+        color: #475569;
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    /* Actions */
+    .module-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+        border-top: 1px solid #E2E8F0;
+        padding-top: 0.75rem;
+        margin-top: 0.25rem;
+    }
+    .action-form {
+        display: inline;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        white-space: nowrap;
+        padding: 0.375rem 0.875rem;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    .btn-danger {
+        color: #DC2626;
+        border-color: #FECACA;
+    }
+    .btn-danger:hover {
+        background: #FEE2E2;
+        border-color: #FECACA;
+        color: #991B1B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+
+    /* Responsive actions */
+    @media (max-width: 768px) {
+        .module-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .module-badges {
+            justify-content: flex-start;
+        }
+        .module-actions {
+            flex-direction: row;
+            justify-content: flex-start;
+        }
+        .module-actions .btn {
+            flex: 0 0 auto;
+        }
+        .action-label {
+            display: inline;
+        }
+    }
+    @media (max-width: 480px) {
+        .module-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .module-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .action-form {
+            display: block;
+            width: 100%;
+        }
+        .module-header h3 {
+            font-size: 1rem;
+        }
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+    }
+    .empty-state i {
+        font-size: 3rem;
+        color: #CBD5E1;
+        margin-bottom: 1rem;
+        display: inline-block;
+    }
+    .empty-state p {
+        color: #64748B;
+        font-size: 0.875rem;
+        margin-bottom: 1.5rem;
+    }
+    html.dark .empty-state {
+        background: #1E293B;
+        border-color: #334155;
+    }
+</style>
 {% endblock %}

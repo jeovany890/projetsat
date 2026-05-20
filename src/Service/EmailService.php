@@ -65,10 +65,8 @@ class EmailService
         ?string $compteEmailDsn = null
     ): void {
         [$username, $password] = match($compteEmailDsn) {
-            'MAILER_PHISHING_BOA'    => ['boa.benini.2026@gmail.com',    $_ENV['GMAIL_PASSWORD_BOA']],
-            'MAILER_PHISHING_SBEE'   => ['sbee.benin.2026@gmail.com',    $_ENV['GMAIL_PASSWORD_SBEE']],
-            'MAILER_PHISHING_UNICEF' => ['unicef.inter.2026@gmail.com',  $_ENV['GMAIL_PASSWORD_UNICEF']],
-            default                  => ['satplatform.noreply1@gmail.com', $_ENV['GMAIL_PASSWORD_LEGITIME']],
+
+            default                  => ['satplatform.noreply1@gmail.com', $_ENV['GMAIL_PASSWORD_PHISHING']],
         };
 
         $this->envoyer(

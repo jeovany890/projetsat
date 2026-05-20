@@ -1,0 +1,291 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Mon profil{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_dashboard') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Retour au tableau de bord
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-card-header">
+            <div class="form-card-icon">
+                <i class="bi bi-person-circle"></i>
+            </div>
+            <div>
+                <h1>Mon profil RSSI</h1>
+                <p>{% if edit_mode %}Modifiez vos informations personnelles et changez votre mot de passe si nécessaire.{% else %}Consultez vos informations personnelles.{% endif %}</p>
+            </div>
+        </div>
+
+        <div class="form-card-body">
+            {% if edit_mode %}
+                <form method="post">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="prenom">Prénom</label>
+                            <input type="text" id="prenom" name="prenom" class="form-control" value="{{ rssi.prenom }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nom">Nom</label>
+                            <input type="text" id="nom" name="nom" class="form-control" value="{{ rssi.nom }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="email" class="form-control" value="{{ rssi.email }}" readonly disabled style="background-color: #f1f5f9; cursor: not-allowed;">
+                            <small style="color: #64748B; font-size: 0.75rem;">L'email ne peut pas être modifié</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="telephone">Téléphone</label>
+                            <input type="tel" id="telephone" name="telephone" class="form-control" value="{{ rssi.telephone }}">
+                        </div>
+                    </div>
+
+                    <div class="form-divider">Sécurité du compte</div>
+
+                    <div class="form-group">
+                        <label for="mot_de_passe_actuel">Mot de passe actuel</label>
+                        <input type="password" id="mot_de_passe_actuel" name="mot_de_passe_actuel" class="form-control" placeholder="Laissez vide si vous ne changez pas de mot de passe">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nouveau_mot_de_passe">Nouveau mot de passe</label>
+                            <input type="password" id="nouveau_mot_de_passe" name="nouveau_mot_de_passe" class="form-control" placeholder="8 caractères minimum">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmation_mot_de_passe">Confirmer le mot de passe</label>
+                            <input type="password" id="confirmation_mot_de_passe" name="confirmation_mot_de_passe" class="form-control" placeholder="Confirmez le nouveau mot de passe">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ path('rssi_profil') }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg"></i> Enregistrer les modifications
+                        </button>
+                    </div>
+                </form>
+            {% else %}
+                <div class="profile-info">
+                    <div class="info-row">
+                        <div class="info-label">Prénom</div>
+                        <div class="info-value">{{ rssi.prenom }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Nom</div>
+                        <div class="info-value">{{ rssi.nom }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Email</div>
+                        <div class="info-value">{{ rssi.email }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Téléphone</div>
+                        <div class="info-value">{{ rssi.telephone|default('Non renseigné') }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Date de création</div>
+                        <div class="info-value">{{ rssi.dateCreation|date('d/m/Y H:i') }}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Dernière connexion</div>
+                        <div class="info-value">{{ rssi.dateDerniereConnexion ? rssi.dateDerniereConnexion|date('d/m/Y H:i') : 'Jamais' }}</div>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="{{ path('rssi_dashboard') }}" class="btn btn-secondary">Retour</a>
+                        <a href="{{ path('rssi_profil_edit') }}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .form-container {
+        max-width: 740px;
+        margin: 0 auto;
+        padding: 0.5rem 0;
+    }
+    .form-card {
+        background: #ffffff;
+        border: 1px solid #E2E8F0;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+    .form-card-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #EFF6FF;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .form-card-icon {
+        width: 48px;
+        height: 48px;
+        background: #3B82F6;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.35rem;
+    }
+    .form-card-header h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0 0 0.25rem 0;
+    }
+    .form-card-header p {
+        margin: 0;
+        color: #475569;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    html.dark .form-card {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .form-card-header {
+        background: #0F172A;
+        border-color: #334155;
+    }
+    html.dark .form-card-header h1,
+    html.dark .form-card-header p {
+        color: #F8FAFC;
+    }
+    .form-card-body {
+        padding: 1.5rem;
+    }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    @media (max-width: 720px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-group label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 0.45rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 0.9rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        color: #0F172A;
+        background: #ffffff;
+        transition: all 0.15s ease;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    html.dark .form-control {
+        background: #14243D;
+        border-color: #334155;
+        color: #F8FAFC;
+    }
+    .form-divider {
+        margin: 1rem 0 0.75rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #334155;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+    }
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.1rem;
+        border-radius: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-primary {
+        background: #3B82F6;
+        color: white;
+    }
+    .btn-secondary {
+        background: #F8FAFC;
+        color: #0F172A;
+        border: 1px solid #CBD5E1;
+    }
+    .btn-primary:hover,
+    .btn-secondary:hover {
+        opacity: 0.95;
+    }
+    .profile-info {
+        padding: 1rem 0;
+    }
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    .info-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #0F172A;
+    }
+    html.dark .info-row {
+        border-color: #334155;
+    }
+    html.dark .info-label {
+        color: #94A3B8;
+    }
+    html.dark .info-value {
+        color: #F8FAFC;
+    }
+</style>
+{% endblock %}

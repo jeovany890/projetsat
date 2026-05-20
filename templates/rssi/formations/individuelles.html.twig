@@ -1,0 +1,567 @@
+{% extends 'rssi/layout.html.twig' %}
+
+{% block page_title %}Suivi des formations individuelles{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('rssi_formations_liste') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Campagnes formation
+    </a>
+{% endblock %}
+
+{% block content %}
+<div class="indiv-container">
+
+    {# ── Explication ── #}
+    <div class="info-banner">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <div class="info-banner-title">Formations assignées automatiquement</div>
+            <div class="info-banner-text">
+                Ces formations ont été proposées automatiquement à des employés suite à un
+                <strong>échec sur une campagne phishing</strong>. Elles ne font partie d'aucune campagne de formation.
+                Vous pouvez suivre leur progression ici et envoyer des rappels.
+            </div>
+        </div>
+    </div>
+
+    {# ── Stats globales ── #}
+    <div class="stats-grid stats-grid-4">
+        {% set nbTotal    = progressions|length %}
+        {% set nbTermines = progressions|filter(p => p.statut == 'TERMINE')|length %}
+        {% set nbEnCours  = progressions|filter(p => p.statut == 'EN_COURS')|length %}
+        {% set nbAttente  = progressions|filter(p => p.statut == 'NON_COMMENCE')|length %}
+
+        <div class="stat-card">
+            <div class="stat-value">{{ nbTotal }}</div>
+            <div class="stat-label">Total assignées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value text-green">{{ nbTermines }}</div>
+            <div class="stat-label">Terminées</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value text-blue">{{ nbEnCours }}</div>
+            <div class="stat-label">En cours</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value text-amber">{{ nbAttente }}</div>
+            <div class="stat-label">Non commencées</div>
+        </div>
+    </div>
+
+    {# ── Filtres ── #}
+    <div class="filters-card">
+        <form method="get" class="filters-form">
+            <select name="statut" class="filter-select" onchange="this.form.submit()">
+                <option value="">Tous les statuts</option>
+                <option value="NON_COMMENCE" {{ app.request.query.get('statut') == 'NON_COMMENCE' ? 'selected' }}>Non commencées</option>
+                <option value="EN_COURS"     {{ app.request.query.get('statut') == 'EN_COURS'     ? 'selected' }}>En cours</option>
+                <option value="TERMINE"      {{ app.request.query.get('statut') == 'TERMINE'      ? 'selected' }}>Terminées</option>
+            </select>
+
+            <select name="module_id" class="filter-select" onchange="this.form.submit()">
+                <option value="">Tous les modules</option>
+                {% for module in modules %}
+                    <option value="{{ module.id }}"
+                        {{ app.request.query.get('module_id') == module.id ~ '' ? 'selected' }}>
+                        {{ module.titre }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            {% if app.request.query.get('statut') or app.request.query.get('module_id') %}
+                <a href="{{ path('rssi_formations_individuelles') }}" class="btn btn-ghost btn-sm">
+                    <i class="bi bi-x"></i> Réinitialiser
+                </a>
+            {% endif %}
+
+            <div class="result-count">{{ progressions|length }} résultat(s)</div>
+        </form>
+    </div>
+
+    {# ── Tableau des progressions ── #}
+    {% if progressions|length == 0 %}
+        <div class="empty-state">
+            <i class="bi bi-mortarboard"></i>
+            <h3>Aucune formation individuelle</h3>
+            <p>Les formations proposées après un échec phishing apparaîtront ici.</p>
+        </div>
+    {% else %}
+        <div class="table-responsive-wrapper">
+            <table class="indiv-table">
+                <thead>
+                    <tr>
+                        <th>Employé</th>
+                        <th>Module</th>
+                        <th class="text-center">Progression</th>
+                        <th class="text-center">Statut</th>
+                        <th class="text-center">Assignée le</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prog in progressions %}
+                    <tr>
+                        <td class="employee-cell">
+                            <a href="{{ path('rssi_employes_detail', {id: prog.employe.id}) }}" class="employee-link">
+                                <div class="employee-avatar">{{ prog.employe.prenom|slice(0,1)|upper }}{{ prog.employe.nom|slice(0,1)|upper }}</div>
+                                <div class="employee-info">
+                                    <div class="employee-name">{{ prog.employe.prenom }} {{ prog.employe.nom }}</div>
+                                    <div class="employee-dept">{{ prog.employe.departement ? prog.employe.departement.nom : 'Sans département' }}</div>
+                                </div>
+                            </a>
+                        </td>
+                        <td class="module-cell">
+                            <div class="module-title">{{ prog.module.titre }}</div>
+                        </td>
+                        <td class="progress-cell">
+                            <div class="progress-wrapper">
+            
+                                <span class="progress-value">{{ prog.pourcentageProgression }}%</span>
+                            </div>
+                        </td>
+                        <td class="status-cell">
+                            {% if prog.statut == 'TERMINE' %}
+                                <span class="badge badge-success">Terminé</span>
+                            {% elseif prog.statut == 'EN_COURS' %}
+                                <span class="badge badge-blue">En cours</span>
+                            {% else %}
+                                <span class="badge badge-amber">Non commencé</span>
+                            {% endif %}
+                        </td>
+                        <td class="date-cell">
+                            {{ prog.dateDebut ? prog.dateDebut|date('d/m/Y') : '—' }}
+                        </td>
+                        <td class="actions-cell">
+                            {% if prog.statut != 'TERMINE' %}
+                                <form method="post" action="{{ path('rssi_formations_rappel_individuel', {id: prog.id}) }}"
+                                      id="form-rappel-{{ prog.id }}"
+                                      style="display: inline-block;">
+                                    <button type="submit" class="btn-crud btn-rappel"
+                                            data-confirm="Envoyer un rappel à {{ prog.employe.prenom }} ?"
+                                            data-form="form-rappel-{{ prog.id }}">
+                                        <i class="bi bi-bell"></i> Rappel
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span class="text-success"><i class="bi bi-check2-all"></i> Fait</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* ===== DESIGN SYSTÈME ÉPURÉ ===== */
+    :root {
+        --bg: #F8FAFC;
+        --surface: #FFFFFF;
+        --border: #E2E8F0;
+        --text-primary: #0F172A;
+        --text-secondary: #475569;
+        --text-muted: #64748B;
+        --accent: #3B82F6;
+        --accent-light: #EFF6FF;
+        --danger: #EF4444;
+        --danger-light: #FEF2F2;
+        --warning: #F59E0B;
+        --warning-light: #FFFBEB;
+        --success: #10B981;
+        --success-light: #F0FDF4;
+    }
+
+    .indiv-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* Bannière info */
+    .info-banner {
+        background: var(--accent-light);
+        border: 1px solid #BFDBFE;
+        border-radius: 0.75rem;
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    .info-banner i {
+        font-size: 1.25rem;
+        color: var(--accent);
+        flex-shrink: 0;
+    }
+    .info-banner-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #1E40AF;
+        margin-bottom: 0.2rem;
+    }
+    .info-banner-text {
+        font-size: 0.75rem;
+        color: var(--accent);
+        line-height: 1.5;
+    }
+    html.dark .info-banner {
+        background: #1E3A8A;
+        border-color: #3B82F6;
+    }
+    html.dark .info-banner-title {
+        color: #93C5FD;
+    }
+    html.dark .info-banner-text {
+        color: #BFDBFE;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    .stats-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    @media (max-width: 1024px) { .stats-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 640px) { .stats-grid-4 { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .stat-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .stat-value {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+    .text-green { color: var(--success); }
+    .text-blue { color: var(--accent); }
+    .text-amber { color: var(--warning); }
+    html.dark .stat-card { background: #1E293B; border-color: #334155; }
+    html.dark .stat-value { color: #F1F5F9; }
+
+    /* Filtres */
+    .filters-card {
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+        padding: 1rem;
+    }
+    .filters-form {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .filter-select {
+        padding: 0.45rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.8rem;
+        background: var(--surface);
+        cursor: pointer;
+        min-width: 160px;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(59,130,246,0.1);
+    }
+    .result-count {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+    html.dark .filter-select {
+        background: #0F172A;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.9rem;
+        border-radius: 40px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.7rem;
+        font-size: 0.7rem;
+    }
+    .btn-secondary {
+        background: #F1F5F9;
+        color: var(--text-primary);
+        border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+        background: #E2E8F0;
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    .btn-ghost:hover {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+    html.dark .btn-secondary {
+        background: #334155;
+        border-color: #475569;
+        color: #E2E8F0;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E3A8A;
+    }
+
+    /* Tableau responsive */
+    .table-responsive-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    .indiv-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8rem;
+        min-width: 750px;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--surface);
+    }
+    .indiv-table th {
+        text-align: left;
+        padding: 0.875rem 1rem;
+        background-color: #F8FAFC;
+        color: var(--text-secondary);
+        font-weight: 600;
+        border-bottom: 1px solid var(--border);
+    }
+    .indiv-table td {
+        padding: 0.875rem 1rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+    .indiv-table tr:last-child td { border-bottom: none; }
+    html.dark .indiv-table th {
+        background-color: #1E293B;
+        color: #94A3B8;
+        border-bottom-color: #334155;
+    }
+    html.dark .indiv-table td { border-bottom-color: #334155; }
+    html.dark .indiv-table { background: #1E293B; }
+
+    /* Cellules */
+    .text-center { text-align: center; }
+
+    .employee-cell a {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        text-decoration: none;
+    }
+    .employee-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), #2563EB);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: white;
+        flex-shrink: 0;
+    }
+    .employee-name {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .employee-dept {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.1rem;
+    }
+    .module-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .module-categorie {
+        display: inline-block;
+        margin-top: 0.25rem;
+        font-size: 0.65rem;
+        font-weight: 600;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        background: #EDE9FE;
+        color: #6D28D9;
+    }
+    html.dark .module-categorie {
+        background: #4C1D95;
+        color: #A78BFA;
+    }
+
+    /* Progression */
+    .progress-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 110px;
+    }
+    .progress-bar {
+        flex: 1;
+        height: 6px;
+        background: var(--border);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.3s;
+    }
+    .progress-value {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        white-space: nowrap;
+    }
+
+    /* Badges */
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success {
+        background: var(--success-light);
+        color: #166534;
+    }
+    .badge-blue {
+        background: var(--accent-light);
+        color: var(--accent);
+    }
+    .badge-amber {
+        background: var(--warning-light);
+        color: #92400E;
+    }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-blue { background: #1E3A8A; color: #60A5FA; }
+    html.dark .badge-amber { background: #78350F; color: #FDE047; }
+
+    /* Actions */
+    .btn-crud {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 40px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.15s;
+        border: none;
+        background-color: #F1F5F9;
+        color: var(--text-secondary);
+    }
+    .btn-rappel:hover {
+        background-color: #E2E8F0;
+        transform: translateY(-1px);
+    }
+    .text-success {
+        color: var(--success);
+        font-size: 0.75rem;
+    }
+    html.dark .btn-crud {
+        background-color: #334155;
+        color: #E2E8F0;
+    }
+    html.dark .btn-rappel:hover {
+        background-color: #475569;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        background: var(--surface);
+        border-radius: 0.75rem;
+        border: 1px solid var(--border);
+    }
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 1rem;
+    }
+    .empty-state h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+    .empty-state p {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    html.dark .empty-state h3 { color: #F1F5F9; }
+
+    /* Responsive fin */
+    @media (max-width: 768px) {
+        .filters-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .filter-select {
+            width: 100%;
+        }
+        .result-count {
+            text-align: center;
+            margin-left: 0;
+        }
+        .actions-cell {
+            white-space: nowrap;
+        }
+    }
+</style>
+{% endblock %}

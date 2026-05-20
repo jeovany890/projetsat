@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerte Phishing — SAT Platform</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #FEF2F2;
+            min-height: 100vh;
+            padding: 40px 16px;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap { max-width: 680px; margin: 0 auto; }
+        .banner {
+            background: #DC2626;
+            border-radius: 12px 12px 0 0;
+            padding: 32px;
+            text-align: center;
+        }
+        .banner-icon { font-size: 52px; margin-bottom: 12px; }
+        .banner h1 { color: white; font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+        .banner p  { color: rgba(255,255,255,0.88); font-size: 14px; line-height: 1.6; }
+        .body {
+            background: white;
+            border-radius: 0 0 12px 12px;
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        .intro { color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 24px; }
+        .box { border-radius: 10px; padding: 20px 24px; margin-bottom: 20px; }
+        .box-orange { background: #FFF7ED; border: 1px solid #FED7AA; }
+        .box-green  { background: #F0FDF4; border: 1px solid #BBF7D0; }
+        .box-red    { background: #FEF2F2; border: 1px solid #FECACA; }
+        .box-blue   { background: #EFF6FF; border: 1px solid #BFDBFE; }
+        .box h2 { font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+        .box-orange h2 { color: #92400E; }
+        .box-green h2  { color: #14532D; }
+        .box-red h2    { color: #991B1B; }
+        .box-blue h2   { color: #1E40AF; }
+        ul { padding-left: 20px; font-size: 14px; line-height: 2.1; }
+        .box-orange ul { color: #78350F; }
+        .box-green ul  { color: #166534; }
+        .score-box { display: flex; align-items: center; gap: 14px; }
+        .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+        .btn {
+            flex: 1; min-width: 180px; padding: 13px 20px;
+            border-radius: 8px; font-weight: 600; font-size: 14px;
+            text-align: center; text-decoration: none;
+            border: none; cursor: pointer; display: inline-block;
+        }
+        .btn-blue   { background: #2563EB; color: white; }
+        .btn-green  { background: #059669; color: white; }
+        .btn-yellow { background: #D97706; color: white; }
+        button.btn:disabled { background: #D1D5DB; color: #6B7280; cursor: not-allowed; }
+        .footer { text-align: center; color: #9CA3AF; font-size: 12px; margin-top: 20px; line-height: 1.8; }
+        #signaler-result {
+            display: none; margin-top: 12px; padding: 12px 16px;
+            border-radius: 8px; font-size: 13px; font-weight: 600;
+        }
+        .result-ok   { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+        .result-err  { background: #DBEAFE; color: #1E40AF; border: 1px solid #BFDBFE; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="banner">
+        <div class="banner-icon">🎣</div>
+        <h1>Vous venez de cliquer sur un lien de phishing</h1>
+        <p>
+            Cet email faisait partie d'un test de sensibilisation organisé par votre entreprise.<br>
+            <strong style="color:white;">Aucune donnée n'a été compromise.</strong>
+        </p>
+    </div>
+
+    <div class="body">
+
+        <p class="intro">
+            Bonjour <strong>{{ employe.prenom }} {{ employe.nom }}</strong>,<br>
+            vous avez cliqué sur le bouton de l'email piège
+            <em style="color:#DC2626;">« {{ gabarit.sujetEmail }} »</em>
+            {% if resultat.dateClic %}
+                le <strong>{{ resultat.dateClic|date('d/m/Y à H:i') }}</strong>.
+            {% endif %}
+        </p>
+
+        {# ── Indices à repérer ── #}
+        {% if indices is not empty %}
+        <div class="box box-orange">
+            <h2>🔍 Ce que vous deviez vérifier avant de cliquer</h2>
+            <ul>
+                {% for indice in indices %}
+                <li>{{ indice }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# ── Bonnes pratiques ── #}
+        <div class="box box-green">
+            <h2>✅ Les bons réflexes face à un email suspect</h2>
+            <ul>
+                <li>Vérifiez le <strong>domaine exact</strong> de l'expéditeur — un seul caractère peut tout changer</li>
+                <li>Méfiez-vous des <strong>urgences artificielles</strong> (24h, 48h, suspension immédiate…)</li>
+                <li>Survolez le lien <strong>avant</strong> de cliquer pour voir l'URL réelle</li>
+                <li>Les banques, la DGI et MTN ne demandent <strong>jamais</strong> de cliquer un lien par email ou SMS</li>
+                <li>En cas de doute → <strong>signalez à votre RSSI</strong>, ne cliquez pas</li>
+            </ul>
+        </div>
+
+        {# ── Impact score ── #}
+        <div class="box box-red">
+            <div class="score-box">
+                <span style="font-size:32px;">📉</span>
+                <div>
+                    <div style="font-weight:700;color:#991B1B;font-size:14px;">Impact sur votre score de vigilance</div>
+                    <div style="color:#7F1D1D;font-size:13px;margin-top:4px;">
+                        Votre score a été réduit de <strong>10 points</strong>.
+                        Suivez les formations sur la plateforme pour l'améliorer.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Bouton signalement ── #}
+        {% if not resultat.emailSignale %}
+        <div class="box box-blue">
+            <h2>📣 Informer votre RSSI</h2>
+            <p style="font-size:13px;color:#1E40AF;margin-bottom:14px;line-height:1.6;">
+                Même si vous avez cliqué, vous pouvez signaler cet email à votre responsable.
+                Cela montre votre prise de conscience et sera noté dans votre dossier.
+            </p>
+            <button id="btn-signaler" class="btn btn-yellow"
+                    onclick="signalerEmail('{{ token }}')">
+                📣 Signaler cet email à mon RSSI
+            </button>
+            <div id="signaler-result"></div>
+        </div>
+        {% else %}
+        <div class="box box-blue">
+            <p style="font-size:14px;color:#1E40AF;font-weight:600;">
+                ✅ Vous avez déjà signalé cet email. Votre RSSI en a été informé.
+            </p>
+        </div>
+        {% endif %}
+
+        {# ── Actions ── #}
+        <div class="actions">
+            <a href="/login" class="btn btn-blue">🏠 Accéder à la plateforme</a>
+            <a href="/login" class="btn btn-green">📚 Revoir mes formations</a>
+        </div>
+
+    </div>
+
+    <p class="footer">
+        Test de sensibilisation organisé dans le cadre du programme de cybersécurité de votre entreprise.<br>
+        <strong>SAT Platform</strong> — Security Awareness Training
+    </p>
+
+</div>
+
+<script>
+async function signalerEmail(token) {
+    const btn    = document.getElementById('btn-signaler');
+    const result = document.getElementById('signaler-result');
+
+    btn.disabled    = true;
+    btn.textContent = 'Envoi en cours…';
+
+    try {
+        const resp = await fetch('/phishing/signaler/' + token, {
+            method:  'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const data = await resp.json();
+        result.style.display = 'block';
+
+        if (data.success) {
+            result.className   = 'result-ok';
+            result.textContent = data.message ?? 'Signalement enregistré.';
+            btn.textContent    = '✅ Signalé';
+        } else {
+            result.className   = 'result-err';
+            result.textContent = 'Erreur lors du signalement. Réessayez.';
+            btn.disabled       = false;
+            btn.textContent    = '📣 Signaler cet email à mon RSSI';
+        }
+    } catch (e) {
+        result.style.display = 'block';
+        result.className     = 'result-err';
+        result.textContent   = 'Erreur réseau. Vérifiez votre connexion et réessayez.';
+        btn.disabled         = false;
+        btn.textContent      = '📣 Signaler cet email à mon RSSI';
+    }
+}
+</script>
+</body>
+</html>

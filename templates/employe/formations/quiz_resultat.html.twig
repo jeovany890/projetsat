@@ -1,0 +1,387 @@
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Résultat du quiz{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* Container principal */
+    .result-container {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+    /* Carte résultat principal */
+    .result-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .result-card.success {
+        border-top: 4px solid #10b981;
+    }
+    .result-card.fail {
+        border-top: 4px solid #ef4444;
+    }
+
+    /* Score */
+    .result-score {
+        margin-bottom: 1rem;
+    }
+    .result-percentage {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+    }
+    .result-percentage.success {
+        color: #10b981;
+    }
+    .result-percentage.fail {
+        color: #ef4444;
+    }
+    .result-detail {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-top: 0.25rem;
+    }
+    .result-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.5rem;
+    }
+    .result-message {
+        font-size: 0.875rem;
+        color: #475569;
+        margin-bottom: 0;
+    }
+    .result-message strong {
+        color: #0f172a;
+    }
+
+    /* Statistiques */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .stat-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+    .stat-value.correct { color: #10b981; }
+    .stat-value.wrong { color: #ef4444; }
+
+    /* Détail des questions */
+    .questions-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .question-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+        overflow: hidden;
+    }
+    .question-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .question-status {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .question-status.correct {
+        background: #dcfce7;
+        color: #10b981;
+    }
+    .question-status.wrong {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+    .question-text {
+        flex: 1;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.4;
+    }
+    .question-body {
+        padding: 1rem 1.25rem;
+    }
+    .answer-box {
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8125rem;
+        margin-bottom: 0.5rem;
+    }
+    .answer-correct {
+        background: #f0fdf4;
+        color: #166534;
+        border-left: 3px solid #10b981;
+    }
+    .answer-wrong {
+        background: #fef2f2;
+        color: #991b1b;
+        border-left: 3px solid #ef4444;
+    }
+    .explanation {
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.75rem;
+        color: #475569;
+        line-height: 1.5;
+        margin-top: 0.5rem;
+    }
+
+    /* Actions */
+    .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        transition: all 0.15s;
+    }
+    .btn-primary {
+        background: #10b981;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #059669;
+    }
+    .btn-secondary {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #e2e8f0;
+    }
+    .btn-secondary:hover {
+        background: #e2e8f0;
+    }
+    .btn-outline {
+        background: transparent;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+    .btn-outline:hover {
+        background: #f8fafc;
+    }
+    .btn-success {
+        background: #10b981;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #059669;
+    }
+    .ml-auto {
+        margin-left: auto;
+    }
+
+    /* Dark mode */
+    html.dark .result-card,
+    html.dark .stat-item,
+    html.dark .question-item {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    html.dark .result-percentage {
+        color: #f1f5f9;
+    }
+    html.dark .result-percentage.success {
+        color: #34d399;
+    }
+    html.dark .result-percentage.fail {
+        color: #f87171;
+    }
+    html.dark .result-title,
+    html.dark .questions-title,
+    html.dark .question-text {
+        color: #f1f5f9;
+    }
+    html.dark .result-message,
+    html.dark .result-detail {
+        color: #94a3b8;
+    }
+    html.dark .question-header {
+        background: #0f172a;
+        border-color: #334155;
+    }
+    html.dark .answer-correct {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+    html.dark .answer-wrong {
+        background: #7f1d1d;
+        color: #fca5a5;
+    }
+    html.dark .explanation {
+        background: #0f172a;
+        color: #94a3b8;
+    }
+    html.dark .btn-secondary {
+        background: #334155;
+        border-color: #475569;
+        color: #e2e8f0;
+    }
+    html.dark .btn-secondary:hover {
+        background: #475569;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+
+    {# Carte résultat principal #}
+    <div class="result-card {{ reussi ? 'success' : 'fail' }}">
+        <div class="result-score">
+            <div class="result-percentage {{ reussi ? 'success' : 'fail' }}">{{ pourcentage }}%</div>
+            <div class="result-detail">{{ score }} / {{ total }} bonnes réponses</div>
+        </div>
+        <div class="result-title">{{ reussi ? 'Quiz réussi' : 'Quiz non réussi' }}</div>
+        <div class="result-message">
+            {% if reussi %}
+                Vous avez obtenu <strong>{{ score }}</strong> bonne{{ score > 1 ? 's' : '' }} réponse{{ score > 1 ? 's' : '' }} sur <strong>{{ total }}</strong>.
+                <br>+30 points, +5 vigilance gagnés.
+            {% else %}
+                Vous avez obtenu <strong>{{ score }}</strong> bonne{{ score > 1 ? 's' : '' }} réponse{{ score > 1 ? 's' : '' }} sur <strong>{{ total }}</strong>.
+                <br>Relisez le chapitre et réessayez.
+            {% endif %}
+        </div>
+    </div>
+
+    {# Statistiques #}
+    <div class="stats-grid">
+        <div class="stat-item">
+            <div class="stat-value correct">{{ score }}</div>
+            <div class="stat-label">Bonnes réponses</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value wrong">{{ total - score }}</div>
+            <div class="stat-label">Mauvaises réponses</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value">{{ pourcentage }}%</div>
+            <div class="stat-label">Score obtenu</div>
+        </div>
+    </div>
+
+    {# Détail des questions #}
+    <div class="questions-title">Correction détaillée</div>
+
+{% for question in questions %}
+    {% set r = resultats[loop.index0] %}   {# ← utilisation de l’index #}
+    <div class="question-item">
+        <div class="question-header">
+            <div class="question-status {{ r.correct ? 'correct' : 'wrong' }}">
+                {{ r.correct ? '✓' : '✗' }}
+            </div>
+            <div class="question-text">{{ question.question }}</div>
+        </div>
+        <div class="question-body">
+            {% if r.correct %}
+                <div class="answer-box answer-correct">
+                    Bonne réponse : <strong>{{ r.bonne }}</strong>
+                </div>
+            {% else %}
+                <div class="answer-box answer-wrong">
+                    Votre réponse : <strong>{{ r.donnee ?? 'Sans réponse' }}</strong>
+                </div>
+                <div class="answer-box answer-correct">
+                    Bonne réponse : <strong>{{ r.bonne }}</strong>
+                </div>
+            {% endif %}
+            {% if r.explication %}
+                <div class="explanation">
+                    {{ r.explication }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endfor %}
+    {# Actions #}
+    <div class="actions">
+        {% if not reussi %}
+            <a href="{{ path('employe_chapitre_quiz', {moduleId: module.id, chapitreId: chapitre.id}) }}"
+               class="btn btn-outline">
+                Réessayer
+            </a>
+        {% endif %}
+
+        {% if reussi %}
+            {% if simulation is defined and simulation %}
+                <a href="{{ path('employe_simulation_jouer', {id: simulation.id}) }}"
+                   class="btn btn-success ml-auto">
+                    Passer la simulation finale
+                </a>
+            {% elseif chapitresSuivant is defined and chapitresSuivant %}
+                <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: chapitresSuivant.id}) }}"
+                   class="btn btn-primary ml-auto">
+                    Suivant : {{ chapitresSuivant.titre|slice(0,30) }}{% if chapitresSuivant.titre|length > 30 %}…{% endif %}
+                </a>
+            {% elseif tousTermines is defined and tousTermines %}
+                <span class="btn" style="background:#dcfce7; color:#166534; cursor:default; margin-left:auto;">
+                    Formation terminée
+                </span>
+            {% else %}
+                <a href="{{ retour_url }}" class="btn btn-primary ml-auto">
+                    Retour au module
+                </a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

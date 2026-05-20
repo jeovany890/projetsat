@@ -1,0 +1,534 @@
+{% extends 'admin/layout.html.twig' %}
+
+{% block page_title %}{{ module.titre }}{% endblock %}
+
+{% block topbar_actions %}
+    <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+    <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-pencil"></i> Modifier
+    </a>
+    <form method="post" action="{{ path('admin_module_toggle_publication', {id: module.id}) }}" style="display: inline;">
+        <input type="hidden" name="_token" value="{{ csrf_token('toggle_' ~ module.id) }}">
+        <button type="submit" class="btn btn-ghost btn-sm" style="color: {{ module.estPublie ? '#DC2626' : '#166534' }};">
+            <i class="bi bi-{{ module.estPublie ? 'eye-slash' : 'eye' }}"></i>
+            {{ module.estPublie ? 'Dépublier' : 'Publier' }}
+        </button>
+    </form>
+{% endblock %}
+
+{% block content %}
+<div class="module-detail-container">
+
+    {# En-tête #}
+    <div class="module-header">
+        <div>
+            <h1>{{ module.titre }}</h1>
+            <div class="module-badges">
+                {% if module.estPublie %}
+                    <span class="badge badge-success">Publié</span>
+                {% else %}
+                    <span class="badge badge-warning">Brouillon</span>
+                {% endif %}
+            </div>
+        </div>
+        <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Ajouter un chapitre
+        </a>
+    </div>
+
+    {# Informations et statistiques #}
+    <div class="module-stats-grid">
+        <div class="card info-card">
+            <h2>Informations</h2>
+            {% if module.description %}
+                <p class="description">{{ module.description }}</p>
+            {% endif %}
+            <div class="meta-list">
+              <span><strong>Catégorie :</strong> {{ module.categorie ?: '—' }}</span>
+                <span><strong>Difficulté :</strong> {{ module.difficulte|capitalize }}</span>
+                <span><strong>Durée :</strong> {{ module.dureeEstimee }} min</span>
+                <span><strong>Points :</strong> {{ module.pointsReussite }}</span>
+                <span><strong>Étoiles :</strong> ★ {{ module.etoilesReussite }}</span>
+            </div>
+        </div>
+        <div class="card stats-card">
+            <h2>Statistiques</h2>
+            <div class="stats-values">
+                <div>
+                    <div class="stat-number">{{ module.chapitres|length }}</div>
+                    <div class="stat-label">Chapitre(s)</div>
+                </div>
+                <div>
+                    <div class="stat-number">{{ module.chapitres|filter(c => c.quiz is not null)|length }}</div>
+                    <div class="stat-label">Quiz de chapitre</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Liste des chapitres #}
+    <div class="card">
+        <div class="card-header-flex">
+            <h2>Chapitres</h2>
+            <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg"></i> Nouveau chapitre
+            </a>
+        </div>
+
+        {% if module.chapitres|length == 0 %}
+            <div class="empty-chapters">
+                <i class="bi bi-journal-text"></i>
+                <p>Aucun chapitre. Créez le premier chapitre de ce module.</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="chapitres-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Titre</th>
+                            <th class="text-center">Vidéo</th>
+                            <th class="text-center">Quiz</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chapitre in module.chapitres %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="chapitre-titre">{{ chapitre.titre }}</div>
+                                {% if chapitre.dureeVideo %}
+                                    <div class="chapitre-duree"><i class="bi bi-play-circle"></i> {{ chapitre.dureeVideo }} min</div>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if chapitre.urlVideo %}
+                                    <i class="bi bi-play-circle-fill text-blue" title="{{ chapitre.urlVideo }}"></i>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if chapitre.quiz %}
+                                    <span class="quiz-badge">{{ chapitre.quiz.questions|length }} Q</span>
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right">
+                                <div class="action-buttons">
+                                    <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-sm btn-purple" title="Gérer le quiz">
+                                        <i class="bi bi-patch-question-fill"></i> Quiz
+                                    </a>
+                                    <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-sm btn-ghost" title="Modifier">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('admin_chapitre_supprimer', {moduleId: module.id, id: chapitre.id}) }}"
+                                          id="form-supp-chap-{{ chapitre.id }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('supprimer_chapitre_' ~ chapitre.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer"
+                                                data-confirm="Supprimer ce chapitre ?"
+                                                data-form="form-supp-chap-{{ chapitre.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Simulation associée — on choisit parmi les simulations existantes #}
+    <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <h2 style="margin:0;">Simulation finale</h2>
+            <a href="{{ path('admin_simulations_liste') }}" class="btn btn-ghost btn-sm" title="Gérer toutes les simulations">
+                <i class="bi bi-collection-play"></i> Toutes les simulations
+            </a>
+        </div>
+
+        {# Simulation actuellement liée #}
+        {% if module.simulation %}
+            <div class="simulation-linked" style="background:#F0FDF4;border:1.5px solid #BBF7D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span style="font-size:26px;">
+                        {% if module.simulation.typeSimulation == 'GMAIL' %}📧
+                        {% elseif module.simulation.typeSimulation == 'SMS' %}📱
+                        {% else %}💬{% endif %}
+                    </span>
+                    <div>
+                        <div style="font-weight:700;color:#166534;font-size:14px;">{{ module.simulation.titre }}</div>
+                        <div style="font-size:12px;color:#15803D;margin-top:2px;">
+                            {{ module.simulation.typeSimulation }} —
+                            {{ module.simulation.difficulte|capitalize }} —
+                            {{ module.simulation.dureeEstimee }} min —
+                            {{ module.simulation.pointsReussite }} pts
+                        </div>
+                    </div>
+                </div>
+                <span style="background:#DCFCE7;color:#166534;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">✅ Liée</span>
+            </div>
+        {% else %}
+            <div style="background:#FEF9C3;border:1.5px solid #FDE047;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:13px;color:#854D0E;">
+                ⚠️ Aucune simulation liée — l'employé ne pourra pas atteindre 100% de progression.
+            </div>
+        {% endif %}
+
+        {# Formulaire de sélection #}
+        <form method="post" action="{{ path('admin_module_simulation', {id: module.id}) }}">
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <select name="simulation_id" style="flex:1;min-width:220px;border:1.5px solid var(--gray-200);border-radius:8px;padding:8px 12px;font-size:13px;font-family:inherit;color:var(--gray-800);background:white;">
+                    <option value="">— Choisir une simulation —</option>
+                    <option value="aucune" {% if not module.simulation %}selected{% endif %}>🔗 Aucune (délier)</option>
+                    {% for sim in simulationsDisponibles %}
+                        <option value="{{ sim.id }}" {% if module.simulation and module.simulation.id == sim.id %}selected{% endif %}>
+                            {% if sim.typeSimulation == 'GMAIL' %}📧
+                            {% elseif sim.typeSimulation == 'SMS' %}📱
+                            {% else %}💬{% endif %}
+                            {{ sim.titre }} ({{ sim.typeSimulation }} — {{ sim.difficulte|capitalize }})
+                        </option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-link-45deg"></i>
+                    {% if module.simulation %}Changer{% else %}Lier{% endif %}
+                </button>
+            </div>
+            {% if simulationsDisponibles|length == 0 %}
+            <p style="font-size:12px;color:var(--gray-400);margin-top:8px;">
+                Aucune simulation disponible.
+                <a href="{{ path('admin_simulation_nouvelle') }}" style="color:var(--primary);">Créez-en une d'abord</a>,
+                puis revenez lier ici.
+            </p>
+            {% endif %}
+        </form>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .module-detail-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    /* En-tête */
+    .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .module-header h1 {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin: 0 0 0.5rem 0;
+    }
+    .module-badges {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .badge-success { background: #DCFCE7; color: #166534; }
+    .badge-warning { background: #FEF9C3; color: #854D0E; }
+    .badge-linked { background: #EDE9FE; color: #5B21B6; }
+    html.dark .badge-success { background: #14532D; color: #4ADE80; }
+    html.dark .badge-warning { background: #78350F; color: #FDE047; }
+    html.dark .badge-linked { background: #4C1D95; color: #C4B5FD; }
+
+    /* Cartes stats */
+    .module-stats-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+        .module-stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    .card {
+        background: white;
+        border-radius: 1rem;
+        border: 1px solid #E2E8F0;
+        padding: 1.25rem;
+    }
+    html.dark .card {
+        background: #1E293B;
+        border-color: #334155;
+    }
+    .info-card h2, .stats-card h2 {
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748B;
+        margin: 0 0 1rem 0;
+    }
+    .description {
+        color: #475569;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 0 0 1rem 0;
+    }
+    .meta-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        font-size: 0.8125rem;
+        color: #334155;
+    }
+    .stats-values {
+        display: flex;
+        justify-content: space-around;
+        text-align: center;
+    }
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #E53E3E;
+        line-height: 1.2;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        color: #64748B;
+        margin-top: 0.25rem;
+    }
+    html.dark .description, .meta-list {
+        color: #CBD5E1;
+    }
+    html.dark .stat-number {
+        color: #F87171;
+    }
+
+    /* Chapitres */
+    .card-header-flex {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .card-header-flex h2 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0F172A;
+        margin: 0;
+    }
+    .table-responsive {
+        overflow-x: auto;
+    }
+    .chapitres-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.8125rem;
+    }
+    .chapitres-table th {
+        text-align: left;
+        padding: 0.75rem;
+        background: #F8FAFC;
+        font-weight: 600;
+        color: #475569;
+        border-bottom: 1px solid #E2E8F0;
+    }
+    .chapitres-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid #E2E8F0;
+        vertical-align: middle;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .chapitre-titre {
+        font-weight: 600;
+        color: #0F172A;
+    }
+    .chapitre-duree {
+        font-size: 0.65rem;
+        color: #94A3B8;
+        margin-top: 0.2rem;
+    }
+    .text-blue { color: #3B82F6; }
+    .text-muted { color: #94A3B8; }
+    .quiz-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        background: #EDE9FE;
+        color: #5B21B6;
+        padding: 0.2rem 0.5rem;
+        border-radius: 20px;
+    }
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.7rem;
+    }
+    .btn-primary {
+        background: #E53E3E;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #C53030;
+        transform: translateY(-1px);
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    .btn-purple {
+        background: #EDE9FE;
+        color: #5B21B6;
+        border: none;
+    }
+    .btn-purple:hover {
+        background: #DDD6FE;
+    }
+    .btn-danger {
+        background: #FEF2F2;
+        color: #DC2626;
+        border: 1px solid #FECACA;
+    }
+    .btn-danger:hover {
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        color: #F1F5F9;
+    }
+    .empty-chapters {
+        text-align: center;
+        padding: 2rem;
+        color: #94A3B8;
+    }
+    .empty-chapters i {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Simulation */
+    .simulation-linked {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #F5F3FF;
+        border: 1px solid #DDD6FE;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+    .simulation-meta {
+        font-size: 0.7rem;
+        color: #6D28D9;
+        margin-top: 0.25rem;
+    }
+    .simulation-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-top: 1rem;
+    }
+    .simulation-form {
+        flex: 1;
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .form-control {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.8125rem;
+        background: white;
+    }
+    html.dark .form-control {
+        background: #0F172A;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    .small {
+        font-size: 0.7rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .action-buttons {
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        .simulation-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .simulation-form select, .simulation-form button {
+            width: 100%;
+        }
+        .module-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .module-header .btn-primary {
+            align-self: flex-start;
+        }
+        .chapitres-table th, .chapitres-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}

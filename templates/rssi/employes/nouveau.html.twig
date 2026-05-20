@@ -2,59 +2,65 @@
 
 {% block page_title %}Nouvel employé{% endblock %}
 
+{% block topbar_actions %}
+    <a href="{{ path('rssi_employes_importer') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
+    </a>
+    <a href="{{ path('rssi_employes_liste') }}" class="btn btn-ghost btn-sm">
+        <i class="bi bi-arrow-left"></i> Retour
+    </a>
+{% endblock %}
+
 {% block content %}
-<div style="max-width:620px;">
+<div class="form-container">
     <div class="r-card">
         <div class="r-card-header">
-            <div class="r-card-title"><i class="bi bi-person-plus-fill"></i> Ajouter un employé manuellement</div>
+            <div class="r-card-title">
+                <i class="bi bi-person-plus-fill" style="color:#3B82F6;"></i> Ajouter un employé manuellement
+            </div>
+            
         </div>
         <div class="r-card-body">
 
             {% if departements|length == 0 %}
-            <div style="background:#FEF9C3;padding:14px 16px;border-radius:10px;border:1px solid #FEF08A;margin-bottom:20px;font-size:13px;color:#854D0E;">
+            <div class="alert-warning">
                 <i class="bi bi-exclamation-triangle-fill"></i>
                 Vous devez d'abord créer au moins un département.
-                <a href="{{ path('rssi_departements_nouveau') }}" style="color:#0891B2;font-weight:600;margin-left:4px;">Créer un département</a>
+                <a href="{{ path('rssi_departements_nouveau') }}" class="alert-link">Créer un département</a>
             </div>
             {% endif %}
 
             <form method="post">
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Prénom *</label>
-                        <input type="text" name="prenom" required placeholder="Jean"
-                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Prénom <span class="text-red">*</span></label>
+                        <input type="text" name="prenom" required placeholder="Jean" class="form-control">
                     </div>
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Nom *</label>
-                        <input type="text" name="nom" required placeholder="Dupont"
-                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    <div class="form-group">
+                        <label class="form-label">Nom <span class="text-red">*</span></label>
+                        <input type="text" name="nom" required placeholder="Dupont" class="form-control">
                     </div>
                 </div>
 
-                <div style="margin-bottom:16px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Email *</label>
-                    <input type="email" name="email" required placeholder="jean.dupont@entreprise.com"
-                           style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-group">
+                    <label class="form-label">Email <span class="text-red">*</span></label>
+                    <input type="email" name="email" required placeholder="jean.dupont@entreprise.com" class="form-control">
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Téléphone</label>
-                        <input type="text" name="telephone" placeholder="+229 XX XX XX XX"
-                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" placeholder="+229 XX XX XX XX" class="form-control">
                     </div>
-                    <div>
-                        <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Poste / Fonction</label>
-                        <input type="text" name="poste" placeholder="Comptable, Développeur..."
-                               style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                    <div class="form-group">
+                        <label class="form-label">Poste / Fonction</label>
+                        <input type="text" name="poste" placeholder="Comptable, Développeur..." class="form-control">
                     </div>
                 </div>
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Département *</label>
-                    <select name="departement" required
-                            style="width:100%;padding:10px 14px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px;box-sizing:border-box;">
+                <div class="form-group">
+                    <label class="form-label">Département <span class="text-red">*</span></label>
+                    <select name="departement" required class="form-control" {% if departements|length == 0 %}disabled{% endif %}>
                         <option value="">-- Choisir un département --</option>
                         {% for dept in departements %}
                             <option value="{{ dept.id }}">{{ dept.nom }}</option>
@@ -62,22 +68,281 @@
                     </select>
                 </div>
 
-                <div style="background:#F0F9FF;padding:12px 16px;border-radius:8px;border:1px solid #BAE6FD;margin-bottom:20px;font-size:13px;color:#0369A1;">
+                <div class="info-box">
                     <i class="bi bi-info-circle-fill"></i>
                     Un mot de passe temporaire sera généré et envoyé par email à l'employé.
                 </div>
 
-                <div style="display:flex;gap:10px;">
-                    <button type="submit" class="r-btn r-btn-primary" {% if departements|length == 0 %}disabled style="opacity:0.5;"{% endif %}>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" {% if departements|length == 0 %}disabled{% endif %}>
                         <i class="bi bi-person-plus"></i> Créer l'employé
                     </button>
-                    <a href="{{ path('rssi_employes_liste') }}" class="r-btn r-btn-ghost">Annuler</a>
-                    <a href="{{ path('rssi_employes_importer') }}" class="r-btn r-btn-ghost" style="margin-left:auto;">
-                        <i class="bi bi-file-earmark-arrow-up"></i> Importer CSV
+                    <a href="{{ path('rssi_employes_liste') }}" class="btn btn-ghost">
+                        <i class="bi bi-x-lg"></i> Annuler
                     </a>
                 </div>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    /* Override couleur cyan -> bleu */
+    :root {
+        --r-accent: #3B82F6;
+        --r-accent-dim: rgba(59,130,246,0.12);
+    }
+    .r-brand-icon, .r-user-avatar {
+        background: linear-gradient(135deg, #3B82F6, #2563EB) !important;
+        box-shadow: 0 2px 8px rgba(59,130,246,0.2) !important;
+    }
+    .r-brand-role, .r-nav-link.active {
+        color: #3B82F6 !important;
+    }
+    .r-nav-link.active {
+        background: rgba(59,130,246,0.12) !important;
+    }
+    .r-topbar-company {
+        background: #EFF6FF !important;
+        border-color: #BFDBFE !important;
+        color: #1E40AF !important;
+    }
+
+    /* Conteneur */
+    .form-container {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    /* Sous-titre */
+    .r-card-subtitle {
+        font-size: 0.75rem;
+        color: #64748B;
+        margin-top: 0.25rem;
+        line-height: 1.4;
+    }
+
+    /* Grille responsive */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 0;
+    }
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+            gap: 0;
+        }
+    }
+
+    /* Groupes de formulaire */
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+    .form-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin-bottom: 0.5rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #CBD5E1;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.15s;
+        background: white;
+        color: #0F172A;
+        box-sizing: border-box;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #3B82F6;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    select.form-control {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 14px;
+    }
+    select.form-control:disabled {
+        background-color: #F8FAFC;
+        color: #94A3B8;
+        cursor: not-allowed;
+    }
+    html.dark .form-control {
+        background: #1E293B;
+        border-color: #334155;
+        color: #F1F5F9;
+    }
+    html.dark .form-label {
+        color: #94A3B8;
+    }
+    html.dark select.form-control {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    }
+    html.dark select.form-control:disabled {
+        background-color: #0F172A;
+        color: #64748B;
+    }
+
+    /* Alerte */
+    .alert-warning {
+        background: #FEF9C3;
+        border: 1px solid #FEF08A;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.8125rem;
+        color: #854D0E;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .alert-warning i {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .alert-link {
+        color: #0891B2;
+        font-weight: 600;
+        text-decoration: none;
+        margin-left: 0.25rem;
+    }
+    .alert-link:hover {
+        text-decoration: underline;
+    }
+    html.dark .alert-warning {
+        background: #422006;
+        border-color: #713F12;
+        color: #FDE047;
+    }
+    html.dark .alert-link {
+        color: #22D3EE;
+    }
+
+    /* Info box */
+    .info-box {
+        background: #EFF6FF;
+        border: 1px solid #BFDBFE;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.5rem;
+        font-size: 0.8125rem;
+        color: #1E40AF;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .info-box i {
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    html.dark .info-box {
+        background: #1E3A8A;
+        border-color: #3B82F6;
+        color: #BFDBFE;
+    }
+
+    /* Boutons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.8125rem;
+        line-height: 1.4;
+        white-space: nowrap;
+    }
+    .btn-sm {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+    }
+    .btn-primary {
+        background: #3B82F6;
+        color: white;
+        padding: 0.375rem 1rem;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover:not(:disabled) {
+        background: #2563EB;
+    }
+    .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    .btn-ghost {
+        background: transparent;
+        border: 1px solid #E2E8F0;
+        color: #475569;
+        padding: 0.375rem 1rem;
+    }
+    .btn-ghost:hover {
+        background: #F8FAFC;
+        border-color: #CBD5E1;
+        color: #1E293B;
+    }
+    html.dark .btn-ghost {
+        border-color: #334155;
+        color: #94A3B8;
+    }
+    html.dark .btn-ghost:hover {
+        background: #1E293B;
+        border-color: #475569;
+        color: #F1F5F9;
+    }
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+    .text-red {
+        color: #EF4444;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+        .r-card-body {
+            padding: 1rem;
+        }
+        .form-actions {
+            flex-direction: column;
+        }
+        .form-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        .alert-warning, .info-box {
+            flex-direction: column;
+            text-align: center;
+        }
+        .alert-link {
+            margin-left: 0;
+        }
+    }
+    @media (max-width: 480px) {
+        .form-container {
+            padding: 0 0.5rem;
+        }
+    }
+</style>
 {% endblock %}

@@ -21,11 +21,13 @@ class Entreprise
 
     #[ORM\Column(type: 'string', length: 13, unique: true)]
     private ?string $ifu = null;
-#[ORM\Column(type: 'boolean', options: ['default' => false])]
-private bool $charteAcceptee = false;
 
-   #[ORM\Column(type: 'datetime', nullable: true)]
- private ?\DateTimeInterface $dateAcceptationCharte = null;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $charteAcceptee = false;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $dateAcceptationCharte = null;
+
     #[ORM\Column(type: 'string', length: 50)]
     private ?string $rccm = null;
 
@@ -53,197 +55,94 @@ private bool $charteAcceptee = false;
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateValidation = null;
 
-    // Relations
+    /**
+     * Traçabilité audit : quel admin a validé cette entreprise.
+     * Nullable car les entreprises EN_ATTENTE n'ont pas encore de validateur.
+     */
+    #[ORM\ManyToOne(targetEntity: Administrateur::class)]
+    #[ORM\JoinColumn(name: 'valide_by', nullable: true, onDelete: 'SET NULL')]
+    private ?Administrateur $validateurAdmin = null;
+
+    // ── Relations ──
+
     #[ORM\OneToMany(targetEntity: Departement::class, mappedBy: 'entreprise', cascade: ['persist', 'remove'])]
     private Collection $departements;
+
+    /**
+     * Relation inverse vers les RSSI de cette entreprise.
+     * Permet $entreprise->getRssis() et la suppression CASCADE automatique
+     * quand l'entreprise est supprimée (onDelete: CASCADE est sur RSSI.entreprise_id).
+     */
+    #[ORM\OneToMany(targetEntity: RSSI::class, mappedBy: 'entreprise')]
+    private Collection $rssis;
 
     public function __construct()
     {
         $this->dateCreation = new \DateTime();
         $this->departements = new ArrayCollection();
+        $this->rssis        = new ArrayCollection();
     }
 
-    // ========================================
-    // GETTERS ET SETTERS
-    // ========================================
+    public function getId(): ?int { return $this->id; }
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    public function getNom(): ?string { return $this->nom; }
+    public function setNom(string $nom): static { $this->nom = $nom; return $this; }
 
-    public function getNom(): ?string
-    {
-        return $this->nom;
-    }
+    public function getIfu(): ?string { return $this->ifu; }
+    public function setIfu(string $ifu): static { $this->ifu = $ifu; return $this; }
 
-    public function setNom(string $nom): static
+    public function getRccm(): ?string { return $this->rccm; }
+    public function setRccm(string $rccm): static { $this->rccm = $rccm; return $this; }
+
+    public function isCharteAcceptee(): bool { return $this->charteAcceptee; }
+    public function setCharteAcceptee(bool $v): static { $this->charteAcceptee = $v; return $this; }
+    public function getDateAcceptationCharte(): ?\DateTimeInterface { return $this->dateAcceptationCharte; }
+    public function setDateAcceptationCharte(?\DateTimeInterface $d): static { $this->dateAcceptationCharte = $d; return $this; }
+    public function accepterCharte(): static
     {
-        $this->nom = $nom;
+        $this->charteAcceptee          = true;
+        $this->dateAcceptationCharte   = new \DateTime();
         return $this;
     }
 
-    public function getIfu(): ?string
-    {
-        return $this->ifu;
-    }
+    public function getSecteur(): ?string { return $this->secteur; }
+    public function setSecteur(string $secteur): static { $this->secteur = $secteur; return $this; }
 
-    public function setIfu(string $ifu): static
-    {
-        $this->ifu = $ifu;
-        return $this;
-    }
+    public function getNombreEmployes(): int { return $this->nombreEmployes; }
+    public function setNombreEmployes(int $nombreEmployes): static { $this->nombreEmployes = max(0, $nombreEmployes); return $this; }
 
-    public function getRccm(): ?string
-    {
-        return $this->rccm;
-    }
+    public function getTelephone(): ?string { return $this->telephone; }
+    public function setTelephone(string $t): static { $this->telephone = $t; return $this; }
 
-    public function setRccm(string $rccm): static
-    {
-        $this->rccm = $rccm;
-        return $this;
-    }
-    public function isCharteAcceptee(): bool
-{
-    return $this->charteAcceptee;
-}
+    public function getEmail(): ?string { return $this->email; }
+    public function setEmail(string $email): static { $this->email = $email; return $this; }
 
-public function setCharteAcceptee(bool $charteAcceptee): static
-{
-    $this->charteAcceptee = $charteAcceptee;
-    return $this;
-}
+    public function getAdresse(): ?string { return $this->adresse; }
+    public function setAdresse(?string $adresse): static { $this->adresse = $adresse; return $this; }
 
-public function getDateAcceptationCharte(): ?\DateTimeInterface
-{
-    return $this->dateAcceptationCharte;
-}
+    public function getStatut(): string { return $this->statut; }
+    public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
 
-public function setDateAcceptationCharte(?\DateTimeInterface $date): static
-{
-    $this->dateAcceptationCharte = $date;
-    return $this;
-}
+    public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
+    public function setDateCreation(\DateTimeInterface $d): static { $this->dateCreation = $d; return $this; }
 
-// Méthode utilitaire
-public function accepterCharte(): static
-{
-    $this->charteAcceptee = true;
-    $this->dateAcceptationCharte = new \DateTime();
-    return $this;
-}
+    public function getDateValidation(): ?\DateTimeInterface { return $this->dateValidation; }
+    public function setDateValidation(?\DateTimeInterface $d): static { $this->dateValidation = $d; return $this; }
 
-    public function getSecteur(): ?string
-    {
-        return $this->secteur;
-    }
+    // ── Traçabilité audit ──
+    public function getValidateurAdmin(): ?Administrateur { return $this->validateurAdmin; }
+    public function setValidateurAdmin(?Administrateur $admin): static { $this->validateurAdmin = $admin; return $this; }
 
-    public function setSecteur(string $secteur): static
-    {
-        $this->secteur = $secteur;
-        return $this;
-    }
-
-    public function getNombreEmployes(): int
-    {
-        return $this->nombreEmployes;
-    }
-
-    public function setNombreEmployes(int $nombreEmployes): static
-    {
-        $this->nombreEmployes = $nombreEmployes;
-        return $this;
-    }
-
-    public function getTelephone(): ?string
-    {
-        return $this->telephone;
-    }
-
-    public function setTelephone(string $telephone): static
-    {
-        $this->telephone = $telephone;
-        return $this;
-    }
-
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): static
-    {
-        $this->email = $email;
-        return $this;
-    }
-
-    public function getAdresse(): ?string
-    {
-        return $this->adresse;
-    }
-
-    public function setAdresse(?string $adresse): static
-    {
-        $this->adresse = $adresse;
-        return $this;
-    }
-
-    public function getStatut(): string
-    {
-        return $this->statut;
-    }
-
-    public function setStatut(string $statut): static
-    {
-        $this->statut = $statut;
-        return $this;
-    }
-
-    public function getDateCreation(): ?\DateTimeInterface
-    {
-        return $this->dateCreation;
-    }
-
-    public function setDateCreation(\DateTimeInterface $dateCreation): static
-    {
-        $this->dateCreation = $dateCreation;
-        return $this;
-    }
-
-    public function getDateValidation(): ?\DateTimeInterface
-    {
-        return $this->dateValidation;
-    }
-
-    public function setDateValidation(?\DateTimeInterface $dateValidation): static
-    {
-        $this->dateValidation = $dateValidation;
-        return $this;
-    }
-
-    // ========================================
-    // RELATIONS
-    // ========================================
-
-    /**
-     * @return Collection<int, Departement>
-     */
-    public function getDepartements(): Collection
-    {
-        return $this->departements;
-    }
-
+    // ── Relations ──
+    public function getDepartements(): Collection { return $this->departements; }
     public function addDepartement(Departement $departement): static
     {
         if (!$this->departements->contains($departement)) {
             $this->departements->add($departement);
             $departement->setEntreprise($this);
         }
-
         return $this;
     }
-
     public function removeDepartement(Departement $departement): static
     {
         if ($this->departements->removeElement($departement)) {
@@ -251,61 +150,30 @@ public function accepterCharte(): static
                 $departement->setEntreprise(null);
             }
         }
-
         return $this;
     }
 
-    // ========================================
-    // MÉTHODES UTILITAIRES
-    // ========================================
+    public function getRssis(): Collection { return $this->rssis; }
 
-    public function isValidee(): bool
-    {
-        return $this->statut === 'ACTIF';
-    }
+    // ── Méthodes utilitaires ──
+    public function isValidee(): bool { return $this->statut === 'ACTIF'; }
+    public function isEnAttente(): bool { return $this->statut === 'EN_ATTENTE'; }
+    public function isSuspendue(): bool { return $this->statut === 'SUSPENDU'; }
+    public function isRejetee(): bool { return $this->statut === 'REJETE'; }
 
-    public function isEnAttente(): bool
+    public function valider(?Administrateur $admin = null): static
     {
-        return $this->statut === 'EN_ATTENTE';
-    }
-
-    public function isSuspendue(): bool
-    {
-        return $this->statut === 'SUSPENDU';
-    }
-
-    public function isRejetee(): bool
-    {
-        return $this->statut === 'REJETE';
-    }
-
-    public function valider(): static
-    {
-        $this->statut = 'ACTIF';
+        $this->statut         = 'ACTIF';
         $this->dateValidation = new \DateTime();
+        if ($admin) {
+            $this->validateurAdmin = $admin;
+        }
         return $this;
     }
 
-    public function suspendre(): static
-    {
-        $this->statut = 'SUSPENDU';
-        return $this;
-    }
+    public function suspendre(): static { $this->statut = 'SUSPENDU'; return $this; }
+    public function rejeter(): static { $this->statut = 'REJETE'; return $this; }
+    public function reactiver(): static { $this->statut = 'ACTIF'; return $this; }
 
-    public function rejeter(): static
-    {
-        $this->statut = 'REJETE';
-        return $this;
-    }
-
-    public function reactiver(): static
-    {
-        $this->statut = 'ACTIF';
-        return $this;
-    }
-
-    public function __toString(): string
-    {
-        return $this->nom ?? '';
-    }
+    public function __toString(): string { return $this->nom ?? ''; }
 }

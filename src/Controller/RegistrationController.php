@@ -60,7 +60,7 @@ class RegistrationController extends AbstractController
             if (empty($errors)) {
                 $entreprise = new Entreprise();
                 $entreprise->setNom($entrepriseNom)->setIfu($ifu)->setRccm($rccm)
-                    ->setSecteur($secteur)->setNombreEmployes((int)$nombreEmployes)
+                    ->setSecteur($secteur)->setNombreEmployes((int) $nombreEmployes)
                     ->setTelephone($telephoneEntreprise)->setEmail($emailEntreprise)
                     ->setAdresse($adresse)->setStatut('EN_ATTENTE');
                 $entityManager->persist($entreprise);

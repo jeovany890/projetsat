@@ -15,9 +15,16 @@ class RSSI extends Utilisateur
     private ?\DateTimeInterface $jetonExpiration = null;
 
     // ✅ AJOUT : Lien direct vers l'entreprise du RSSI
-    #[ORM\ManyToOne(targetEntity: Entreprise::class)]
-    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
-    private ?Entreprise $entreprise = null;
+   #[ORM\ManyToOne(targetEntity: Entreprise::class)]
+#[ORM\JoinColumn(nullable: true, onDelete: 'CASCADE')]
+private ?Entreprise $entreprise = null;
+
+    // 2FA OTP
+    #[ORM\Column(type: 'string', length: 100, nullable: true)]
+    private ?string $codeOtp = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $codeOtpExpiration = null;
 
     // ========================================
     // JETON ACTIVATION
@@ -57,6 +64,32 @@ class RSSI extends Utilisateur
     {
         $this->jetonActivation = bin2hex(random_bytes(32));
         $this->jetonExpiration = (new \DateTime())->modify('+48 hours');
+    }
+
+    public function getCodeOtp(): ?string { return $this->codeOtp; }
+    public function setCodeOtp(?string $codeOtp): static { $this->codeOtp = $codeOtp; return $this; }
+    public function getCodeOtpExpiration(): ?\DateTimeInterface { return $this->codeOtpExpiration; }
+    public function setCodeOtpExpiration(?\DateTimeInterface $exp): static { $this->codeOtpExpiration = $exp; return $this; }
+
+    public function genererCodeOtp(): string
+    {
+        $code = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $this->codeOtp = $code;
+        $this->codeOtpExpiration = (new \DateTime())->modify('+10 minutes');
+        return $code;
+    }
+
+    public function isCodeOtpValide(string $code): bool
+    {
+        return $this->codeOtp === $code
+            && $this->codeOtpExpiration !== null
+            && $this->codeOtpExpiration > new \DateTime();
+    }
+
+    public function effacerCodeOtp(): void
+    {
+        $this->codeOtp = null;
+        $this->codeOtpExpiration = null;
     }
 
     // ========================================

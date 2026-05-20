@@ -2,6 +2,7 @@
 
 namespace App\EventSubscriber;
 
+use App\Entity\Employe;
 use App\Entity\RSSI;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -26,7 +27,6 @@ class CharteSubscriber implements EventSubscriberInterface
 
     public function onKernelRequest(RequestEvent $event): void
     {
-        // Ignorer les sous-requêtes
         if (!$event->isMainRequest()) {
             return;
         }
@@ -34,48 +34,51 @@ class CharteSubscriber implements EventSubscriberInterface
         $request = $event->getRequest();
         $route   = $request->attributes->get('_route');
 
-        // Ne pas intercepter ces routes (éviter boucle infinie)
+        // Routes libres — jamais interceptées
         $routesLibres = [
-            'rssi_charte',
             'app_login',
             'app_logout',
             'app_register',
             'app_activation',
             'app_redirect_dashboard',
-            '_wdt',       // Symfony toolbar
-            '_profiler',  // Symfony profiler
+            'app_2fa',
+            'rssi_charte',
+            'employe_premiere_connexion',
+            '_wdt',
+            '_profiler',
         ];
 
-        if (in_array($route, $routesLibres)) {
+        if (!$route || in_array($route, $routesLibres)) {
             return;
         }
 
-        // Ignorer les routes non-RSSI
-        if (!$route || !str_starts_with($route, 'rssi_')) {
-            return;
-        }
-
-        // Récupérer l'utilisateur connecté
         $token = $this->tokenStorage->getToken();
         if (!$token) {
             return;
         }
 
         $user = $token->getUser();
-        if (!$user instanceof RSSI) {
-            return;
+
+        // ── Employé : première connexion → forcer changement mot de passe ──
+        if ($user instanceof Employe && str_starts_with($route, 'employe_')) {
+            if ($user->isEstPremiereConnexion()) {
+                $url = $this->router->generate('employe_premiere_connexion');
+                $event->setResponse(new RedirectResponse($url));
+                return;
+            }
         }
 
-        // Vérifier si la charte a été acceptée
-        $entreprise = $user->getEntreprise();
-        if (!$entreprise) {
-            return;
-        }
-
-        if (!$entreprise->isCharteAcceptee()) {
-            // Redirection PHP pure — avant tout rendu de page
-            $url = $this->router->generate('rssi_charte');
-            $event->setResponse(new RedirectResponse($url));
+        // ── RSSI : charte non acceptée → forcer la charte ──
+        if ($user instanceof RSSI && str_starts_with($route, 'rssi_')) {
+            $entreprise = $user->getEntreprise();
+            if (!$entreprise) {
+                return;
+            }
+            if (!$entreprise->isCharteAcceptee()) {
+                $url = $this->router->generate('rssi_charte');
+                $event->setResponse(new RedirectResponse($url));
+                return;
+            }
         }
     }
 }

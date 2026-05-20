@@ -1,0 +1,602 @@
+{% extends 'employe/layout.html.twig' %}
+
+{% block page_title %}Mon profil{% endblock %}
+
+{% block content %}
+<style>
+    /* ===== RESPONSIVE PROFIL ===== */
+    .pf-wrap {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 340px 1fr;
+        gap: 24px;
+        align-items: start;
+    }
+
+    /* --- Colonne gauche (carte identité + score) --- */
+    .pf-card {
+        background: #fff;
+        border-radius: 18px;
+        border: 1px solid #eef1f5;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px rgba(15, 23, 42, .05);
+        overflow: hidden;
+    }
+    .pf-card + .pf-card {
+        margin-top: 18px;
+    }
+
+    /* Hero identité */
+    .pf-hero {
+        position: relative;
+        padding: 0 24px 24px;
+        text-align: center;
+    }
+    .pf-banner {
+        height: 80px;
+        margin: 0 -24px;
+        background: linear-gradient(135deg, #10B981 0%, #059669 60%, #047857 100%);
+        position: relative;
+    }
+    .pf-banner::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, .25), transparent 60%);
+    }
+    .pf-avatar {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10B981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 800;
+        color: #fff;
+        margin: -48px auto 14px;
+        border: 4px solid #fff;
+        box-shadow: 0 8px 20px rgba(16, 185, 129, .35);
+        position: relative;
+        z-index: 1;
+    }
+    .pf-name {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--gray-900);
+    }
+    .pf-poste {
+        font-size: 13px;
+        color: var(--gray-500);
+        margin-top: 4px;
+    }
+    .pf-dept {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        background: #ecfdf5;
+        color: #047857;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+    .pf-info {
+        margin-top: 20px;
+        padding-top: 18px;
+        border-top: 1px dashed #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        text-align: left;
+    }
+    .pf-info-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+    }
+    .pf-info-row .ic {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .pf-info-row .lbl {
+        font-size: 11px;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    .pf-info-row .val {
+        font-size: 13px;
+        color: var(--gray-800);
+        font-weight: 600;
+        word-break: break-all;
+    }
+    .pf-btn {
+        display: block;
+        width: 100%;
+        margin-top: 18px;
+        padding: 11px;
+        text-align: center;
+        background: linear-gradient(135deg, #10B981, #059669);
+        color: #fff;
+        font-weight: 700;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 13px;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+        transition: transform .15s, box-shadow .15s;
+    }
+    .pf-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(16, 185, 129, .4);
+    }
+
+    /* Score vigilance (cercle) */
+    .pf-score {
+        padding: 22px;
+    }
+    .pf-score-title {
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        margin-bottom: 14px;
+        text-align: center;
+    }
+    .pf-ring-wrap {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 0 auto;
+    }
+    .pf-ring-wrap svg {
+        transform: rotate(-90deg);
+    }
+    .pf-ring-bg {
+        fill: none;
+        stroke: #f1f5f9;
+        stroke-width: 12;
+    }
+    .pf-ring-fg {
+        fill: none;
+        stroke-width: 12;
+        stroke-linecap: round;
+        transition: stroke-dashoffset 1s ease;
+    }
+    .pf-ring-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .pf-ring-text .v {
+        font-size: 30px;
+        font-weight: 900;
+        line-height: 1;
+    }
+    .pf-ring-text .l {
+        font-size: 10px;
+        color: var(--gray-500);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+    .pf-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 18px;
+    }
+    .pf-stat {
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 12px;
+        text-align: center;
+        border: 1px solid #f1f5f9;
+    }
+    .pf-stat .n {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--gray-900);
+    }
+    .pf-stat .n.gold {
+        color: #F59E0B;
+        letter-spacing: 1px;
+    }
+    .pf-stat .l {
+        font-size: 10px;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        margin-top: 2px;
+        letter-spacing: .4px;
+    }
+
+    /* ========== COLONNE DROITE (listes) ========== */
+    .pf-section {
+        padding: 22px;
+    }
+    .pf-section-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .pf-section-head h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 800;
+        color: var(--gray-900);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .pf-section-head h3 .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #10B981;
+    }
+    .pf-link {
+        font-size: 12px;
+        color: #059669;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .pf-link:hover {
+        text-decoration: underline;
+    }
+    .pf-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px;
+        border-radius: 10px;
+        transition: background .15s;
+        flex-wrap: wrap;
+    }
+    .pf-row:hover {
+        background: #f9fafb;
+    }
+    .pf-row + .pf-row {
+        border-top: 1px solid #f1f5f9;
+    }
+    .pf-row-main {
+        flex: 1;
+        min-width: 140px;
+    }
+    .pf-row-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--gray-900);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .pf-row-sub {
+        font-size: 12px;
+        color: var(--gray-500);
+        margin-top: 2px;
+    }
+    .pf-progress {
+        width: 70px;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 3px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+    .pf-progress > div {
+        height: 100%;
+        border-radius: 3px;
+    }
+    .pf-badge {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+        flex-shrink: 0;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+    }
+    .pf-badge.ok {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .pf-badge.run {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .pf-badge.idle {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+    .pf-badge.fail {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .pf-score-num {
+        font-size: 14px;
+        font-weight: 800;
+        flex-shrink: 0;
+    }
+    .pf-empty {
+        font-size: 13px;
+        color: var(--gray-400);
+        text-align: center;
+        padding: 24px 0;
+    }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 900px) {
+        .pf-wrap {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .pf-hero {
+            padding: 0 16px 20px;
+        }
+        .pf-banner {
+            margin: 0 -16px;
+        }
+        .pf-avatar {
+            width: 80px;
+            height: 80px;
+            font-size: 28px;
+            margin-top: -40px;
+        }
+        .pf-name {
+            font-size: 18px;
+        }
+        .pf-info-row {
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .pf-info-row .ic {
+            width: 28px;
+            height: 28px;
+        }
+        .pf-stats {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .pf-score {
+            padding: 16px;
+        }
+        .pf-ring-wrap {
+            width: 120px;
+            height: 120px;
+        }
+        .pf-ring-text .v {
+            font-size: 24px;
+        }
+        .pf-section {
+            padding: 16px;
+        }
+        .pf-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .pf-row-main {
+            width: 100%;
+        }
+        .pf-row-title {
+            white-space: normal;
+            word-break: break-word;
+        }
+        .pf-progress {
+            width: 100%;
+            margin: 4px 0;
+        }
+        .pf-badge, .pf-score-num {
+            align-self: flex-start;
+        }
+        .pf-section-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+
+    /* Mode sombre */
+    html.dark .pf-card,
+    html.dark .pf-stat,
+    html.dark .pf-row:hover {
+        background: #1e293b;
+        border-color: #334155;
+    }
+    html.dark .pf-name,
+    html.dark .pf-row-title,
+    html.dark .pf-section-head h3 {
+        color: #f1f5f9;
+    }
+    html.dark .pf-info-row .ic {
+        background: #0f172a;
+        color: #94a3b8;
+    }
+    html.dark .pf-stat .n,
+    html.dark .pf-info-row .val {
+        color: #e2e8f0;
+    }
+    html.dark .pf-badge.idle {
+        background: #334155;
+        color: #cbd5e1;
+    }
+    html.dark .pf-ring-bg {
+        stroke: #334155;
+    }
+</style>
+
+<div class="pf-wrap">
+
+    {# ============ Colonne gauche ============ #}
+    <div>
+        <div class="pf-card">
+            <div class="pf-hero">
+                <div class="pf-banner"></div>
+                <div class="pf-avatar">
+                    {{ employe.prenom|slice(0,1)|upper }}{{ employe.nom|slice(0,1)|upper }}
+                </div>
+                <div class="pf-name">{{ employe.prenom }} {{ employe.nom }}</div>
+                <div class="pf-poste">{{ employe.poste ?? 'Employé' }}</div>
+                {% if employe.departement %}
+                    <div class="pf-dept">{{ employe.departement.nom }}</div>
+                {% endif %}
+
+                <div class="pf-info">
+                    <div class="pf-info-row">
+                        <div class="ic"><i class="fa-regular fa-envelope"></i></div>
+                        <div>
+                            <div class="lbl">Email</div>
+                            <div class="val">{{ employe.email }}</div>
+                        </div>
+                    </div>
+                    {% if employe.telephone %}
+                    <div class="pf-info-row">
+                        <div class="ic"><i class="fa-solid fa-mobile-button"></i></div>
+                        <div>
+                            <div class="lbl">Téléphone</div>
+                            <div class="val">{{ employe.telephone }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <a href="{{ path('employe_profil_modifier') }}" class="pf-btn">
+                    Modifier le profil
+                </a>
+            </div>
+        </div>
+
+        {# ----- Score vigilance ----- #}
+        {% set score = employe.scoreVigilance|round %}
+        {% set couleur = score >= 75 ? '#10B981' : (score >= 50 ? '#F59E0B' : '#EF4444') %}
+        {% set circ = 339.292 %}
+        {% set offset = circ - (circ * score / 100) %}
+
+        <div class="pf-card pf-score">
+            <div class="pf-score-title">Score de vigilance</div>
+            <div class="pf-ring-wrap">
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                    <circle class="pf-ring-bg" cx="70" cy="70" r="54"/>
+                    <circle class="pf-ring-fg" cx="70" cy="70" r="54"
+                            stroke="{{ couleur }}"
+                            stroke-dasharray="{{ circ }}"
+                            stroke-dashoffset="{{ offset }}"/>
+                </svg>
+                <div class="pf-ring-text">
+                    <div class="v" style="color:{{ couleur }};">{{ score }}%</div>
+                    <div class="l">{{ employe.niveauVigilance }}</div>
+                </div>
+            </div>
+
+            <div class="pf-stats">
+                <div class="pf-stat">
+                    <div class="n">{{ employe.totalPoints }}</div>
+                    <div class="l">Points</div>
+                </div>
+                <div class="pf-stat">
+                    <div class="n gold">
+                        {% for i in 1..5 %}{{ i <= employe.nombreEtoiles ? '★' : '☆' }}{% endfor %}
+                    </div>
+                    <div class="l">Niveau {{ employe.nombreEtoiles }}/5</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ============ Colonne droite ============ #}
+    <div>
+
+        {# ----- Formations ----- #}
+        <div class="pf-card pf-section">
+            <div class="pf-section-head">
+                <h3><span class="dot"></span> Mes formations</h3>
+            </div>
+            {% if progressions is empty %}
+                <p class="pf-empty">Aucune formation assignée.</p>
+            {% else %}
+                {% for p in progressions %}
+                    <div class="pf-row">
+                        <div class="pf-row-main">
+                            <div class="pf-row-title">{{ p.module.titre }}</div>
+                            <div class="pf-row-sub">{{ p.pourcentageProgression }}% — {{ p.statut|replace({'_':' '})|lower }}</div>
+                        </div>
+                        <div class="pf-progress">
+                            <div style="width:{{ p.pourcentageProgression }}%;background:{% if p.statut == 'TERMINE' %}#10B981{% else %}#3B82F6{% endif %};"></div>
+                        </div>
+                        <span class="pf-badge {% if p.statut == 'TERMINE' %}ok{% elseif p.statut == 'EN_COURS' %}run{% else %}idle{% endif %}">
+                            {% if p.statut == 'TERMINE' %}Terminé{% elseif p.statut == 'EN_COURS' %}En cours{% else %}À faire{% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {# ----- Simulations ----- #}
+        <div class="pf-card pf-section">
+            <div class="pf-section-head">
+                <h3><span class="dot" style="background:#3B82F6;"></span> Dernières simulations</h3>
+                {% if resultatsSimu is not empty %}
+                    <a href="{{ path('employe_simulations') }}" class="pf-link">Tout voir →</a>
+                {% endif %}
+            </div>
+            {% if resultatsSimu is empty %}
+                <p class="pf-empty">Aucune simulation effectuée.</p>
+            {% else %}
+                {% for r in resultatsSimu|slice(0,5) %}
+                    <div class="pf-row">
+                        <div class="pf-row-main">
+                            <div class="pf-row-title">{{ r.simulation.titre }}</div>
+                            <div class="pf-row-sub">{{ r.dateTermine|date('d/m/Y') }}</div>
+                        </div>
+                        <span class="pf-score-num" style="color:{% if r.aReussi %}#059669{% else %}#DC2626{% endif %};">{{ r.score }}%</span>
+                        <span class="pf-badge {% if r.aReussi %}ok{% else %}fail{% endif %}">
+                            {% if r.aReussi %}Réussi{% else %}Échoué{% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+
+        {# ----- Quiz ----- #}
+        {% if tentatives is not empty %}
+        <div class="pf-card pf-section">
+            <div class="pf-section-head">
+                <h3><span class="dot" style="background:#F59E0B;"></span> Quiz récents</h3>
+            </div>
+            {% for t in tentatives|slice(0,4) %}
+                <div class="pf-row">
+                    <div class="pf-row-main">
+                        <div class="pf-row-title">{{ t.quiz.titre }}</div>
+                        <div class="pf-row-sub">{{ t.dateTermine|date('d/m/Y') }}</div>
+                    </div>
+                    <span class="pf-score-num" style="color:{% if t.aReussi %}#059669{% else %}#DC2626{% endif %};">{{ t.score }}/{{ t.totalQuestions }}</span>
+                    <span class="pf-badge {% if t.aReussi %}ok{% else %}fail{% endif %}">
+                        {% if t.aReussi %}Réussi{% else %}Échoué{% endif %}
+                    </span>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
