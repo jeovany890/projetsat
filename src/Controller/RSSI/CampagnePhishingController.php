@@ -5,7 +5,6 @@ namespace App\Controller\RSSI;
 use App\Entity\CampagnePhishing;
 use App\Entity\Departement;
 use App\Entity\Employe;
-use App\Entity\EnvoiPhishing;
 use App\Entity\GabaritPhishing;
 use App\Entity\ResultatPhishing;
 use App\Entity\RSSI;
@@ -104,20 +103,12 @@ class CampagnePhishingController extends AbstractController
                 $resultat = new ResultatPhishing();
                 $resultat->setJetonTrackingUnique($token)
                     ->setCampagne($campagne)
-                    ->setEmploye($employe);
-                $em->persist($resultat);
-
-                $envoi = new EnvoiPhishing();
-                $envoi->setCampagne($campagne)
                     ->setEmploye($employe)
                     ->setEmailDestinataire($employe->getEmail())
                     ->setSujetUtilise($gabarit->getSujetEmail())
                     ->setDatePlanifiee(new \DateTime())
-                    ->setStatut('PLANIFIE');
-                $em->persist($envoi);
-
-                // ResultatPhishing est le propriétaire de la FK envoi_id
-                $resultat->setEnvoi($envoi);
+                    ->setStatut(ResultatPhishing::STATUT_PLANIFIE);
+                $em->persist($resultat);
             }
 
             $em->flush();

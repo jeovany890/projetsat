@@ -7,94 +7,426 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
     <style>
-        :root { --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
-        
-        /* GESTION DU THÈME & TRANSITIONS */
-        body { font-family:var(--font-body); background-color:#060810; color:#e2e8f0; transition: all 0.4s ease-in-out; }
-        
-        /* Mode Clair Forcé */
-        html.light body { background-color: #f8fafc; color: #1e293b; }
-        html.light .bg-grid { background-image: linear-gradient(to right,rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.05) 1px,transparent 1px); }
-        
-        /* Navbar Translucide & Smart Hide */
-        nav { 
-            background-color: rgba(0, 0, 0, 0.1) !important; 
-            backdrop-blur: 24px !important; 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease !important; 
+        :root {
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --green: #00E5A0;
+            --red: #FF3B5C;
+            --dark-bg: #060810;
+            --dark-card: #0C0F1D;
+            --text-white: #F9FAFB;
+            --text-muted: #94A3B8;
+            --border-light: rgba(255,255,255,0.07);
+            --border-lighter: rgba(255,255,255,0.1);
         }
-        .nav-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        html.light nav { background-color: rgba(255, 255, 255, 0.3) !important; border-color: rgba(0,0,0,0.05) !important; }
-        html.light nav .text-white { color: #0f172a !important; }
 
-        /* Synchronisation Carte GAUCHE */
-        html.light .hero-card { background-color: rgba(255, 255, 255, 0.8) !important; border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03); }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background-color: var(--dark-bg);
+            color: #e2e8f0;
+            transition: all 0.4s ease-in-out;
+        }
+        .font-display, h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
+
+        /* Mode clair */
+        html.light body { background-color: #f8fafc; color: #1e293b; }
+        html.light .bg-grid { background-image: linear-gradient(to right, rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.05) 1px, transparent 1px); }
+        html.light nav { background-color: rgba(255,255,255,0.3) !important; border-color: rgba(0,0,0,0.05) !important; }
+        html.light nav .nav-text-white { color: #0f172a !important; }
+        html.light .hero-card { background-color: rgba(255,255,255,0.8) !important; border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.03); }
         html.light .hero-card h1 { color: #0f172a !important; }
-        html.light .hero-card p, html.light .hero-card .stats-label { color: #64748b !important; }
-        html.light .hero-card .stats-value { color: #0f172a !important; }
-        html.light .hero-card .border-t { border-color: rgba(0,0,0,0.05) !important; }
-        html.light .hero-badge { background-color: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.1) !important; color: #475569 !important; }
-
-        /* Synchronisation Carte DROITE */
-        html.light .form-card { background-color: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.06); }
+        html.light .hero-card p, html.light .stats-label { color: #64748b !important; }
+        html.light .stats-value { color: #0f172a !important; }
+        html.light .form-card { background-color: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.06); }
         html.light .input-sat { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
         html.light .form-card h2 { color: #0f172a !important; }
         html.light .form-card label { color: #64748b !important; }
-        
-        /* Stepper Sync */
-        .stepper-bg { background-color: #0C0F1D; transition: background-color 0.4s ease; }
+        html.light .hero-badge { background-color: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.1) !important; color: #475569 !important; }
         html.light .stepper-bg { background-color: #ffffff !important; }
         html.light .stepper-line { background-color: rgba(0,0,0,0.1) !important; }
         html.light .step-inactive { background: #f1f5f9 !important; border-color: #cbd5e1 !important; color: #94a3b8 !important; }
         html.light .step-text-inactive { color: #94a3b8 !important; }
         html.light .step-text-active { color: #0f172a !important; }
-
-        /* Styles de base */
-        .bg-grid { background-size:40px 40px; background-image:linear-gradient(to right,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.03) 1px,transparent 1px); }
-        .glow-emerald { background:radial-gradient(circle at center,rgba(0,229,160,.12) 0%,transparent 70%); }
-        .glow-red { background:radial-gradient(circle at center,rgba(255,59,92,.08) 0%,transparent 70%); }
-        
-        .input-sat { background: #060810; border: 1px solid rgba(255,255,255,0.07); color: #F9FAFB; border-radius: 1rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.2s; font-size: 0.875rem; }
-        .input-sat:focus { border-color: #00E5A0; outline: none; box-shadow: 0 0 0 2px rgba(0,229,160,0.15); }
-        select.input-sat { appearance: none; padding-right: 2.5rem; }
-        
-        .btn-primary-sat { background: #00E5A0; color: #060810; border-radius: 9999px; padding: 0.875rem 1.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 8px 20px rgba(0,229,160,0.2); }
-        .btn-primary-sat:hover { background: white; transform: scale(1.02); }
-
-        .btn-secondary-sat { background: transparent; color: #94a3b8; border-radius: 9999px; padding: 0.875rem 1.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-secondary-sat:hover { background: rgba(255,255,255,0.05); color: #F9FAFB; }
         html.light .btn-secondary-sat { border-color: #cbd5e1; color: #64748b; }
         html.light .btn-secondary-sat:hover { background: #f1f5f9; color: #0f172a; }
+        html.light .border-white\/5 { border-color: rgba(0,0,0,0.05) !important; }
+        html.light .border-white\/10 { border-color: rgba(0,0,0,0.1) !important; }
 
-        .badge-register { background: rgba(0,229,160,0.1); color: #00E5A0; border: 1px solid rgba(0,229,160,0.2); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; transition: all 0.3s; }
-        .badge-register:hover { background: #00E5A0; color: #060810; }
-        
-        /* Utilities */
-        .step-active { background: #00E5A0; color: #060810; box-shadow: 0 0 15px rgba(0,229,160,0.3); border-color: #00E5A0; }
+        /* Grid background */
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+        }
+
+        /* Glows */
+        .glow-emerald { background: radial-gradient(circle at center, rgba(0,229,160,.12) 0%, transparent 70%); }
+        .glow-red { background: radial-gradient(circle at center, rgba(255,59,92,.08) 0%, transparent 70%); }
+
+        /* Navbar */
+        nav {
+            background-color: rgba(0,0,0,0.1) !important;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease;
+        }
+        .nav-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+
+        /* Layout helpers */
+        .max-w-7xl { max-width: 80rem; margin: 0 auto; }
+        .fixed { position: fixed; }
+        .top-0 { top: 0; }
+        .left-0 { left: 0; }
+        .w-full { width: 100%; }
+        .z-50 { z-index: 50; }
+        .flex { display: flex; }
+        .inline-flex { display: inline-flex; }
+        .flex-col { flex-direction: column; }
+        .items-center { align-items: center; }
+        .items-start { align-items: flex-start; }
+        .justify-center { justify-content: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-end { justify-content: flex-end; }
+        .text-center { text-align: center; }
+        .relative { position: relative; }
+        .absolute { position: absolute; }
+        .overflow-hidden { overflow: hidden; }
+        .pointer-events-none { pointer-events: none; }
+        .gap-2 { gap: 0.5rem; }
+        .gap-3 { gap: 0.75rem; }
+        .gap-4 { gap: 1rem; }
+        .gap-5 { gap: 1.25rem; }
+        .gap-6 { gap: 1.5rem; }
+        .gap-8 { gap: 2rem; }
+        .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .px-6 { padding-left: 1.5rem; padding-right: 1.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .p-4 { padding: 1rem; }
+        .p-8 { padding: 2rem; }
+        .pt-8 { padding-top: 2rem; }
+        .pt-28 { padding-top: 7rem; }
+        .pb-12 { padding-bottom: 3rem; }
+        .mt-2 { margin-top: 0.5rem; }
+        .mt-5 { margin-top: 1.25rem; }
+        .mt-8 { margin-top: 2rem; }
+        .mt-12 { margin-top: 3rem; }
+        .mt-auto { margin-top: auto; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .mb-10 { margin-bottom: 2.5rem; }
+        .mb-12 { margin-bottom: 3rem; }
+        .h-2 { height: 0.5rem; }
+        .h-6 { height: 1.5rem; }
+        .h-20 { height: 5rem; }
+        .h-px { height: 1px; }
+        .w-2 { width: 0.5rem; }
+        .w-8 { width: 2rem; }
+        .w-10 { width: 2.5rem; }
+        .w-20 { width: 5rem; }
+        .w-px { width: 1px; }
+        .h-8 { height: 2rem; }
+        .h-20 { height: 5rem; }
+        .min-h-screen { min-height: 100vh; }
+        .max-w-sm { max-width: 24rem; }
+        .max-w-7xl { max-width: 80rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .shrink-0 { flex-shrink: 0; }
+        .flex-1 { flex: 1; }
+        .flex-shrink-0 { flex-shrink: 0; }
+
+        /* Grid */
+        .grid { display: grid; }
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .col-span-2 { grid-column: span 2; }
+
+        /* Typography */
+        .text-xs { font-size: 0.75rem; }
+        .text-sm { font-size: 0.875rem; }
+        .text-lg { font-size: 1.125rem; }
+        .text-xl { font-size: 1.25rem; }
+        .text-2xl { font-size: 1.5rem; }
+        .text-3xl { font-size: 1.875rem; }
+        .text-4xl { font-size: 2.25rem; }
+        .font-bold { font-weight: 700; }
+        .font-semibold { font-weight: 600; }
+        .font-medium { font-weight: 500; }
+        .uppercase { text-transform: uppercase; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .tracking-wider { letter-spacing: 0.05em; }
+        .leading-tight { line-height: 1.25; }
+        .leading-none { line-height: 1; }
+
+        /* Colors */
+        .text-white { color: #fff; }
+        .text-slate-300 { color: #cbd5e1; }
+        .text-slate-400 { color: #94a3b8; }
+        .text-slate-500 { color: #64748b; }
+        .text-red-400 { color: #f87171; }
+        .bg-dark-card { background-color: var(--dark-card); }
+        .bg-dark-bg { background-color: var(--dark-bg); }
+        .text-green { color: var(--green); }
+        .bg-green { background-color: var(--green); }
+        .border-white\/5 { border-color: rgba(255,255,255,0.05); }
+        .border-white\/10 { border-color: rgba(255,255,255,0.1); }
+        .border-b { border-bottom-width: 1px; border-bottom-style: solid; }
+        .border-t { border-top-width: 1px; border-top-style: solid; }
+
+        /* Rounded */
+        .rounded-full { border-radius: 9999px; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .rounded-2xl { border-radius: 1rem; }
+        .rounded-3xl { border-radius: 1.5rem; }
+
+        /* Shadows */
+        .shadow-xl { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+        /* Transitions */
+        .transition-all { transition: all 0.2s; }
+        .transition-colors { transition: color 0.3s, background-color 0.3s, border-color 0.3s; }
+        .duration-300 { transition-duration: 0.3s; }
+
+        /* ============ COMPONENTS ============ */
+
+        /* Navbar */
+        .nav-container { height: 5rem; display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; }
+        .nav-logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .nav-logo-icon { width: 2rem; height: 2rem; border-radius: 0.5rem; background: rgba(12,15,29,0.5); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--green); transition: all 0.2s; }
+        .nav-logo-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+        .nav-logo-text { display: flex; flex-direction: column; line-height: 1; }
+        .nav-logo-title { font-family: var(--font-display); font-weight: 600; font-size: 1.125rem; text-transform: uppercase; letter-spacing: -0.05em; }
+        .nav-logo-sub { font-family: var(--font-display); font-weight: 500; font-size: 0.75rem; text-transform: uppercase; letter-spacing: -0.05em; color: #64748b; }
+
+        /* Hero card */
+        .hero-card {
+            background: rgba(12,15,29,0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(6,8,16,0.8);
+            transition: all 0.3s;
+        }
+        .hero-badge-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--green); }
+        .hero-badge-text { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #cbd5e1; }
+
+        /* Form card */
+        .form-card {
+            background: var(--dark-card);
+            border-radius: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        /* Input */
+        .input-sat {
+            background: #060810;
+            border: 1px solid var(--border-light);
+            color: #F9FAFB;
+            border-radius: 1rem;
+            padding: 0.75rem 1rem;
+            width: 100%;
+            transition: all 0.2s;
+            font-size: 0.875rem;
+            font-family: var(--font-body);
+        }
+        .input-sat:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 2px rgba(0,229,160,0.15); }
+        select.input-sat { appearance: none; padding-right: 2.5rem; cursor: pointer; }
+        select.input-sat option { background: var(--dark-card); color: #fff; }
+
+        /* Buttons */
+        .btn-primary-sat {
+            background: var(--green);
+            color: #060810;
+            border-radius: 9999px;
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            box-shadow: 0 8px 20px rgba(0,229,160,0.2);
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+        .btn-primary-sat:hover { background: #fff; transform: scale(1.02); }
+
+        .btn-secondary-sat {
+            background: transparent;
+            color: #94a3b8;
+            border-radius: 9999px;
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+        .btn-secondary-sat:hover { background: rgba(255,255,255,0.05); color: #F9FAFB; }
+
+        .badge-register {
+            background: rgba(0,229,160,0.1);
+            color: var(--green);
+            border: 1px solid rgba(0,229,160,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .badge-register:hover { background: var(--green); color: #060810; }
+
+        /* Theme toggle */
+        .theme-toggle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover { color: var(--green); border-color: rgba(0,229,160,0.5); }
+        .theme-toggle svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        /* Stepper */
+        .stepper-bg { background-color: var(--dark-card); transition: background-color 0.4s ease; }
+        .stepper-line { background-color: rgba(255,255,255,0.1); transition: background-color 0.4s ease; }
+        .indicator-wrapper { position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0 0.75rem; }
+        .indicator-circle { width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; transition: all 0.2s; }
+        .indicator-circle svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .step-active { background: var(--green); color: #060810; box-shadow: 0 0 15px rgba(0,229,160,0.3); border-color: var(--green); }
         .step-inactive { background: #060810; color: #64748b; border: 1px solid rgba(255,255,255,0.1); }
+        .indicator-text { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; transition: color 0.2s; }
+        .step-text-active { color: #fff; }
+        .step-text-inactive { color: #64748b; }
+
+        /* Wizard */
+        .wizard-step.hidden { display: none; }
+        .wizard-step.block { display: block; }
+
+        /* Alert */
+        .alert-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 1rem;
+            padding: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: #f87171;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .alert-error svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; margin-top: 0.125rem; }
+
+        /* Validation icon */
+        .validation-icon {
+            width: 5rem;
+            height: 5rem;
+            background: rgba(0,229,160,0.1);
+            color: var(--green);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            border: 1px solid rgba(0,229,160,0.2);
+        }
+        .validation-icon svg { width: 40px; height: 40px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        /* Select arrow */
+        .select-wrapper { position: relative; }
+        .select-arrow { position: absolute; top: 50%; right: 1rem; transform: translateY(-50%); pointer-events: none; color: #94a3b8; }
+        .select-arrow svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+
+        /* Responsive */
+        @media (min-width: 768px) {
+            .md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+            .md\:col-span-2 { grid-column: span 2; }
+            .md\:flex-row { flex-direction: row; }
+            .md\:w-auto { width: auto; }
+            .md\:text-5xl { font-size: 3rem; }
+        }
+        @media (min-width: 1024px) {
+            .lg\:flex-row { flex-direction: row; }
+            .lg\:w-5\/12 { width: 41.666667%; }
+            .lg\:w-7\/12 { width: 58.333333%; }
+            .lg\:p-12 { padding: 3rem; }
+            .lg\:gap-8 { gap: 2rem; }
+        }
+        @media (max-width: 767px) {
+            .flex-col-reverse-mobile { flex-direction: column-reverse; }
+        }
     </style>
 {% endblock %}
 
 {% block body %}
+
+<!-- Sprite SVG -->
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="svg-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="svg-shield-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="svg-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></symbol>
+    <symbol id="svg-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="svg-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="svg-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></symbol>
+    <symbol id="svg-arrow-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></symbol>
+    <symbol id="svg-check-read" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="svg-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></symbol>
+</svg>
+
 <nav id="main-nav" class="fixed top-0 left-0 w-full z-50 border-b border-white/5">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto nav-container">
         <div class="flex items-center gap-6">
-            <a href="{{ path('app_home') }}" class="flex items-center gap-2 group">
-                <div class="w-8 h-8 rounded-lg bg-[#0C0F1D]/50 border border-white/10 flex items-center justify-center text-[#00E5A0] transition-all">
-                    <iconify-icon icon="solar:shield-linear" stroke-width="1.5" class="text-xl"></iconify-icon>
+            <a href="{{ path('app_home') }}" class="nav-logo">
+                <div class="nav-logo-icon">
+                    <svg><use href="#svg-shield"/></svg>
                 </div>
-                <div class="flex flex-col leading-none">
-                    <span class="font-display font-semibold text-white tracking-tighter text-lg uppercase transition-colors">SAT</span>
-                    <span class="font-display font-medium text-slate-500 tracking-tighter text-xs uppercase">Platform</span>
+                <div class="nav-logo-text">
+                    <span class="nav-logo-title nav-text-white">SAT</span>
+                    <span class="nav-logo-sub">Platform</span>
                 </div>
             </a>
         </div>
 
         <div class="flex items-center gap-3">
-            <button id="theme-toggle" class="w-10 h-10 rounded-full border border-white/10 text-slate-400 hover:text-[#00E5A0] hover:border-[#00E5A0]/50 transition-all flex items-center justify-center">
-                <iconify-icon id="theme-icon" icon="solar:moon-stars-bold-duotone" class="text-xl"></iconify-icon>
+            <button id="theme-toggle" class="theme-toggle">
+                <svg id="theme-icon"><use href="#svg-moon"/></svg>
             </button>
             
             <span class="w-px h-6 bg-white/10"></span>
@@ -112,14 +444,11 @@
 
     <div class="max-w-7xl w-full relative z-10 flex flex-col lg:flex-row items-stretch gap-6 lg:gap-8">
         
-        <div class="lg:w-5/12 flex flex-col justify-between p-8 lg:p-12 bg-[#0C0F1D]/60 backdrop-blur-md hero-card transition-all duration-300 rounded-3xl border border-white/5 shadow-xl">
+        <div class="lg:w-5/12 flex flex-col justify-between p-8 lg:p-12 hero-card">
             <div>
-                <div class="hero-badge inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-[#060810]/80 mb-8 transition-all">
-                    <span class="flex h-2 w-2 rounded-full bg-[#00E5A0]"></span>
-                    <span class="text-xs font-bold text-slate-300 uppercase tracking-wider">Programme SAT</span>
-                </div>
-                <h1 class="font-display font-semibold text-4xl md:text-5xl text-white tracking-tight leading-tight mb-6 transition-colors">
-                    Sécurisez l'avenir de votre <span class="text-[#00E5A0]">entreprise</span>
+                
+                <h1 class="font-display font-semibold text-4xl md:text-5xl nav-text-white tracking-tight leading-tight mb-6 transition-colors">
+                    Sécurisez l'avenir de votre <span class="text-green">entreprise</span>
                 </h1>
                 <p class="text-slate-400 text-lg transition-colors">
                     Rejoignez les entreprises béninoises qui transforment leurs employés en première ligne de défense contre les cyberattaques.
@@ -128,46 +457,46 @@
 
             <div class="grid grid-cols-2 gap-4 mt-12 pt-8 border-t border-white/5 transition-colors">
                 <div>
-                    <div class="font-display font-semibold text-2xl text-white stats-value">3</div>
+                    <div class="font-display font-semibold text-2xl nav-text-white stats-value">3</div>
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider stats-label">Étapes simples</div>
                 </div>
                 <div>
-                    <div class="font-display font-semibold text-2xl text-white stats-value">100%</div>
+                    <div class="font-display font-semibold text-2xl nav-text-white stats-value">100%</div>
                     <div class="text-xs text-slate-500 uppercase font-bold tracking-wider stats-label">Sécurisé</div>
                 </div>
             </div>
         </div>
 
-        <div class="lg:w-7/12 flex flex-col p-8 lg:p-12 bg-[#0C0F1D] form-card transition-all duration-300 rounded-3xl border border-white/5 shadow-2xl">
+        <div class="lg:w-7/12 flex flex-col p-8 lg:p-12 form-card">
             
             <div class="text-center mb-10">
-                <h2 class="font-display font-semibold text-3xl text-white tracking-tight mb-2 transition-colors">Inscription</h2>
+                <h2 class="font-display font-semibold text-3xl nav-text-white tracking-tight mb-2 transition-colors">Inscription</h2>
                 <p class="text-slate-400 text-sm transition-colors">Remplissez les informations de votre structure</p>
             </div>
 
             {% for message in app.flashes('error') %}
-                <div class="mb-8 p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-start gap-3 text-red-400 text-sm font-medium">
-                    <iconify-icon icon="solar:danger-circle-linear" stroke-width="1.5" class="text-xl mt-0.5 shrink-0"></iconify-icon>
+                <div class="alert-error mb-8">
+                    <svg><use href="#svg-danger"/></svg>
                     <div>{{ message }}</div>
                 </div>
             {% endfor %}
 
             <div class="flex items-center justify-between mb-10 relative max-w-sm mx-auto w-full">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px bg-white/10 z-0 stepper-line transition-colors"></div>
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-px stepper-line z-0"></div>
                 
-                <div class="relative z-10 flex flex-col items-center gap-2 px-3 stepper-bg indicator-wrapper" id="indicator-1">
-                    <div class="indicator-circle w-8 h-8 rounded-full step-active flex items-center justify-center text-xs font-bold transition-all">1</div>
-                    <span class="indicator-text text-xs font-bold uppercase tracking-wider text-white transition-colors step-text-active">Entreprise</span>
+                <div class="indicator-wrapper stepper-bg" id="indicator-1">
+                    <div class="indicator-circle step-active">1</div>
+                    <span class="indicator-text step-text-active">Entreprise</span>
                 </div>
                 
-                <div class="relative z-10 flex flex-col items-center gap-2 px-3 stepper-bg indicator-wrapper" id="indicator-2">
-                    <div class="indicator-circle w-8 h-8 rounded-full step-inactive flex items-center justify-center text-xs font-bold transition-all">2</div>
-                    <span class="indicator-text text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors step-text-inactive">RSSI</span>
+                <div class="indicator-wrapper stepper-bg" id="indicator-2">
+                    <div class="indicator-circle step-inactive">2</div>
+                    <span class="indicator-text step-text-inactive">RSSI</span>
                 </div>
                 
-                <div class="relative z-10 flex flex-col items-center gap-2 px-3 stepper-bg indicator-wrapper" id="indicator-3">
-                    <div class="indicator-circle w-8 h-8 rounded-full step-inactive flex items-center justify-center text-xs font-bold transition-all">3</div>
-                    <span class="indicator-text text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors step-text-inactive">Validation</span>
+                <div class="indicator-wrapper stepper-bg" id="indicator-3">
+                    <div class="indicator-circle step-inactive">3</div>
+                    <span class="indicator-text step-text-inactive">Validation</span>
                 </div>
             </div>
 
@@ -176,74 +505,72 @@
                 <div id="step-1" class="wizard-step block flex-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="entreprise_nom">
-                                Nom de l'entreprise <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="entreprise_nom">
+                                Nom de l'entreprise <span class="text-green">*</span>
                             </label>
                             <input type="text" id="entreprise_nom" name="entreprise_nom" required placeholder="Ex: TechSolutions SARL" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="ifu">
-                                Numéro IFU <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="ifu">
+                                Numéro IFU <span class="text-green">*</span>
                             </label>
                             <input type="text" id="ifu" name="ifu" required placeholder="3202301234567" maxlength="13" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="rccm">
-                                Numéro RCCM <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="rccm">
+                                Numéro RCCM <span class="text-green">*</span>
                             </label>
                             <input type="text" id="rccm" name="rccm" required placeholder="RB/COT/23/A/123" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="secteur">
-                                Secteur d'activité <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="secteur">
+                                Secteur d'activité <span class="text-green">*</span>
                             </label>
-                            <div class="relative">
-                                <select id="secteur" name="secteur" required class="input-sat cursor-pointer">
-                                    <option value="" class="bg-[#0C0F1D] text-white">Sélectionnez...</option>
-                                    <option value="Technologie" class="bg-[#0C0F1D] text-white">Technologie</option>
-                                    <option value="Finance" class="bg-[#0C0F1D] text-white">Finance</option>
-                                    <option value="Commerce" class="bg-[#0C0F1D] text-white">Commerce</option>
-                                    <option value="Industrie" class="bg-[#0C0F1D] text-white">Industrie</option>
-                                    <option value="Services" class="bg-[#0C0F1D] text-white">Services</option>
-                                    <option value="Santé" class="bg-[#0C0F1D] text-white">Santé</option>
-                                    <option value="Éducation" class="bg-[#0C0F1D] text-white">Éducation</option>
-                                    <option value="Autre" class="bg-[#0C0F1D] text-white">Autre</option>
+                            <div class="select-wrapper">
+                                <select id="secteur" name="secteur" required class="input-sat">
+                                    <option value="">Sélectionnez...</option>
+                                    <option value="Technologie">Technologie</option>
+                                    <option value="Finance">Finance</option>
+                                    <option value="Commerce">Commerce</option>
+                                    <option value="Industrie">Industrie</option>
+                                    <option value="Services">Services</option>
+                                    <option value="Santé">Santé</option>
+                                    <option value="Éducation">Éducation</option>
+                                    <option value="Autre">Autre</option>
                                 </select>
-                                <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none text-slate-400">
-                                    <iconify-icon icon="solar:alt-arrow-down-linear" stroke-width="1.5"></iconify-icon>
-                                </div>
+                                <span class="select-arrow"><svg><use href="#svg-arrow-down"/></svg></span>
                             </div>
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="nombre_employes">
-                                Nombre d'employés <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="nombre_employes">
+                                Nombre d'employés <span class="text-green">*</span>
                             </label>
                             <input type="number" id="nombre_employes" name="nombre_employes" required min="1" placeholder="Ex: 25" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="email_entreprise">
-                                Email entreprise <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="email_entreprise">
+                                Email entreprise <span class="text-green">*</span>
                             </label>
                             <input type="email" id="email_entreprise" name="email_entreprise" required placeholder="contact@entreprise.bj" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="telephone_entreprise">
-                                Téléphone <span class="text-[#00E5A0]"></span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="telephone_entreprise">
+                                Téléphone
                             </label>
-                            <input type="tel" id="telephone_entreprise" name="telephone_entreprise" required placeholder="+229 01 XX XX XX XX" class="input-sat">
+                            <input type="tel" id="telephone_entreprise" name="telephone_entreprise" placeholder="+229 01 XX XX XX XX" class="input-sat">
                         </div>
                     </div>
 
                     <div class="mt-auto flex justify-end">
                         <button type="button" onclick="nextStep(2)" class="btn-primary-sat w-full md:w-auto">
                             Étape suivante
-                            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            <svg width="18" height="18"><use href="#svg-arrow-right"/></svg>
                         </button>
                     </div>
                 </div>
@@ -251,64 +578,64 @@
                 <div id="step-2" class="wizard-step hidden flex-1">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="prenom_rssi">
-                                Prénom du RSSI <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="prenom_rssi">
+                                Prénom du RSSI <span class="text-green">*</span>
                             </label>
                             <input type="text" id="prenom_rssi" name="prenom_rssi" required placeholder="Jean" class="input-sat">
                         </div>
 
                         <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="nom_rssi">
-                                Nom du RSSI <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="nom_rssi">
+                                Nom du RSSI <span class="text-green">*</span>
                             </label>
                             <input type="text" id="nom_rssi" name="nom_rssi" required placeholder="KPOSSA" class="input-sat">
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="email_rssi">
-                                Email professionnel (RSSI) <span class="text-[#00E5A0]">*</span>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="email_rssi">
+                                Email professionnel (RSSI) <span class="text-green">*</span>
                             </label>
                             <input type="email" id="email_rssi" name="email_rssi" required placeholder="jean.kpossa@entreprise.bj" class="input-sat">
                         </div>
 
                         <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors" for="telephone_rssi">
-                                Téléphone 
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2" for="telephone_rssi">
+                                Téléphone
                             </label>
                             <input type="tel" id="telephone_rssi" name="telephone_rssi" placeholder="+229 XX XX XX XX" class="input-sat">
                         </div>
                     </div>
 
-                    <div class="mt-auto flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+                    <div class="mt-auto flex flex-col-reverse-mobile md:flex-row justify-between items-center gap-4">
                         <button type="button" onclick="prevStep(1)" class="btn-secondary-sat w-full md:w-auto">
-                            <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            <svg width="18" height="18"><use href="#svg-arrow-left"/></svg>
                             Retour
                         </button>
                         <button type="button" onclick="nextStep(3)" class="btn-primary-sat w-full md:w-auto">
                             Étape suivante
-                            <iconify-icon icon="solar:arrow-right-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            <svg width="18" height="18"><use href="#svg-arrow-right"/></svg>
                         </button>
                     </div>
                 </div>
 
                 <div id="step-3" class="wizard-step hidden flex-1">
                     <div class="mb-10 text-center">
-                        <div class="w-20 h-20 bg-[#00E5A0]/10 text-[#00E5A0] rounded-full flex items-center justify-center mx-auto mb-6 border border-[#00E5A0]/20">
-                            <iconify-icon icon="solar:shield-check-linear" stroke-width="1.5" class="text-4xl"></iconify-icon>
+                        <div class="validation-icon">
+                            <svg><use href="#svg-shield-check"/></svg>
                         </div>
-                        <h3 class="text-xl font-display font-semibold text-white mb-2 transition-colors">Prêt à soumettre ?</h3>
+                        <h3 class="text-xl font-display font-semibold nav-text-white mb-2 transition-colors">Prêt à soumettre ?</h3>
                         <p class="text-slate-400 text-sm max-w-sm mx-auto transition-colors">
                             Votre demande sera examinée par notre équipe technique. Un email de confirmation contenant les instructions d'accès sera envoyé au Responsable Sécurité sous 48h.
                         </p>
                     </div>
 
-                    <div class="mt-auto flex flex-col-reverse md:flex-row justify-between items-center gap-4">
+                    <div class="mt-auto flex flex-col-reverse-mobile md:flex-row justify-between items-center gap-4">
                         <button type="button" onclick="prevStep(2)" class="btn-secondary-sat w-full md:w-auto">
-                            <iconify-icon icon="solar:arrow-left-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            <svg width="18" height="18"><use href="#svg-arrow-left"/></svg>
                             Modifier
                         </button>
                         <button type="submit" class="btn-primary-sat w-full md:w-auto">
-                            <iconify-icon icon="solar:check-read-linear" stroke-width="1.5" class="text-lg"></iconify-icon>
+                            <svg width="18" height="18"><use href="#svg-check-read"/></svg>
                             Confirmer et soumettre
                         </button>
                     </div>
@@ -320,20 +647,14 @@
 </main>
 
 <script>
-    // --- LOGIQUE DE LA NAVBAR (HIDE ON SCROLL) ---
     let lastScrollY = window.scrollY;
     const nav = document.getElementById('main-nav');
-
     window.addEventListener('scroll', () => {
-        if (window.scrollY > lastScrollY && window.scrollY > 100) {
-            nav.classList.add('nav-hidden');
-        } else {
-            nav.classList.remove('nav-hidden');
-        }
+        if (window.scrollY > lastScrollY && window.scrollY > 100) nav.classList.add('nav-hidden');
+        else nav.classList.remove('nav-hidden');
         lastScrollY = window.scrollY;
     });
 
-    // --- GESTION DU THÈME ---
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
     const html = document.documentElement;
@@ -341,76 +662,48 @@
     function applyTheme(theme) {
         if (theme === 'light') {
             html.classList.add('light');
-            themeIcon.setAttribute('icon', 'solar:sun-bold-duotone');
+            themeIcon.innerHTML = '<use href="#svg-sun"/>';
         } else {
             html.classList.remove('light');
-            themeIcon.setAttribute('icon', 'solar:moon-stars-bold-duotone');
+            themeIcon.innerHTML = '<use href="#svg-moon"/>';
         }
     }
-
     const savedTheme = localStorage.getItem('sat-theme') || 'dark';
     applyTheme(savedTheme);
-
     themeBtn.addEventListener('click', () => {
         const newTheme = html.classList.contains('light') ? 'dark' : 'light';
         applyTheme(newTheme);
         localStorage.setItem('sat-theme', newTheme);
     });
 
-    // --- LOGIQUE DU WIZARD ---
     function nextStep(step) {
         const currentStepDiv = document.querySelector('.wizard-step.block');
         const inputs = currentStepDiv.querySelectorAll('input, select, textarea');
         let valid = true;
-        
-        inputs.forEach(input => {
-            if(!input.checkValidity()) {
-                input.reportValidity();
-                valid = false;
-            }
-        });
-        
+        inputs.forEach(input => { if(!input.checkValidity()) { input.reportValidity(); valid = false; } });
         if(valid) showStep(step);
     }
-
-    function prevStep(step) {
-        showStep(step);
-    }
-
+    function prevStep(step) { showStep(step); }
     function showStep(step) {
-        // Cacher toutes les étapes
-        document.querySelectorAll('.wizard-step').forEach(el => {
-            el.classList.remove('block');
-            el.classList.add('hidden');
-        });
-        
-        // Afficher l'étape cible
+        document.querySelectorAll('.wizard-step').forEach(el => { el.classList.remove('block'); el.classList.add('hidden'); });
         const current = document.getElementById('step-' + step);
-        current.classList.remove('hidden');
-        current.classList.add('block');
-        current.classList.add('flex-1');
-        
-        // Mettre à jour le Stepper
+        current.classList.remove('hidden'); current.classList.add('block');
         for(let i = 1; i <= 3; i++) {
             const indicator = document.getElementById('indicator-' + i);
             const circle = indicator.querySelector('.indicator-circle');
             const text = indicator.querySelector('.indicator-text');
-            
             if (i < step) {
-                // Complété
-                circle.className = "indicator-circle w-8 h-8 rounded-full step-active flex items-center justify-center text-xs font-bold transition-all";
-                circle.innerHTML = '<iconify-icon icon="solar:check-read-linear" stroke-width="1.5" class="text-sm"></iconify-icon>';
-                text.className = "indicator-text text-xs font-bold uppercase tracking-wider text-white transition-colors step-text-active";
+                circle.className = 'indicator-circle step-active';
+                circle.innerHTML = '<svg><use href="#svg-check-read"/></svg>';
+                text.className = 'indicator-text step-text-active';
             } else if (i === step) {
-                // Actuel
-                circle.className = "indicator-circle w-8 h-8 rounded-full step-active flex items-center justify-center text-xs font-bold transition-all";
+                circle.className = 'indicator-circle step-active';
                 circle.innerHTML = i;
-                text.className = "indicator-text text-xs font-bold uppercase tracking-wider text-white transition-colors step-text-active";
+                text.className = 'indicator-text step-text-active';
             } else {
-                // À venir
-                circle.className = "indicator-circle w-8 h-8 rounded-full step-inactive flex items-center justify-center text-xs font-bold transition-all";
+                circle.className = 'indicator-circle step-inactive';
                 circle.innerHTML = i;
-                text.className = "indicator-text text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors step-text-inactive";
+                text.className = 'indicator-text step-text-inactive';
             }
         }
     }

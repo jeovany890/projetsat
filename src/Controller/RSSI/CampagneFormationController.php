@@ -58,15 +58,14 @@ class CampagneFormationController extends AbstractController
             $description    = trim($request->request->get('description', ''));
             $trimestre      = $request->request->get('trimestre', 'T1');
             $annee          = (int) $request->request->get('annee', date('Y'));
-            $dateDebut      = $request->request->get('date_debut');
             $dateFin        = $request->request->get('date_fin');
             $pointsPenalite = (int) $request->request->get('points_penalite', 50);
             $moduleIds      = $request->request->all('modules') ?: [];
             $deptIds        = $request->request->all('departements') ?: [];
             $tousEmployes   = $request->request->get('tous_employes') === '1';
 
-            if (empty($titre) || empty($dateDebut) || empty($dateFin) || empty($moduleIds)) {
-                $this->addFlash('error', 'Titre, dates et au moins un module sont obligatoires.');
+            if (empty($titre) || empty($dateFin) || empty($moduleIds)) {
+                $this->addFlash('error', 'Titre, date de fin et au moins un module sont obligatoires.');
                 return $this->render('rssi/formations/nouvelle.html.twig', compact('modules', 'departements'));
             }
 
@@ -75,11 +74,11 @@ class CampagneFormationController extends AbstractController
                 ->setDescription($description ?: null)
                 ->setTrimestre($trimestre)
                 ->setAnnee($annee)
-                ->setDateDebut(new \DateTime($dateDebut))
                 ->setDateFin(new \DateTime($dateFin))
                 ->setPointsPenalite($pointsPenalite)
                 ->setRssi($this->getRssi())
-                ->setStatut('PLANIFIEE');
+                ->setStatut('EN_COURS')
+                ->setDateDebut(new \DateTime());
 
             foreach ($moduleIds as $mid) {
                 $m = $em->getRepository(ModuleFormation::class)->find($mid);
@@ -96,17 +95,11 @@ class CampagneFormationController extends AbstractController
                     $module = $em->getRepository(ModuleFormation::class)->find($mid);
                     if (!$module) continue;
 
-                    // ── RÈGLE D'ATTRIBUTION ──────────────────────────────────
-                    // On cherche UNE PROGRESSION EXISTANTE pour cet employé+module
-                    // peu importe la campagne ou le type d'attribution.
                     $existant = $em->getRepository(ProgressionModule::class)->findOneBy([
                         'employe' => $employe,
                         'module'  => $module,
                     ]);
 
-                    // CAS 1 — Aucune progression → on crée normalement
-                    // CAS 2 — Progression TERMINÉE → on peut recréer (nouvelle campagne)
-                    // CAS 3 — Progression NON_COMMENCE ou EN_COURS → on ne touche pas
                     if ($existant && $existant->getStatut() !== 'TERMINE') {
                         $doublons++;
                         continue;
@@ -127,12 +120,9 @@ class CampagneFormationController extends AbstractController
                 }
             }
 
-            // NE PAS fixer totalParticipants ici — il est calculé
-            // dynamiquement par mettreAJourStatut() à partir des progressions réelles
             $em->flush();
 
-            // Recalcul immédiat après flush pour avoir les bons chiffres
-            $this->mettreAJourStatut($campagne);
+            $this->recalculerStats($campagne);
             $em->flush();
 
             if ($doublons > 0) {
@@ -143,8 +133,7 @@ class CampagneFormationController extends AbstractController
                 return $this->redirectToRoute('rssi_formations_liste');
             }
 
-            // ── Emails aux employés ayant reçu au moins un module ──
-            $dateDebutFmt  = (new \DateTime($dateDebut))->format('d/m/Y');
+            $dateDebutFmt  = (new \DateTime())->format('d/m/Y');
             $dateFinFmt    = (new \DateTime($dateFin))->format('d/m/Y');
             $appUrl        = $_ENV['APP_URL'] ?? 'http://localhost:8000';
             $urlFormations = rtrim($appUrl, '/') . '/employe/formations';
@@ -174,7 +163,6 @@ class CampagneFormationController extends AbstractController
                         contenuHtml:  $html
                     );
                 } catch (\Exception) {
-                    // Échec email silencieux — non bloquant
                 }
             }
 
@@ -190,7 +178,7 @@ class CampagneFormationController extends AbstractController
     }
 
     // ══════════════════════════════════════════
-    // SUIVI FORMATIONS INDIVIDUELLES (phishing auto)
+    // SUIVI FORMATIONS INDIVIDUELLES
     // ══════════════════════════════════════════
     #[Route('/individuelles', name: 'rssi_formations_individuelles')]
     public function individuelles(Request $request, EntityManagerInterface $em): Response
@@ -219,7 +207,6 @@ class CampagneFormationController extends AbstractController
             ]);
         }
 
-        // Formations individuelles = campagne IS NULL (attribuées automatiquement par phishing)
         $qb = $em->createQueryBuilder()
             ->select('p')->from(ProgressionModule::class, 'p')
             ->where('p.campagne IS NULL')
@@ -289,13 +276,12 @@ class CampagneFormationController extends AbstractController
     public function detail(CampagneFormation $campagne, EntityManagerInterface $em): Response
     {
         $this->verifierAcces($campagne);
-        $this->mettreAJourStatut($campagne);
+        $this->recalculerStats($campagne);
         $em->flush();
 
         $progressions = $campagne->getProgressions();
         $nbModules    = $campagne->getModules()->count();
 
-        // ── Stats par module ──────────────────────────────────────
         $statsModules = [];
         foreach ($campagne->getModules() as $module) {
             $progsModule = $progressions->filter(fn($p) => $p->getModule()->getId() === $module->getId());
@@ -304,16 +290,13 @@ class CampagneFormationController extends AbstractController
             foreach ($progsModule as $p) { $somme += $p->getPourcentageProgression(); }
             $statsModules[] = [
                 'module'   => $module,
-                'total'    => $total,   // nb employés sur ce module
+                'total'    => $total,
                 'termines' => $progsModule->filter(fn($p) => $p->getStatut() === 'TERMINE')->count(),
                 'enCours'  => $progsModule->filter(fn($p) => $p->getStatut() === 'EN_COURS')->count(),
                 'pct'      => $total > 0 ? (int) round($somme / $total) : 0,
             ];
         }
 
-        // ── Stats par employé (vue consolidée) ───────────────────
-        // Un employé peut avoir plusieurs progressions dans une campagne
-        // (une par module). On consolide ici pour avoir une ligne par employé.
         $parEmploye = [];
         foreach ($progressions as $p) {
             $eid = $p->getEmploye()->getId();
@@ -337,15 +320,11 @@ class CampagneFormationController extends AbstractController
         }
 
         foreach ($parEmploye as &$data) {
-            $data['pct_moyen']    = $data['nb_modules'] > 0
-                ? (int) round($data['somme_pct'] / $data['nb_modules'])
-                : 0;
-            // Tout terminé = tous ses modules dans cette campagne sont à TERMINE
+            $data['pct_moyen']    = $data['nb_modules'] > 0 ? (int) round($data['somme_pct'] / $data['nb_modules']) : 0;
             $data['tout_termine'] = ($data['termines'] === $nbModules);
         }
         unset($data);
 
-        // totalP et termines viennent de mettreAJourStatut() — basés sur employés distincts
         $totalP    = $campagne->getTotalParticipants();
         $termines  = $campagne->getNombreTermines();
         $pctGlobal = $totalP > 0 ? (int) round(($termines / $totalP) * 100) : 0;
@@ -369,10 +348,15 @@ class CampagneFormationController extends AbstractController
     public function changerStatut(CampagneFormation $campagne, string $statut, EntityManagerInterface $em): Response
     {
         $this->verifierAcces($campagne);
-        if (!in_array($statut, ['PLANIFIEE', 'EN_COURS', 'TERMINEE', 'ANNULEE'])) {
+        if (!in_array($statut, ['EN_COURS', 'TERMINEE', 'ANNULEE'])) {
             $this->addFlash('error', 'Statut invalide.');
             return $this->redirectToRoute('rssi_formations_detail', ['id' => $campagne->getId()]);
         }
+
+        if ($statut === 'EN_COURS' && !$campagne->getDateDebut()) {
+            $campagne->setDateDebut(new \DateTime());
+        }
+
         $campagne->setStatut($statut);
         $em->flush();
         $this->addFlash('success', 'Statut mis à jour.');
@@ -409,53 +393,13 @@ class CampagneFormationController extends AbstractController
     }
 
     /**
-     * Recalcule dynamiquement les compteurs d'une campagne
-     * à partir des progressions réelles en base.
-     *
-     * LOGIQUE :
-     * - totalParticipants = nb d'employés DISTINCTS ayant au moins une progression dans la campagne
-     * - nombreTermines    = nb d'employés DISTINCTS ayant TOUS leurs modules à TERMINE
-     * - nombreEnCours     = nb d'employés DISTINCTS ayant au moins 1 module EN_COURS ou NON_COMMENCE
-     * - nombreEnRetard    = nb de progressions individuelles en retard (écheance dépassée, non terminée)
+     * Recalcule les stats SANS toucher au statut.
      */
-    private function mettreAJourStatut(CampagneFormation $campagne): void
+    private function recalculerStats(CampagneFormation $campagne): void
     {
-        $statutActuel = $campagne->getStatut();
-
-        // ── Règles de transition automatique par date ──────────────
-        //
-        // On ne touche au statut QUE dans deux cas précis :
-        //   1. La campagne est PLANIFIEE et la date de début est passée
-        //      → on la passe automatiquement EN_COURS
-        //   2. La campagne est EN_COURS et la date de fin est dépassée
-        //      → on la passe automatiquement TERMINEE
-        //
-        // On ne touche JAMAIS au statut si :
-        //   - Le RSSI l'a manuellement passée EN_COURS (bouton Lancer)
-        //   - Le RSSI l'a manuellement passée TERMINEE (bouton Terminer)
-        //   - Le RSSI l'a ANNULEE
-        //
-        $now = new \DateTime();
-        $fin = $campagne->getDateFin();
-
-        if ($statutActuel === 'PLANIFIEE') {
-            // Seule transition auto depuis PLANIFIEE :
-            // si la date de début est passée → EN_COURS automatiquement
-            $debut = $campagne->getDateDebut();
-            if (!$debut || $now >= $debut) {
-                $campagne->setStatut('EN_COURS');
-            }
-            // Sinon on reste PLANIFIEE — le RSSI doit cliquer Lancer
-        } elseif ($statutActuel === 'EN_COURS' && $fin && $now > $fin) {
-            // Date de fin dépassée → TERMINEE automatiquement
-            $campagne->setStatut('TERMINEE');
-        }
-        // TERMINEE, ANNULEE, ou EN_COURS sans date de fin dépassée → on ne change rien
-
         $progressions = $campagne->getProgressions();
         $nbModules    = $campagne->getModules()->count();
 
-        // ── Regrouper les progressions par employé ──
         $parEmploye = [];
         foreach ($progressions as $p) {
             $eid = $p->getEmploye()->getId();
@@ -464,29 +408,42 @@ class CampagneFormationController extends AbstractController
                 + ($p->getStatut() === 'TERMINE' ? 1 : 0);
         }
 
-        // ── Calcul des compteurs par employé distinct ──
-        $nbTotalEmployes = count($parEmploye);  // employés distincts dans la campagne
+        $nbTotalEmployes = count($parEmploye);
         $nbTermines      = 0;
         $nbEnCours       = 0;
 
         foreach ($parEmploye as $data) {
             if ($data['termines'] === $nbModules && $nbModules > 0) {
-                // Tous les modules de la campagne sont terminés pour cet employé
                 $nbTermines++;
             } else {
-                // Au moins un module pas encore terminé
                 $nbEnCours++;
             }
         }
 
-        // ── Retard : progressions non terminées avec écheance dépassée ──
         $nbEnRetard = $progressions->filter(fn($p) => $p->isEstEnRetard())->count();
 
-        // ── Mise à jour de la campagne ──
         $campagne->setTotalParticipants($nbTotalEmployes);
         $campagne->setNombreTermines($nbTermines);
         $campagne->setNombreEnCours($nbEnCours);
         $campagne->setNombreEnRetard($nbEnRetard);
+    }
+
+    /**
+     * Met à jour le statut + recalcul des stats.
+     * Le statut passe EN_COURS → TERMINEE uniquement si la date de fin est dépassée.
+     */
+    private function mettreAJourStatut(CampagneFormation $campagne): void
+    {
+        $statutActuel = $campagne->getStatut();
+        $now = new \DateTime();
+        $fin = $campagne->getDateFin();
+
+        // ✅ Transition auto UNIQUEMENT si date de fin dépassée
+        if ($statutActuel === 'EN_COURS' && $fin && $now > $fin) {
+            $campagne->setStatut('TERMINEE');
+        }
+
+        $this->recalculerStats($campagne);
     }
 
     private function getEmployesCibles(

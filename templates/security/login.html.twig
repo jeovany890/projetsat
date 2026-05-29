@@ -7,92 +7,677 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+
     <style>
-        :root { --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
-        
-        /* GESTION DU THÈME & TRANSITIONS */
-        body { font-family:var(--font-body); background-color:#060810; color:#e2e8f0; transition: all 0.4s ease-in-out; }
-        
-        /* Mode Clair Forcé */
-        html.light body { background-color: #f8fafc; color: #1e293b; }
-        html.light .bg-grid { background-image: linear-gradient(to right,rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.05) 1px,transparent 1px); }
-        
-        /* Navbar Translucide & Smart Hide */
-        nav { 
-            background-color: rgba(0, 0, 0, 0.1) !important; 
-            backdrop-blur: 24px !important; 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease !important; 
+        :root {
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+
+            /* Couleurs sombres par défaut */
+            --bg-primary: #060810;
+            --bg-secondary: #0C0F1D;
+            --bg-card: rgba(12, 15, 29, 0.6);
+            --text-primary: #e2e8f0;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent: #00E5A0;
+            --accent-glow: rgba(0, 229, 160, 0.15);
+            --red-glow: rgba(255, 59, 92, 0.1);
+            --border-color: rgba(255, 255, 255, 0.05);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --nav-bg: rgba(0, 0, 0, 0.1);
+            --input-bg: #0C0F1D;
+            --input-border: rgba(255, 255, 255, 0.07);
+            --input-text: #F9FAFB;
+            --focus-ring: rgba(0, 229, 160, 0.15);
+
+            /* Mode clair */
+            --light-bg-primary: #f8fafc;
+            --light-bg-card: rgba(255, 255, 255, 0.8);
+            --light-text-primary: #1e293b;
+            --light-text-secondary: #64748b;
+            --light-border: rgba(0, 0, 0, 0.05);
+            --light-nav-bg: rgba(255, 255, 255, 0.3);
+            --light-input-bg: #f1f5f9;
+            --light-input-border: #cbd5e1;
+            --light-input-text: #0f172a;
         }
-        
-        .nav-hidden { 
-            transform: translateY(-100%); 
-            opacity: 0; 
-            pointer-events: none; 
+
+        * {
+            box-sizing: border-box;
         }
 
-        html.light nav { background-color: rgba(255, 255, 255, 0.3) !important; border-color: rgba(0,0,0,0.05) !important; }
-        html.light nav .text-white { color: #0f172a !important; }
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            margin: 0;
+            transition: background-color 0.4s ease-in-out, color 0.4s ease-in-out;
+        }
 
-        /* Synchronisation Carte GAUCHE */
-        html.light .hero-card { background-color: rgba(255, 255, 255, 0.8) !important; border-color: rgba(0,0,0,0.05) !important; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03); }
-        html.light .hero-card h1 { color: #0f172a !important; }
-        html.light .hero-card p, html.light .hero-card .stats-label { color: #64748b !important; }
-        html.light .hero-card .stats-value { color: #0f172a !important; }
-        html.light .hero-card .border-t { border-color: rgba(0,0,0,0.05) !important; }
+        html.light body {
+            background-color: var(--light-bg-primary);
+            color: var(--light-text-primary);
+        }
 
-        /* Synchronisation Carte DROITE */
-        html.light .form-card { background-color: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.06); }
-        html.light .input-sat { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
-        html.light .form-card h2 { color: #0f172a !important; }
+        .bg-grid {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
 
-        /* Styles de base */
-        .bg-grid { background-size:40px 40px; background-image:linear-gradient(to right,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.03) 1px,transparent 1px); }
-        .glow-emerald { background:radial-gradient(circle at center,rgba(0,229,160,.15) 0%,transparent 70%); }
-        .glow-red { background:radial-gradient(circle at center,rgba(255,59,92,.1) 0%,transparent 70%); }
-        .anim-fade-up { animation:fadeUp .7s cubic-bezier(.22,.68,0,1.2) both; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        
-        .input-sat { background: #0C0F1D; border: 1px solid rgba(255,255,255,0.07); color: #F9FAFB; border-radius: 1rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.2s; }
-        .input-sat:focus { border-color: #00E5A0; outline: none; box-shadow: 0 0 0 2px rgba(0,229,160,0.15); }
-        
-        .btn-primary-sat { background: #00E5A0; color: #060810; border-radius: 9999px; padding: 0.875rem 1.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; width: 100%; box-shadow: 0 8px 20px rgba(0,229,160,0.2); }
-        .btn-primary-sat:hover { background: white; transform: scale(1.02); }
+        html.light .bg-grid {
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+        }
 
-        .badge-register { background: rgba(0,229,160,0.1); color: #00E5A0; border: 1px solid rgba(0,229,160,0.2); padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; transition: all 0.3s; }
-        .badge-register:hover { background: #00E5A0; color: #060810; }
+        .main-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            border-bottom: 1px solid var(--border-color);
+            background-color: var(--nav-bg);
+            backdrop-filter: blur(24px);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease;
+        }
 
-        /* RÉINTÉGRATION DES STYLES D'ERREUR (Manquants dans le code 2) */
-        .alert-sat { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.2); border-radius: 1rem; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; color: #e2e8f0; margin-bottom: 1.5rem; }
-        .alert-sat-error { background: rgba(255,59,92,0.1); border-color: rgba(255,59,92,0.2); }
-        html.light .alert-sat-error { background: rgba(255,59,92,0.1); color: #FF3B5C; }
-        .alert-sat i { font-size: 1.25rem; color: #00E5A0; }
-        .alert-sat-error i { color: #FF3B5C; }
+        .nav-hidden {
+            transform: translateY(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        html.light .main-nav {
+            background-color: var(--light-nav-bg);
+            border-color: var(--light-border);
+        }
+
+        .nav-container {
+            max-width: 1280px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 1.5rem;
+            padding-right: 1.5rem;
+            height: 4.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .nav-logo {
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 0.5rem;
+            background-color: rgba(12, 15, 29, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            transition: all 0.2s;
+        }
+
+        .nav-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .nav-brand-main {
+            font-family: var(--font-display);
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            font-size: 1rem;
+            text-transform: uppercase;
+        }
+
+        .nav-brand-sub {
+            font-family: var(--font-display);
+            font-weight: 500;
+            color: #64748b;
+            letter-spacing: -0.02em;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        html.light .nav-brand-main {
+            color: #0f172a;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-theme-toggle {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-theme-toggle:hover {
+            color: var(--accent);
+            border-color: rgba(0, 229, 160, 0.5);
+        }
+
+        .separator {
+            width: 1px;
+            height: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .badge-register {
+            background: rgba(0, 229, 160, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 229, 160, 0.2);
+            padding: 0.45rem 0.9rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .badge-register:hover {
+            background: var(--accent);
+            color: #060810;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-top: 6rem;
+            padding-bottom: 2.5rem;
+            padding-left: 1rem;
+            padding-right: 1rem;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s;
+        }
+
+        .glow-emerald {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 500px;
+            background: radial-gradient(circle at center, rgba(0, 229, 160, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        .glow-red {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle at center, rgba(255, 59, 92, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .content-grid {
+            max-width: 66rem;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        @media (min-width: 1024px) {
+            .content-grid {
+                flex-direction: row;
+                gap: 1.5rem;
+            }
+        }
+
+        .hero-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 1.75rem;
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border-radius: 1.25rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        @media (min-width: 1024px) {
+            .hero-card {
+                padding: 2.5rem;
+            }
+        }
+
+        html.light .hero-card {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-color: rgba(0,0,0,0.05);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.03);
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #060810;
+            margin-bottom: 1.75rem;
+            transition: all 0.2s;
+        }
+
+        .hero-badge-dot {
+            width: 0.45rem;
+            height: 0.45rem;
+            border-radius: 50%;
+            background-color: var(--accent);
+        }
+
+        .hero-badge-text {
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .hero-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 2rem;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+            margin: 0 0 1.25rem 0;
+        }
+
+        .hero-title .accent {
+            color: var(--accent);
+        }
+
+        html.light .hero-title {
+            color: #0f172a;
+        }
+
+        .hero-description {
+            color: #94a3b8;
+            font-size: 1rem;
+            max-width: 28rem;
+            margin: 0;
+        }
+
+        html.light .hero-description {
+            color: #64748b;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 2.5rem;
+            padding-top: 1.75rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        html.light .hero-stats {
+            border-top-color: rgba(0,0,0,0.05);
+        }
+
+        .stat-value {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.35rem;
+            color: #ffffff;
+        }
+
+        html.light .stat-value {
+            color: #0f172a;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .form-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1.75rem;
+            background: #0C0F1D;
+            border-radius: 1.25rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        @media (min-width: 1024px) {
+            .form-card {
+                padding: 2.5rem;
+            }
+        }
+
+        html.light .form-card {
+            background-color: #ffffff;
+            border-color: rgba(0,0,0,0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-inner {
+            width: 100%;
+            max-width: 22rem;
+            margin: 0 auto;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-family: var(--font-display);
+            font-weight: 600;
+            font-size: 1.7rem;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.4rem;
+        }
+
+        html.light .form-title {
+            color: #0f172a;
+        }
+
+        .form-subtitle {
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        html.light .form-subtitle {
+            color: #64748b;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+        }
+
+        html.light .form-label {
+            color: #64748b;
+        }
+
+        .form-input {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: var(--input-text);
+            border-radius: 0.9rem;
+            padding: 0.65rem 0.9rem;
+            width: 100%;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--focus-ring);
+        }
+
+        html.light .form-input {
+            background: var(--light-input-bg);
+            border-color: var(--light-input-border);
+            color: var(--light-input-text);
+        }
+
+        /* NOUVEAU STYLE : Input avec icône intégrée */
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-with-icon .form-input {
+            padding-right: 2.75rem; /* Espace pour l'icône */
+        }
+
+        .input-with-icon .input-icon {
+            position: absolute;
+            right: 0.9rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            z-index: 2;
+        }
+
+        .input-with-icon .input-icon:hover {
+            color: var(--accent);
+            background: rgba(0, 229, 160, 0.1);
+        }
+
+        .input-with-icon .input-icon:active {
+            transform: translateY(-50%) scale(0.9);
+        }
+
+        .form-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+        }
+
+        .forgot-link {
+            font-size: 0.7rem;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 0.4rem;
+        }
+
+        .remember-me input {
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 0.25rem;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: #060810;
+            accent-color: var(--accent);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #060810;
+            border-radius: 9999px;
+            padding: 0.8rem 1.5rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            box-shadow: 0 8px 20px rgba(0, 229, 160, 0.2);
+            margin-top: 0.75rem;
+        }
+
+        .btn-primary:hover {
+            background: white;
+            transform: scale(1.02);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin: 1.25rem 0;
+        }
+
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        html.light .divider-line {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .divider-text {
+            font-size: 0.6rem;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 700;
+        }
+
+        .register-link {
+            display: block;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .register-link:hover {
+            color: var(--accent);
+        }
+
+        .alert {
+            background: rgba(0, 229, 160, 0.1);
+            border: 1px solid rgba(0, 229, 160, 0.2);
+            border-radius: 0.9rem;
+            padding: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #e2e8f0;
+            margin-bottom: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .alert-error {
+            background: rgba(255, 59, 92, 0.1);
+            border-color: rgba(255, 59, 92, 0.2);
+        }
+
+        .alert i, .alert iconify-icon {
+            font-size: 1.1rem;
+        }
+
+        .alert-success i { color: var(--accent); }
+        .alert-warning i { color: #F59E0B; }
+        .alert-error i { color: #FF3B5C; }
+
+        html.light .alert {
+            color: inherit;
+        }
+
+        html.light .alert-error {
+            color: #FF3B5C;
+        }
+
+        .anim-fade-up {
+            animation: fadeUp 0.7s cubic-bezier(0.22, 0.68, 0, 1.2) both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 {% endblock %}
 
 {% block body %}
-<nav id="main-nav" class="fixed top-0 left-0 w-full z-50 border-b border-white/5">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-6">
-            <a href="{{ path('app_home') }}" class="flex items-center gap-2 group">
-                <div class="w-8 h-8 rounded-lg bg-[#0C0F1D]/50 border border-white/10 flex items-center justify-center text-[#00E5A0] transition-all">
-                    <iconify-icon icon="solar:shield-linear" width="20"></iconify-icon>
+<nav id="main-nav" class="main-nav">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <a href="{{ path('app_home') }}" class="nav-brand" style="gap:0.5rem;">
+                <div class="nav-logo">
+                    <iconify-icon icon="solar:shield-linear" width="18"></iconify-icon>
                 </div>
-                <div class="flex flex-col leading-none">
-                    <span class="font-display font-semibold text-white tracking-tighter text-lg uppercase transition-colors">SAT</span>
-                    <span class="font-display font-medium text-slate-500 tracking-tighter text-xs uppercase">Platform</span>
+                <div class="nav-brand-text">
+                    <span class="nav-brand-main">SAT</span>
+                    <span class="nav-brand-sub">Platform</span>
                 </div>
             </a>
         </div>
 
-        <div class="flex items-center gap-3">
-            <button id="theme-toggle" class="w-10 h-10 rounded-full border border-white/10 text-slate-400 hover:text-[#00E5A0] hover:border-[#00E5A0]/50 transition-all flex items-center justify-center">
-                <iconify-icon id="theme-icon" icon="solar:moon-stars-bold-duotone" width="20"></iconify-icon>
+        <div class="nav-actions">
+            <button id="theme-toggle" class="btn-theme-toggle">
+                <iconify-icon id="theme-icon" icon="solar:moon-stars-bold-duotone" width="18"></iconify-icon>
             </button>
             
-            <span class="w-px h-6 bg-white/10"></span>
+            <div class="separator"></div>
 
             <a href="{{ path('app_register') }}" class="badge-register">
                 Créer un compte
@@ -101,119 +686,119 @@
     </div>
 </nav>
 
-<main class="min-h-screen flex items-center justify-center pt-28 pb-12 px-4 bg-grid relative overflow-hidden transition-colors duration-300">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] glow-emerald pointer-events-none opacity-40"></div>
-    <div class="absolute bottom-0 right-0 w-[600px] h-[600px] glow-red pointer-events-none opacity-30"></div>
+<main class="page-wrapper bg-grid">
+    <div class="glow-emerald"></div>
+    <div class="glow-red"></div>
 
-    <div class="max-w-6xl w-full relative z-10 flex flex-col lg:flex-row items-stretch gap-6 lg:gap-8">
+    <div class="content-grid">
         
-        <div class="flex-1 flex flex-col justify-between p-8 lg:p-12 bg-[#0C0F1D]/60 backdrop-blur-md hero-card transition-all duration-300 rounded-3xl border border-white/5 shadow-xl">
+        <div class="hero-card">
             <div>
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-[#060810]/80 mb-8 transition-all">
-                    <span class="flex h-2 w-2 rounded-full bg-[#00E5A0]"></span>
-                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Security Awareness Training</span>
+                <div class="hero-badge">
+                    <span class="hero-badge-dot"></span>
+                    <span class="hero-badge-text">Security Awareness Training</span>
                 </div>
-                <h1 class="font-display font-semibold text-4xl md:text-5xl text-white tracking-tight leading-tight mb-6 transition-colors">
-                    Transformez vos employés en <span class="text-[#00E5A0]">bouclier humain</span>
+                <h1 class="hero-title">
+                    Transformez vos employés en <span class="accent">bouclier humain</span>
                 </h1>
-                <p class="text-slate-400 text-lg max-w-md transition-colors">
+                <p class="hero-description">
                     Formations contextualisées et simulations de phishing pour les PME béninoises.
                 </p>
             </div>
 
-            <div class="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/5 transition-colors">
+            <div class="hero-stats">
                 <div>
-                    <div class="font-display font-semibold text-2xl text-white stats-value">500+</div>
-                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider stats-label">Employés</div>
+                    <div class="stat-value">500+</div>
+                    <div class="stat-label">Employés</div>
                 </div>
                 <div>
-                    <div class="font-display font-semibold text-2xl text-white stats-value">98%</div>
-                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider stats-label">Réussite</div>
+                    <div class="stat-value">98%</div>
+                    <div class="stat-label">Réussite</div>
                 </div>
                 <div>
-                    <div class="font-display font-semibold text-2xl text-white stats-value">24/7</div>
-                    <div class="text-[10px] text-slate-500 uppercase font-bold tracking-wider stats-label">Support</div>
+                    <div class="stat-value">24/7</div>
+                    <div class="stat-label">Support</div>
                 </div>
             </div>
         </div>
 
-        <div class="flex-1 flex flex-col justify-center p-8 lg:p-12 bg-[#0C0F1D] form-card transition-all duration-300 rounded-3xl border border-white/5 shadow-2xl">
-            <div class="w-full max-w-sm mx-auto">
+        <div class="form-card">
+            <div class="form-inner">
                 
-                {# Messages flash (succès/erreur depuis autres controllers) #}
                 {% for msg in app.flashes('success') %}
-                <div class="alert-sat" style="background:rgba(0,229,160,.12);border-color:rgba(0,229,160,.25);margin-bottom:1rem;">
+                <div class="alert" style="background:rgba(0,229,160,.12);border-color:rgba(0,229,160,.25);">
                     <i class="bi bi-check-circle-fill" style="color:#00E5A0;font-size:1.1rem;"></i>
                     <span style="color:#00E5A0;">{{ msg }}</span>
                 </div>
                 {% endfor %}
                 {% for msg in app.flashes('warning') %}
-                <div class="alert-sat" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.25);margin-bottom:1rem;">
+                <div class="alert" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.25);">
                     <i class="bi bi-exclamation-triangle-fill" style="color:#F59E0B;font-size:1.1rem;"></i>
                     <span style="color:#F59E0B;">{{ msg }}</span>
                 </div>
                 {% endfor %}
                 {% for msg in app.flashes('error') %}
-                <div class="alert-sat alert-sat-error" style="margin-bottom:1rem;">
+                <div class="alert alert-error">
                     <i class="bi bi-x-circle-fill" style="color:#FF3B5C;font-size:1.1rem;"></i>
                     <span>{{ msg }}</span>
                 </div>
                 {% endfor %}
-                {# Erreur d'authentification Symfony #}
+                {% if app.request.get('error') == 'suspendue' %}
+    <div class="alert alert-error">
+        Votre entreprise a été suspendue. Contactez votre administrateur.
+    </div>
+{% endif %}
                 {% if error %}
-                    <div class="alert-sat alert-sat-error">
-                        <iconify-icon icon="solar:close-circle-linear" width="20" class="text-[#FF3B5C]"></iconify-icon>
+                    <div class="alert alert-error">
+                        <iconify-icon icon="solar:close-circle-linear" width="20" style="color:#FF3B5C;"></iconify-icon>
                         <span>{{ error.messageKey|trans(error.messageData, 'security') }}</span>
                     </div>
                 {% endif %}
 
-                <div class="text-center mb-10">
-                    <h2 class="font-display font-semibold text-3xl text-white tracking-tight mb-2 transition-colors">Bon retour</h2>
-                    <p class="text-slate-400 text-sm transition-colors">Accédez à votre tableau de bord</p>
+                <div class="form-header">
+                    <h2 class="form-title">Bon retour</h2>
+                    <p class="form-subtitle">Accédez à votre tableau de bord</p>
                 </div>
 
-                <form method="post" class="space-y-5">
-                    <div>
-                        <label for="username" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 transition-colors">Adresse email</label>
-                        <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus placeholder="nom@entreprise.bj" class="input-sat">
+                <form method="post" style="display:flex;flex-direction:column;gap:1rem;">
+                    <div class="form-group">
+                        <label for="username" class="form-label">Adresse email</label>
+                        <input type="email" id="username" name="_username" value="{{ last_username }}" required autofocus placeholder="nom@entreprise.bj" class="form-input">
                     </div>
 
-                    <div>
-                        <div class="flex justify-between mb-2">
-                            <label for="password" class="text-xs font-bold text-slate-400 uppercase tracking-wider transition-colors">Mot de passe</label>
-                            <a href="{{ path('app_reset_password_request') }}" class="text-xs text-[#00E5A0] hover:underline">Oublié ?</a>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <label for="password" class="form-label" style="margin-bottom:0;">Mot de passe</label>
+                            <a href="{{ path('app_reset_password_request') }}" class="forgot-link">Oublié ?</a>
                         </div>
-                        <div class="relative">
-                            <input type="password" id="password" name="_password" required placeholder="••••••••" class="input-sat pr-12">
-                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#00E5A0]">
-                                <iconify-icon id="password-eye-icon" icon="solar:eye-linear" width="20"></iconify-icon>
+                        <!-- Input avec l'icône œil intégrée DANS le champ -->
+                        <div class="input-with-icon">
+                            <input type="password" id="password" name="_password" required placeholder="••••••••" class="form-input">
+                            <button type="button" onclick="togglePasswordVisibility()" class="input-icon" aria-label="Afficher le mot de passe">
+                                <iconify-icon id="password-eye-icon" icon="solar:eye-linear" width="18"></iconify-icon>
                             </button>
                         </div>
                     </div>
 
-                    {# RÉINTÉGRATION DU BOUTON SE SOUVENIR DE MOI #}
-                    <div class="flex items-center text-sm mt-2">
-                        <label class="flex items-center gap-2 cursor-pointer text-slate-400">
-                            <input type="checkbox" name="_remember_me" class="w-4 h-4 rounded border-white/20 bg-[#060810] text-[#00E5A0] focus:ring-[#00E5A0]">
-                            <span>Se souvenir de moi</span>
-                        </label>
+                    <div class="remember-me">
+                        <input type="checkbox" name="_remember_me">
+                        <span>Se souvenir de moi</span>
                     </div>
 
-                    {# LE JETON CSRF MANQUANT EST ICI #}
                     <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
 
-                    <button type="submit" class="btn-primary-sat w-full mt-4">
+                    <button type="submit" class="btn-primary">
                         Se connecter
-                        <iconify-icon icon="solar:arrow-right-up-linear" width="18"></iconify-icon>
+                        <iconify-icon icon="solar:arrow-right-up-linear" width="16"></iconify-icon>
                     </button>
 
-                    <div class="flex items-center gap-3 my-6">
-                        <div class="flex-1 h-px bg-white/5 transition-colors"></div>
-                        <span class="text-[10px] text-slate-600 uppercase font-bold">Nouveau ici ?</span>
-                        <div class="flex-1 h-px bg-white/5 transition-colors"></div>
+                    <div class="divider">
+                        <div class="divider-line"></div>
+                        <span class="divider-text">Nouveau ici ?</span>
+                        <div class="divider-line"></div>
                     </div>
 
-                    <a href="{{ path('app_register') }}" class="block text-center text-sm font-semibold text-slate-400 hover:text-[#00E5A0] transition-colors">
+                    <a href="{{ path('app_register') }}" class="register-link">
                         Inscrire mon entreprise
                     </a>
                 </form>
@@ -223,7 +808,6 @@
 </main>
 
 <script>
-    // --- LOGIQUE DE LA NAVBAR (HIDE ON SCROLL) ---
     let lastScrollY = window.scrollY;
     const nav = document.getElementById('main-nav');
 
@@ -236,7 +820,6 @@
         lastScrollY = window.scrollY;
     });
 
-    // --- LOGIQUE DU THEME (CLAIR/SOMBRE) ---
     const themeBtn = document.getElementById('theme-toggle');
     const themeIcon = document.getElementById('theme-icon');
     const html = document.documentElement;
@@ -260,16 +843,19 @@
         localStorage.setItem('sat-theme', newTheme);
     });
 
-    // --- LOGIQUE DE L'OEIL MOT DE PASSE ---
+    // Fonction pour afficher/masquer le mot de passe
     function togglePasswordVisibility() {
-        const input = document.getElementById('password');
-        const icon = document.getElementById('password-eye-icon');
-        if (input.type === 'password') {
-            input.type = 'text';
-            icon.setAttribute('icon', 'solar:eye-closed-linear');
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('password-eye-icon');
+        
+        if (passwordInput.type === 'password') {
+            // Afficher le mot de passe
+            passwordInput.type = 'text';
+            eyeIcon.setAttribute('icon', 'solar:eye-closed-linear');
         } else {
-            input.type = 'password';
-            icon.setAttribute('icon', 'solar:eye-linear');
+            // Masquer le mot de passe
+            passwordInput.type = 'password';
+            eyeIcon.setAttribute('icon', 'solar:eye-linear');
         }
     }
 </script>

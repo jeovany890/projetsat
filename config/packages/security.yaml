@@ -32,6 +32,10 @@ security:
                 lifetime: 604800
                 path: /
 
+            # login_throttling:
+            #     max_attempts: 5
+            #     interval: '1 minute'
+
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }

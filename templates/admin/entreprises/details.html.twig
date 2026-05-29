@@ -12,38 +12,7 @@
 <div class="entreprise-detail-container">
 
     {# En-tête #}
-    <div class="entreprise-header">
-        <div>
-            <h1><i class="bi bi-building"></i> {{ entreprise.nom }}</h1>
-            <div class="entreprise-breadcrumb">
-                <a href="{{ path('admin_entreprises_liste') }}">Entreprises</a> / <span>{{ entreprise.nom }}</span>
-            </div>
-        </div>
-        <div class="entreprise-actions-top">
-            {% if entreprise.statut == 'ACTIF' %}
-                <span class="badge badge-success">Active</span>
-                <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" id="form-susp-entrep-{{ entreprise.id }}" class="inline-form">
-                    <button type="submit" class="btn btn-ghost btn-sm btn-warning"
-                            data-confirm="Suspendre cette entreprise ?"
-                            data-form="form-susp-entrep-{{ entreprise.id }}">
-                        <i class="bi bi-pause-circle"></i> Suspendre
-                    </button>
-                </form>
-            {% elseif entreprise.statut == 'SUSPENDU' %}
-                <span class="badge badge-danger">Suspendue</span>
-                <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" class="inline-form">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-play-circle"></i> Réactiver
-                    </button>
-                </form>
-            {% elseif entreprise.statut == 'EN_ATTENTE' %}
-                <span class="badge badge-warning">En attente</span>
-            {% elseif entreprise.statut == 'REJETE' %}
-                <span class="badge badge-danger">Rejetée</span>
-            {% endif %}
-        </div>
-    </div>
-
+    
     {# Statistiques #}
     <div class="stats-grid stats-grid-4">
         <div class="stat-card">

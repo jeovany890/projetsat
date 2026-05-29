@@ -55,14 +55,10 @@ class CampagnePhishing
     #[ORM\OneToMany(targetEntity: ResultatPhishing::class, mappedBy: 'campagne', cascade: ['persist', 'remove'])]
     private Collection $resultats;
 
-    #[ORM\OneToMany(targetEntity: EnvoiPhishing::class, mappedBy: 'campagne', cascade: ['persist', 'remove'])]
-    private Collection $envois;
-
     public function __construct()
     {
         $this->dateCreation = new \DateTime();
         $this->resultats    = new ArrayCollection();
-        $this->envois       = new ArrayCollection();
     }
 
     public function getId(): ?int { return $this->id; }
@@ -110,8 +106,6 @@ class CampagnePhishing
         }
         return $this;
     }
-
-    public function getEnvois(): Collection { return $this->envois; }
 
     public function __toString(): string { return $this->titre ?? ''; }
 }

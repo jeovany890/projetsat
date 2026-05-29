@@ -44,10 +44,10 @@
             {% endif %}
             <div class="campaign-meta">
                 <span><i class="bi bi-calendar3"></i> T{{ campagne.trimestre }} {{ campagne.annee }}</span>
-                <span><i class="bi bi-play"></i> {{ campagne.dateDebut|date('d/m/Y') }}</span>
-                <span><i class="bi bi-stop"></i> {{ campagne.dateFin|date('d/m/Y') }}</span>
+                <span><i class="bi bi-play"></i> {{ campagne.dateDebut ? campagne.dateDebut|date('d/m/Y') : 'Début automatique au lancement' }}</span>
+                <span><i class="bi bi-stop"></i> {{ campagne.dateFin ? campagne.dateFin|date('d/m/Y') : '—' }}</span>
                 <span><i class="bi bi-people"></i> {{ campagne.totalParticipants }} participant(s)</span>
-                <span><i class="bi bi-exclamation-triangle"></i> -{{ campagne.pointsPenalite }} pts si non complété</span>
+               
             </div>
         </div>
         <div class="campaign-progress-circle">

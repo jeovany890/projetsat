@@ -100,7 +100,7 @@ class DashboardController extends AbstractController
         if (!empty($employeIds)) {
             $resultatStats = $em->createQueryBuilder()
                 ->select(
-                    'SUM(CASE WHEN r.emailEnvoye = true THEN 1 ELSE 0 END) as envoyes',
+                    'SUM(CASE WHEN r.statut = :envoye THEN 1 ELSE 0 END) as envoyes',
                     'SUM(CASE WHEN r.lienClique = true THEN 1 ELSE 0 END) as clics',
                     'SUM(CASE WHEN r.soumissionDonnees = true THEN 1 ELSE 0 END) as soumissions',
                     'SUM(CASE WHEN r.signale = true THEN 1 ELSE 0 END) as signalements'
@@ -109,6 +109,7 @@ class DashboardController extends AbstractController
                 ->join('r.employe', 'e')
                 ->where('e.id IN (:ids)')
                 ->setParameter('ids', $employeIds)
+                ->setParameter('envoye', ResultatPhishing::STATUT_ENVOYE)
                 ->getQuery()->getSingleResult();
 
             $totalEnvoyes     = (int)($resultatStats['envoyes'] ?? 0);

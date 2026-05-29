@@ -8,21 +8,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ModuleFormationRepository::class)]
-#[ORM\Table(name: "module_formation")]
+#[ORM\Table(name: 'module_formation')]
 class ModuleFormation
 {
-    /**
-     * Bonus de complétion de module par défaut : 20 points.
-     *
-     * Architecture module standard (100 pts totaux) :
-     *   9 quiz × 5 pts             = 45 pts  (Quiz.points)
-     *   simulation finale          = 35 pts  (SimulationInteractive.pointsReussite)
-     *   bonus complétion (ce champ) = 20 pts
-     *                              ─────────
-     *                              = 100 pts
-     */
-    const POINTS_BONUS_DEFAUT = 20;
-
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
@@ -46,20 +34,18 @@ class ModuleFormation
     #[ORM\Column(type: 'integer')]
     private ?int $dureeEstimee = null;
 
-    /**
-     * Bonus de complétion attribué à l'employé quand il termine le module
-     * (tous chapitres validés + simulation réussie si présente).
-     *
-     * Ce champ remplace l'ancien "pointsReussite" pour clarifier sa sémantique :
-     * il s'agit d'un bonus de fin de module, pas du total des points du module.
-     *
-     * Anciennement : $pointsReussite (default 100) — valeur trop haute
-     * qui s'ajoutait en double aux points déjà octroyés par les quiz et simulation.
-     */
-    #[ORM\Column(type: 'integer', options: ['default' => 20])]
-    private int $pointsBonus = self::POINTS_BONUS_DEFAUT;
+    #[ORM\Column(type: 'integer', options: ['default' => 100])]
+    private int $pointsReussite = 100;
 
+    // Simulation intégrée (plus de table séparée)
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $simulationTitre = null;
 
+    #[ORM\Column(type: 'string', length: 50, nullable: true)]
+    private ?string $simulationType = null;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    private ?array $simulationContenu = [];
 
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     private bool $estPublie = false;
@@ -73,57 +59,69 @@ class ModuleFormation
     #[ORM\OneToMany(targetEntity: Chapitre::class, mappedBy: 'module', cascade: ['persist', 'remove'])]
     private Collection $chapitres;
 
-    #[ORM\OneToOne(targetEntity: SimulationInteractive::class, inversedBy: 'module', cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(name: 'simulation_id', referencedColumnName: 'id', nullable: true)]
-    private ?SimulationInteractive $simulation = null;
-
     public function __construct()
     {
         $this->dateCreation = new \DateTime();
         $this->chapitres = new ArrayCollection();
     }
 
+    // ========================================
+    // Getters / Setters
+    // ========================================
+
     public function getId(): ?int { return $this->id; }
+
     public function getTitre(): ?string { return $this->titre; }
     public function setTitre(string $titre): static { $this->titre = $titre; return $this; }
+
     public function getSlug(): ?string { return $this->slug; }
     public function setSlug(string $slug): static { $this->slug = $slug; return $this; }
+
     public function getDescription(): ?string { return $this->description; }
     public function setDescription(string $description): static { $this->description = $description; return $this; }
+
     public function getTypeModule(): ?string { return $this->typeModule; }
     public function setTypeModule(string $typeModule): static { $this->typeModule = $typeModule; return $this; }
+
     public function getDifficulte(): ?string { return $this->difficulte; }
     public function setDifficulte(string $difficulte): static { $this->difficulte = $difficulte; return $this; }
+
     public function getDureeEstimee(): ?int { return $this->dureeEstimee; }
     public function setDureeEstimee(int $dureeEstimee): static { $this->dureeEstimee = $dureeEstimee; return $this; }
 
-    /**
-     * Bonus de complétion attribué à la fin du module (en points pédagogiques).
-     * Valeur cible : 20 pts pour un module standard de 100 pts.
-     */
-    public function getPointsBonus(): int { return $this->pointsBonus; }
-    public function setPointsBonus(int $pointsBonus): static { $this->pointsBonus = max(0, $pointsBonus); return $this; }
+    public function getPointsReussite(): int { return $this->pointsReussite; }
+    public function setPointsReussite(int $points): static { $this->pointsReussite = max(0, $points); return $this; }
 
-    /**
-     * Alias de rétrocompatibilité pour getPointsBonus().
-     * @deprecated Utiliser getPointsBonus()
-     */
-    public function getPointsReussite(): int { return $this->pointsBonus; }
+    // Simulation
+    public function getSimulationTitre(): ?string { return $this->simulationTitre; }
+    public function setSimulationTitre(?string $titre): static { $this->simulationTitre = $titre; return $this; }
 
-    /**
-     * Alias de rétrocompatibilité pour setPointsBonus().
-     * @deprecated Utiliser setPointsBonus()
-     */
+    public function getSimulationType(): ?string { return $this->simulationType; }
+    public function setSimulationType(?string $type): static { $this->simulationType = $type; return $this; }
 
+    public function getSimulationContenu(): ?array { return $this->simulationContenu; }
+    public function setSimulationContenu(?array $contenu): static { $this->simulationContenu = $contenu; return $this; }
 
     public function isEstPublie(): bool { return $this->estPublie; }
     public function setEstPublie(bool $estPublie): static { $this->estPublie = $estPublie; return $this; }
+
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
     public function setDateCreation(\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+
     public function getCategorie(): ?string { return $this->categorie; }
     public function setCategorie(?string $categorie): static { $this->categorie = $categorie; return $this; }
 
     public function getChapitres(): Collection { return $this->chapitres; }
+    
+
+public function getTotalPointsQuiz(): int
+{
+    $total = 0;
+    foreach ($this->chapitres as $chapitre) {
+        $total += $chapitre->getTotalPoints();  // ✅ Correction ici
+    }
+    return $total;
+}
     public function addChapitre(Chapitre $chapitre): static
     {
         if (!$this->chapitres->contains($chapitre)) {
@@ -134,14 +132,45 @@ class ModuleFormation
     }
     public function removeChapitre(Chapitre $chapitre): static
     {
-        if ($this->chapitres->removeElement($chapitre)) {
-            if ($chapitre->getModule() === $this) {
-                $chapitre->setModule(null);
-            }
+        if ($this->chapitres->removeElement($chapitre) && $chapitre->getModule() === $this) {
+            $chapitre->setModule(null);
         }
         return $this;
     }
-    public function getSimulation(): ?SimulationInteractive { return $this->simulation; }
-    public function setSimulation(?SimulationInteractive $simulation): static { $this->simulation = $simulation; return $this; }
+
+    // ========================================
+    // Méthodes calculées (pas de stockage)
+    // ========================================
+
+    public function hasSimulation(): bool
+    {
+        return !empty($this->simulationTitre) && !empty($this->simulationContenu);
+    }
+
+    /**
+     * Somme des points de tous les quiz des chapitres
+     */
+
+
+    /**
+     * Points attribués à la simulation (total du module - somme des quiz)
+     */
+    public function getPointsSimulation(): int
+    {
+        if (!$this->hasSimulation()) {
+            return 0;
+        }
+        return max(0, $this->pointsReussite - $this->getTotalPointsQuiz());
+    }
+
+    /**
+     * Nombre total de questions du quiz (utile pour l'affichage)
+     */
+    public function getNombreQuestionsSimulation(): int
+    {
+        return count($this->simulationContenu ?? []);
+    }
+
     public function __toString(): string { return $this->titre ?? ''; }
+    
 }

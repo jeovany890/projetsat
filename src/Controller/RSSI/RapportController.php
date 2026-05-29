@@ -95,14 +95,16 @@ class RapportController extends AbstractController
         if (!empty($employeIds)) {
             $r = $em->createQueryBuilder()
                 ->select(
-                    'SUM(CASE WHEN r.emailEnvoye = true THEN 1 ELSE 0 END) as env',
+                    'SUM(CASE WHEN r.statut = :envoye THEN 1 ELSE 0 END) as env',
                     'SUM(CASE WHEN r.lienClique = true THEN 1 ELSE 0 END) as clics',
                     'SUM(CASE WHEN r.soumissionDonnees = true THEN 1 ELSE 0 END) as subs',
                     'SUM(CASE WHEN r.signale = true THEN 1 ELSE 0 END) as sigs'
                 )
                 ->from(ResultatPhishing::class, 'r')
                 ->join('r.employe', 'e')
-                ->where('e.id IN (:ids)')->setParameter('ids', $employeIds)
+                ->where('e.id IN (:ids)')
+                ->setParameter('ids', $employeIds)
+                ->setParameter('envoye', ResultatPhishing::STATUT_ENVOYE)
                 ->getQuery()->getSingleResult();
 
             $totalEnvoyes      = (int)($r['env']  ?? 0);

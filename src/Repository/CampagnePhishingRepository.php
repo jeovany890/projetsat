@@ -56,7 +56,8 @@ class CampagnePhishingRepository extends ServiceEntityRepository
         ->select('COUNT(r.id)')
         ->from('App\Entity\ResultatPhishing', 'r')
         ->where('r.campagne = :c')
-        ->andWhere('r.emailEnvoye = true')
+        ->andWhere('r.statut = :envoye')
+        ->setParameter('envoye', 'ENVOYE')
         ->setParameter('c', $campagne)
         ->getQuery()->getSingleScalarResult();
 
@@ -119,7 +120,7 @@ class CampagnePhishingRepository extends ServiceEntityRepository
         ->select(
             'IDENTITY(r.campagne) AS campagne_id',
             'COUNT(r.id) AS totalCibles',
-            'SUM(CASE WHEN r.emailEnvoye = true THEN 1 ELSE 0 END) AS emailsEnvoyes',
+            'SUM(CASE WHEN r.statut = :envoye THEN 1 ELSE 0 END) AS emailsEnvoyes',
             'SUM(CASE WHEN r.lienClique = true THEN 1 ELSE 0 END) AS liensCliques',
             'SUM(CASE WHEN r.soumissionDonnees = true THEN 1 ELSE 0 END) AS soumissions',
             'SUM(CASE WHEN r.signale = true THEN 1 ELSE 0 END) AS emailsSignales'
@@ -127,6 +128,7 @@ class CampagnePhishingRepository extends ServiceEntityRepository
         ->from('App\Entity\ResultatPhishing', 'r')
         ->where('IDENTITY(r.campagne) IN (:ids)')
         ->setParameter('ids', $ids)
+        ->setParameter('envoye', 'ENVOYE')
         ->groupBy('r.campagne')
         ->getQuery()
         ->getArrayResult();

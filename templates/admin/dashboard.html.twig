@@ -5,141 +5,252 @@
 {% block content %}
 <div class="dash-container">
 
-    {# 1. Section des KPI (Key Performance Indicators) #}
+    {# ── 1. KPI CARDS ── #}
     <div class="dash-grid-4">
-        
-        {# Carte: Entreprises actives #}
-        <div class="dash-card card-primary-gradient">
-            <div class="card-icon-bg"></div>
+
+        <div class="dash-card card-gradient-blue">
+            <div class="card-blob"></div>
             <div class="card-content">
                 <div class="card-top">
                     <div class="card-info">
-                        <span class="card-label text-white-80">Entreprises actives</span>
-                        <h3 class="card-value text-white">{{ stats.entreprisesActives }}</h3>
+                        <span class="card-label" style="color:rgba(255,255,255,0.75)">Entreprises actives</span>
+                        <h3 class="card-value" style="color:#fff">{{ stats.entreprisesActives|default(0) }}</h3>
                     </div>
-                    <div class="card-icon text-white">
-                        <i class="bi bi-building"></i>
+                    <div class="card-icon-circle" style="background:rgba(255,255,255,0.18)">
+                        <iconify-icon icon="solar:buildings-2-bold" width="22" style="color:#fff"></iconify-icon>
                     </div>
                 </div>
-                <div class="card-bottom text-white-80">
-                    <i class="bi bi-graph-up-arrow"></i> Sur {{ stats.totalEntreprises }} au total
+                <div class="card-bottom" style="color:rgba(255,255,255,0.7)">
+                    Sur {{ stats.totalEntreprises|default(0) }} total inscrites
                 </div>
             </div>
         </div>
 
-        {# Carte: Employés formés #}
-        <div class="dash-card border-left-success">
-            <div class="card-content">
-                <div class="card-top">
-                    <div class="card-info">
-                        <span class="card-label">RSSI inscrits</span>
-                        <h3 class="card-value text-success">{{ stats.totalRSSI }}</h3>
-                    </div>
-                    <div class="card-icon icon-success">
-                        <i class="bi bi-people"></i>
-                    </div>
-                </div>
-                <div class="card-bottom">
-                    {{ stats.totalRSSI }} RSSI inscrits
-                </div>
-            </div>
-        </div>
-
-        {# Carte: En attente #}
-        <div class="dash-card border-left-warning">
+        <div class="dash-card" style="border-left:3px solid #F59E0B">
             <div class="card-content">
                 <div class="card-top">
                     <div class="card-info">
                         <span class="card-label">En attente</span>
-                        <h3 class="card-value text-warning">{{ stats.entreprisesEnAttente }}</h3>
+                        <h3 class="card-value" style="color:#F59E0B">{{ stats.entreprisesEnAttente|default(0) }}</h3>
                     </div>
-                    <div class="card-icon icon-warning">
-                        <i class="bi bi-clock-history"></i>
+                    <div class="card-icon-circle" style="background:#FEF3C7">
+                        <iconify-icon icon="solar:clock-circle-bold" width="22" style="color:#D97706"></iconify-icon>
                     </div>
                 </div>
-                <div class="card-bottom">
-                    Demandes à valider
-                </div>
+                <div class="card-bottom">Demandes à valider</div>
             </div>
         </div>
 
-        {# Carte: Modules #}
-        <div class="dash-card border-left-info">
+        <div class="dash-card" style="border-left:3px solid #10B981">
             <div class="card-content">
                 <div class="card-top">
                     <div class="card-info">
-                        <span class="card-label">Modules actifs</span>
-                        <h3 class="card-value text-info">{{ stats.modulesPublies }}</h3>
+                        <span class="card-label">RSSI inscrits</span>
+                        <h3 class="card-value" style="color:#10B981">{{ stats.totalRSSI|default(0) }}</h3>
                     </div>
-                    <div class="card-icon icon-info">
-                        <i class="bi bi-book"></i>
+                    <div class="card-icon-circle" style="background:#D1FAE5">
+                        <iconify-icon icon="solar:shield-check-bold" width="22" style="color:#059669"></iconify-icon>
                     </div>
                 </div>
-                <div class="card-bottom">
-                    Sur {{ stats.totalModules }} créés
-                </div>
+                <div class="card-bottom">Responsables sécurité</div>
             </div>
         </div>
+
+        <div class="dash-card" style="border-left:3px solid #6366F1">
+            <div class="card-content">
+                <div class="card-top">
+                    <div class="card-info">
+                        <span class="card-label">Employés actifs</span>
+                        <h3 class="card-value" style="color:#6366F1">{{ stats.totalEmployesActifs|default(0) }}</h3>
+                    </div>
+                    <div class="card-icon-circle" style="background:#EEF2FF">
+                        <iconify-icon icon="solar:users-group-rounded-bold" width="22" style="color:#4F46E5"></iconify-icon>
+                    </div>
+                </div>
+                <div class="card-bottom">Apprenants actifs</div>
+            </div>
+        </div>
+
     </div>
 
-    {# 2. Section des Graphiques Principaux #}
+    {# ── 2. ÉVOLUTION + SECTEURS ── #}
     <div class="dash-grid-2-1">
-        
-        {# Évolution #}
+
         <div class="dash-card">
             <div class="card-header">
-                <h3 class="card-title"><i class="bi bi-graph-up text-primary"></i> Évolution des entreprises</h3>
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:graph-up-bold" width="16" style="color:#6366F1"></iconify-icon>
+                    Évolution des entreprises (12 derniers mois)
+                </h3>
             </div>
-            <div class="chart-container">
+            <div style="position:relative;height:260px">
                 <canvas id="chartEvolution"></canvas>
             </div>
         </div>
 
-        {# Secteurs #}
         <div class="dash-card">
             <div class="card-header">
-                <h3 class="card-title"><i class="bi bi-pie-chart text-secondary"></i> Secteurs d'activité</h3>
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:pie-chart-2-bold" width="16" style="color:#EC4899"></iconify-icon>
+                    Secteurs d'activité
+                </h3>
             </div>
-            <div class="chart-container">
+            <div style="position:relative;height:200px">
                 <canvas id="chartSecteurs"></canvas>
             </div>
         </div>
+
     </div>
 
-    {# 3. Section des Graphiques Secondaires #}
-    <div class="dash-grid-2">
-        
-        {# Statut #}
+    {# ── 3. STATUT + JAUGES + CLASSEMENT ── #}
+    <div class="dash-grid-3">
+
+        {# Barres statut #}
         <div class="dash-card">
             <div class="card-header">
-                <h3 class="card-title"><i class="bi bi-bar-chart text-success"></i> Statut des entreprises</h3>
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:chart-bold" width="16" style="color:#10B981"></iconify-icon>
+                    Statut des entreprises
+                </h3>
             </div>
-            <div class="chart-container">
+            <div style="position:relative;height:180px">
                 <canvas id="chartStatut"></canvas>
             </div>
         </div>
 
-        {# Campagnes #}
-        <div class="dash-card flex-center">
-            <div class="card-header w-100">
-                <h3 class="card-title"><i class="bi bi-envelope-paper text-warning"></i> Campagnes phishing</h3>
+        {# Jauges circulaires #}
+        <div class="dash-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:dial-bold" width="16" style="color:#F59E0B"></iconify-icon>
+                    Répartition en %
+                </h3>
             </div>
-            <div class="campaign-stats">
-                <div class="campaign-number">{{ stats.totalCampagnesPhishing }}</div>
-                <div class="campaign-label">Campagnes lancées au total</div>
-                <div class="campaign-badge">
-                    <span class="badge badge-success pulse-animation">
-                        <i class="bi bi-activity"></i> {{ stats.campagnesEnCours }} en cours
-                    </span>
+            <div class="gauge-row">
+                <div class="gauge-wrap">
+                    <canvas id="gaugeActif" width="110" height="80"></canvas>
+                    <div class="gauge-val" id="gvActif" style="color:#10B981">–</div>
+                    <div class="gauge-label">Actives</div>
+                </div>
+                <div class="gauge-wrap">
+                    <canvas id="gaugeAttente" width="110" height="80"></canvas>
+                    <div class="gauge-val" id="gvAttente" style="color:#F59E0B">–</div>
+                    <div class="gauge-label">En attente</div>
+                </div>
+                <div class="gauge-wrap">
+                    <canvas id="gaugeSuspendu" width="110" height="80"></canvas>
+                    <div class="gauge-val" id="gvSuspendu" style="color:#EF4444">–</div>
+                    <div class="gauge-label">Suspendues</div>
                 </div>
             </div>
         </div>
+
+        {# Phishing #}
+        <div class="dash-card flex-center">
+            <div class="card-header w-100">
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:letter-opened-bold" width="16" style="color:#F59E0B"></iconify-icon>
+                    Campagnes phishing
+                </h3>
+            </div>
+            <div class="campaign-stats">
+                <div class="campaign-number">{{ stats.totalCampagnesPhishing|default(0) }}</div>
+                <div class="campaign-label">Campagnes lancées</div>
+                <div class="campaign-badge">
+                    <span class="badge badge-success pulse-anim">
+                        <iconify-icon icon="solar:pulse-bold" width="13"></iconify-icon>
+                        {{ stats.campagnesEnCours|default(0) }} en cours
+                    </span>
+                </div>
+                <div style="margin-top:14px;font-size:12px;color:#64748B">
+                    {{ stats.modulesPublies|default(0) }} modules publiés /
+                    {{ stats.totalModules|default(0) }} total
+                </div>
+            </div>
+        </div>
+
     </div>
 
-    {# 4. Section Tableau de données #}
+    {# ── 4. CLASSEMENT + ENTREPRISES VULNÉRABLES ── #}
+    <div class="dash-grid-2">
+
+        {# Classement entreprises #}
+        <div class="dash-card">
+            <div class="card-header flex-between">
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:ranking-bold" width="16" style="color:#6366F1"></iconify-icon>
+                    Classement des entreprises
+                </h3>
+                <a href="{{ path('admin_entreprises_liste') }}" class="btn-link">Voir tout</a>
+            </div>
+            <ul class="rank-list">
+                {% for entreprise in dernieresEntreprises %}
+                <li class="rank-item">
+                    <span class="rank-num rank-{{ loop.index }}">{{ loop.index }}</span>
+                    <span class="rank-info">
+                        <span class="rank-name">{{ entreprise.nom }}</span>
+                        <span class="rank-sector">{{ entreprise.secteur }}</span>
+                    </span>
+                    <span class="rank-right">
+                        <span class="rank-employes">{{ entreprise.nombreEmployes }} emp.</span>
+                        {% if entreprise.statut == 'ACTIF' %}
+                            <span class="badge badge-success">Actif</span>
+                        {% elseif entreprise.statut == 'EN_ATTENTE' %}
+                            <span class="badge badge-warning">Attente</span>
+                        {% else %}
+                            <span class="badge badge-neutral">{{ entreprise.statut }}</span>
+                        {% endif %}
+                    </span>
+                </li>
+                {% else %}
+                <li class="rank-empty">Aucune entreprise.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {# Entreprises vulnérables — score de vigilance #}
+        <div class="dash-card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <iconify-icon icon="solar:danger-triangle-bold" width="16" style="color:#EF4444"></iconify-icon>
+                    Entreprises vulnérables
+                </h3>
+            </div>
+            <div class="vuln-list" id="vulnList">
+                {# Rempli dynamiquement par JS depuis entreprisesVulnerables #}
+                {% if entreprisesVulnerables is defined and entreprisesVulnerables|length > 0 %}
+                    {% for item in entreprisesVulnerables %}
+                    <div class="vuln-item">
+                        <div class="vuln-header">
+                            <span class="vuln-name">{{ item.nom }}</span>
+                            <span class="vuln-score" style="color:{% if item.score < 35 %}#EF4444{% elseif item.score < 55 %}#F59E0B{% else %}#10B981{% endif %}">
+                                {{ item.score }}/100
+                            </span>
+                        </div>
+                        <div class="vuln-bar-track">
+                            <div class="vuln-bar-fill" style="width:{{ item.score }}%;background:{% if item.score < 35 %}#EF4444{% elseif item.score < 55 %}#F59E0B{% else %}#10B981{% endif %}"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    {# Fallback visuel si la variable n'est pas encore passée depuis le controller #}
+                    <div class="vuln-placeholder">
+                        <iconify-icon icon="solar:check-circle-bold" width="28" style="color:#10B981"></iconify-icon>
+                        <p>Aucune entreprise en situation de risque critique.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    {# ── 5. TABLEAU DERNIÈRES INSCRIPTIONS ── #}
     <div class="dash-card">
         <div class="card-header flex-between">
-            <h3 class="card-title"><i class="bi bi-building-add text-info"></i> Dernières inscriptions</h3>
+            <h3 class="card-title">
+                <iconify-icon icon="solar:add-circle-bold" width="16" style="color:#6366F1"></iconify-icon>
+                Dernières inscriptions
+            </h3>
             <a href="{{ path('admin_entreprises_liste') }}" class="btn-link">Voir tout</a>
         </div>
         <div class="table-responsive">
@@ -149,38 +260,38 @@
                         <th>Entreprise</th>
                         <th>Secteur</th>
                         <th class="text-center">Employés</th>
-                        <th>Date d'inscription</th>
+                        <th>Date</th>
                         <th class="text-center">Statut</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for entreprise in dernieresEntreprises %}
                     <tr>
                         <td>
-                            <div class="fw-bold text-dark">{{ entreprise.nom }}</div>
+                            <div class="fw-600">{{ entreprise.nom }}</div>
                             <div class="text-sm text-muted">IFU: {{ entreprise.ifu }}</div>
                         </td>
-                        <td>
-                            <span class="badge badge-light">{{ entreprise.secteur }}</span>
-                        </td>
-                        <td class="text-center fw-medium">{{ entreprise.nombreEmployes }}</td>
-                        <td class="text-muted text-sm">
-                            <i class="bi bi-calendar3"></i> {{ entreprise.dateCreation|date('d/m/Y') }}
-                        </td>
+                        <td><span class="badge badge-neutral">{{ entreprise.secteur }}</span></td>
+                        <td class="text-center">{{ entreprise.nombreEmployes }}</td>
+                        <td class="text-muted text-sm">{{ entreprise.dateCreation|date('d/m/Y') }}</td>
                         <td class="text-center">
                             {% if entreprise.statut == 'ACTIF' %}
                                 <span class="badge badge-success">Actif</span>
                             {% elseif entreprise.statut == 'EN_ATTENTE' %}
-                                <span class="badge badge-warning">En attente</span>
+                                <span class="badge badge-warning">Attente</span>
                             {% else %}
-                                <span class="badge badge-light">{{ entreprise.statut }}</span>
+                                <span class="badge badge-neutral">{{ entreprise.statut }}</span>
                             {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn-icon" title="Voir détails">
+                                <iconify-icon icon="solar:eye-bold" width="16"></iconify-icon>
+                            </a>
                         </td>
                     </tr>
                     {% else %}
-                    <tr>
-                        <td colspan="5" class="text-center text-muted py-4">Aucune entreprise récente.</td>
-                    </tr>
+                    <tr><td colspan="6" class="text-center text-muted py-4">Aucune entreprise récente.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -188,226 +299,532 @@
     </div>
 
 </div>
+{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
 <style>
-/* ==========================================================================
-   DASHBOARD UI / UX STYLES (CORRIGÉ ULTRA-RESPONSIVE)
-   ========================================================================== */
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
 .dash-container {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 18px;
     padding-bottom: 24px;
-    width: 100%; /* Empêche le débordement du conteneur parent */
+    width: 100%;
     overflow-x: hidden;
 }
 
-/* Grilles CSS avec protection anti-débordement (min(100%, Xpx)) */
 .dash-grid-4 {
     display: grid;
-    /* La magie opère ici : 240px max, mais 100% si l'écran est plus petit */
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
 }
 .dash-grid-2-1 {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 20px;
+    gap: 18px;
+}
+.dash-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
 }
 .dash-grid-2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
 }
 
-/* Bascule de la grille asymétrique sur les écrans moyens et petits */
-@media (max-width: 992px) {
-    .dash-grid-2-1 { grid-template-columns: 1fr; }
+@media (max-width: 1100px) {
+    .dash-grid-3 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+    .dash-grid-2-1,
+    .dash-grid-2     { grid-template-columns: 1fr; }
+    .dash-grid-3     { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+    .dash-grid-4 { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Cartes (Cards) */
+/* ═══════════════════════════════════════
+   CARD BASE
+═══════════════════════════════════════ */
 .dash-card {
     background: #ffffff;
     border-radius: 16px;
-    border: 1px solid #E2E8F0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-    padding: 24px;
+    border: 1px solid #E8EEF4;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    padding: 18px;
     position: relative;
     overflow: hidden;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    width: 100%; /* Sécurité supplémentaire */
+    width: 100%;
     box-sizing: border-box;
 }
 .dash-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.07);
+}
+.card-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #F1F5F9;
+}
+.card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1E293B;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 7px;
 }
 
-/* En-têtes de cartes */
-.card-header { margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #F1F5F9; }
-.card-title { font-size: 16px; font-weight: 700; color: #1E293B; margin: 0; display: flex; align-items: center; gap: 8px; }
+/* ═══════════════════════════════════════
+   KPI CARD
+═══════════════════════════════════════ */
+.card-gradient-blue {
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 60%, #818CF8 100%);
+    border: none;
+}
+.card-blob {
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 110px; height: 110px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 50%;
+    z-index: 1;
+}
+.card-content { position: relative; z-index: 2; }
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.card-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #64748B;
+    display: block;
+    margin-bottom: 5px;
+}
+.card-value {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.1;
+    color: #0F172A;
+}
+.card-icon-circle {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.card-bottom {
+    font-size: 11.5px;
+    color: #64748B;
+    font-weight: 500;
+}
 
-/* Contenu des KPI */
-.card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; position: relative; z-index: 2; }
-.card-label { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #64748B; display: block; margin-bottom: 8px; }
-.card-value { font-size: 32px; font-weight: 800; margin: 0; line-height: 1; color: #0F172A; }
-.card-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
-.card-bottom { font-size: 13px; color: #64748B; font-weight: 500; position: relative; z-index: 2; }
+/* ═══════════════════════════════════════
+   JAUGES CIRCULAIRES
+═══════════════════════════════════════ */
+.gauge-row {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    padding: 8px 0 4px;
+}
+.gauge-wrap { text-align: center; }
+.gauge-val {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    margin-top: 2px;
+}
+.gauge-label {
+    font-size: 11px;
+    color: #64748B;
+    margin-top: 3px;
+    font-weight: 500;
+}
 
-/* Couleurs et bordures sémantiques */
-.border-left-success { border-left: 4px solid #10B981; }
-.border-left-warning { border-left: 4px solid #F59E0B; }
-.border-left-info { border-left: 4px solid #3B82F6; }
-.icon-success { background: #D1FAE5; color: #10B981; }
-.icon-warning { background: #FEF3C7; color: #F59E0B; }
-.icon-info { background: #DBEAFE; color: #3B82F6; }
-.text-success { color: #10B981 !important; }
-.text-warning { color: #F59E0B !important; }
-.text-info { color: #3B82F6 !important; }
-.text-primary { color: #6366F1 !important; }
-.text-secondary { color: #EC4899 !important; }
+/* ═══════════════════════════════════════
+   CAMPAGNES
+═══════════════════════════════════════ */
+.campaign-stats { text-align: center; padding: 12px 0 6px; width: 100%; }
+.campaign-number {
+    font-size: 52px;
+    font-weight: 900;
+    background: linear-gradient(135deg, #6366F1, #EC4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+.campaign-label { color: #64748B; font-size: 12px; font-weight: 500; margin: 8px 0 14px; }
 
-/* Carte dégradé (Primary) */
-.card-primary-gradient { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); border: none; }
-.card-primary-gradient .card-icon-bg { position: absolute; top: -20px; right: -20px; width: 120px; height: 120px; background: rgba(255,255,255,0.1); border-radius: 50%; z-index: 1; }
-.text-white { color: #ffffff !important; }
-.text-white-80 { color: rgba(255,255,255,0.8) !important; }
+/* ═══════════════════════════════════════
+   CLASSEMENT
+═══════════════════════════════════════ */
+.rank-list { list-style: none; padding: 0; margin: 0; }
+.rank-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 0;
+    border-bottom: 1px solid #F1F5F9;
+}
+.rank-item:last-child { border-bottom: none; }
+.rank-num {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.rank-1 { background: #FEF3C7; color: #92400E; }
+.rank-2 { background: #E2E8F0; color: #334155; }
+.rank-3 { background: #FEE2E2; color: #991B1B; }
+.rank-4, .rank-5 { background: #F1F5F9; color: #64748B; }
+.rank-info { flex: 1; min-width: 0; }
+.rank-name { display: block; font-size: 13px; font-weight: 600; color: #1E293B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rank-sector { font-size: 11px; color: #94A3B8; }
+.rank-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.rank-employes { font-size: 11px; color: #94A3B8; }
+.rank-empty { padding: 20px 0; text-align: center; color: #94A3B8; font-size: 13px; }
 
-/* Conteneurs Chart.js */
-.chart-container { position: relative; width: 100%; height: 300px; }
-.chart-container canvas { max-width: 100%; }
+/* ═══════════════════════════════════════
+   ENTREPRISES VULNÉRABLES
+═══════════════════════════════════════ */
+.vuln-list { display: flex; flex-direction: column; gap: 12px; }
+.vuln-item {}
+.vuln-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+.vuln-name { font-size: 13px; font-weight: 600; color: #1E293B; }
+.vuln-score { font-size: 13px; font-weight: 700; }
+.vuln-bar-track {
+    height: 8px;
+    background: #F1F5F9;
+    border-radius: 4px;
+    overflow: hidden;
+}
+.vuln-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.vuln-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+    gap: 10px;
+    color: #64748B;
+    font-size: 13px;
+    text-align: center;
+}
 
-/* Zone Campagne */
-.campaign-stats { text-align: center; padding: 20px 0; }
-.campaign-number { font-size: 56px; font-weight: 900; background: linear-gradient(135deg, #6366F1, #EC4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; word-break: break-word; }
-.campaign-label { color: #64748B; font-weight: 500; margin: 12px 0 20px 0; }
+/* ═══════════════════════════════════════
+   TABLE
+═══════════════════════════════════════ */
+.table-responsive { overflow-x: auto; width: 100%; }
+.dash-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dash-table th {
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748B;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+}
+.dash-table td {
+    padding: 13px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid #F1F5F9;
+}
+.dash-table tbody tr:hover { background: #FAFBFC; }
 
-/* Tableaux - Gestion du scroll horizontal forcé sur mobile */
-.table-responsive { overflow-x: auto; width: 100%; -webkit-overflow-scrolling: touch; margin-bottom: 0; border-radius: 8px; }
-.dash-table { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 600px; }
-.dash-table th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748B; background: #F8FAFC; border-bottom: 2px solid #E2E8F0; white-space: nowrap; }
-.dash-table td { padding: 16px; vertical-align: middle; border-bottom: 1px solid #E2E8F0; transition: background 0.2s; }
-.dash-table tr:last-child td { border-bottom: none; }
-.dash-table tbody tr:hover td { background: #F8FAFC; }
+/* ═══════════════════════════════════════
+   BADGES
+═══════════════════════════════════════ */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.badge-success  { background: #D1FAE5; color: #065F46; }
+.badge-warning  { background: #FEF3C7; color: #92400E; }
+.badge-neutral  { background: #F1F5F9; color: #475569; }
 
-/* Badges & Utilitaires */
-.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
-.badge-success { background: #D1FAE5; color: #065F46; }
-.badge-warning { background: #FEF3C7; color: #92400E; }
-.badge-light { background: #F1F5F9; color: #475569; }
-
-.flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.flex-center { display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.w-100 { width: 100%; }
-.fw-bold { font-weight: 700; }
-.fw-medium { font-weight: 500; }
-.text-sm { font-size: 13px; }
+/* ═══════════════════════════════════════
+   UTILITAIRES
+═══════════════════════════════════════ */
+.flex-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.flex-center   { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.w-100  { width: 100%; }
+.fw-600 { font-weight: 600; }
+.text-sm   { font-size: 12px; }
 .text-muted { color: #94A3B8; }
-.py-4 { padding-top: 24px; padding-bottom: 24px; }
-.btn-link { color: #6366F1; text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; }
-.btn-link:hover { text-decoration: underline; }
+.text-center { text-align: center; }
+.py-4   { padding-top: 20px; padding-bottom: 20px; }
 
-/* Animation */
+.btn-link {
+    color: #6366F1;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    transition: opacity 0.15s;
+}
+.btn-link:hover { opacity: 0.7; text-decoration: underline; }
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: #F1F5F9;
+    color: #475569;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+.btn-icon:hover { background: #EEF2FF; color: #4F46E5; }
+
+/* ═══════════════════════════════════════
+   ANIMATION BADGE
+═══════════════════════════════════════ */
 @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-    70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.45); }
+    70%  { box-shadow: 0 0 0 7px rgba(16,185,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
 }
-.pulse-animation { animation: pulse 2s infinite; }
-
-/* ==========================================================================
-   CORRECTIF MICRO-ÉCRANS (< 400px) - iPhone SE, etc.
-   ========================================================================== */
-@media (max-width: 400px) {
-    .dash-container { gap: 16px; }
-    .dash-grid-4, .dash-grid-2-1, .dash-grid-2 { gap: 16px; }
-    
-    /* Réduction du padding intérieur pour gagner de l'espace vitale */
-    .dash-card { padding: 16px; }
-    
-    /* Ajustement de la typographie pour éviter le chevauchement */
-    .card-value { font-size: 26px; }
-    .card-label { font-size: 11px; }
-    .card-icon { width: 40px; height: 40px; font-size: 20px; }
-    
-    .campaign-number { font-size: 42px; }
-    .card-title { font-size: 14px; }
-    
-    /* Les graphiques prennent moins de hauteur sur les petits téléphones */
-    .chart-container { height: 250px; }
-}
+.pulse-anim { animation: pulse 2s infinite; }
 </style>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" data-turbo-track="reload"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const colors = { primary: '#6366F1', secondary: '#EC4899', success: '#10B981', warning: '#F59E0B', danger: '#EF4444', info: '#3B82F6', text: '#475569', grid: '#E2E8F0' };
+// Détruire les instances Chart.js précédentes avant de recréer
+// (nécessaire avec Turbo Drive qui réutilise les canvas du DOM précédent)
+function destroyCharts() {
+    ['chartEvolution','chartSecteurs','chartStatut'].forEach(function(id) {
+        var existing = Chart.getChart(id);
+        if (existing) { existing.destroy(); }
+    });
+}
 
-    // Options communes pour rendre les graphiques vraiment responsives
-    const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false, // Permet au canvas de s'adapter à la hauteur du conteneur
-        plugins: {
-            legend: { display: false },
-            tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, cornerRadius: 8 }
-        }
+// Utiliser turbo:load EN PLUS de DOMContentLoaded.
+// Turbo Drive remplace le body sans redéclencher DOMContentLoaded :
+// les graphiques et jauges ne s'initialiseraient jamais après la première visite.
+function initDashboard() {
+    if (typeof Chart === 'undefined') { return; }
+    destroyCharts();
+
+    /* ── Palette ── */
+    const C = {
+        primary : '#6366F1',
+        pink    : '#EC4899',
+        success : '#10B981',
+        warning : '#F59E0B',
+        danger  : '#EF4444',
+        info    : '#3B82F6',
+        grid    : '#E8EEF4',
+        text    : '#64748B',
     };
 
-    // 1. Évolution (Ligne)
-    new Chart(document.getElementById('chartEvolution').getContext('2d'), {
-        type: 'line',
-        data: {
-            labels: {{ evolutionEntreprises|default([])|map(e => e.mois)|json_encode|raw }},
-            datasets: [{
-                label: 'Entreprises',
-                data: {{ evolutionEntreprises|default([])|map(e => e.total)|json_encode|raw }},
-                borderColor: colors.primary,
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                borderWidth: 3, fill: true, tension: 0.4, pointBackgroundColor: colors.primary, pointRadius: 4
-            }]
+    const baseOpts = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(15,23,42,0.92)',
+                padding: 12,
+                cornerRadius: 8,
+                titleFont: { size: 12 },
+                bodyFont: { size: 12 },
+            },
         },
-        options: { ...commonOptions, scales: { 
-            y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { precision: 0, color: colors.text } },
-            x: { grid: { display: false }, ticks: { color: colors.text } }
-        }}
-    });
+    };
 
-    // 2. Secteurs (Doughnut)
-    new Chart(document.getElementById('chartSecteurs').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: {{ entreprisesParSecteur|default([])|map(e => e.secteur)|json_encode|raw }},
-            datasets: [{
-                data: {{ entreprisesParSecteur|default([])|map(e => e.total)|json_encode|raw }},
-                backgroundColor: [colors.primary, colors.secondary, colors.success, colors.warning, colors.info],
-                borderWidth: 0, hoverOffset: 4
-            }]
-        },
-        options: { ...commonOptions, cutout: '70%', plugins: { 
-            legend: { display: true, position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { size: 12 } } }
-        }}
-    });
+    /* ── 1. Graphique évolution (line) ── */
+    const evoLabels = {{ evolutionEntreprises|default([])|map(e => e.mois)|json_encode|raw }};
+    const evoData   = {{ evolutionEntreprises|default([])|map(e => e.total)|json_encode|raw }};
 
-    // 3. Statut (Bar)
-    new Chart(document.getElementById('chartStatut').getContext('2d'), {
+    if (evoLabels.length > 0) {
+        new Chart(document.getElementById('chartEvolution'), {
+            type: 'line',
+            data: {
+                labels: evoLabels,
+                datasets: [{
+                    label: 'Inscriptions',
+                    data: evoData,
+                    borderColor: C.primary,
+                    backgroundColor: 'rgba(99,102,241,0.08)',
+                    borderWidth: 2.5,
+                    fill: true,
+                    tension: 0.42,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: C.primary,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                }],
+            },
+            options: {
+                ...baseOpts,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: C.grid },
+                        ticks: { color: C.text, precision: 0 },
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: C.text },
+                    },
+                },
+            },
+        });
+    }
+
+    /* ── 2. Graphique secteurs (doughnut) ── */
+    const sectLabels = {{ entreprisesParSecteur|default([])|map(e => e.secteur)|json_encode|raw }};
+    const sectData   = {{ entreprisesParSecteur|default([])|map(e => e.total)|json_encode|raw }};
+
+    if (sectLabels.length > 0) {
+        new Chart(document.getElementById('chartSecteurs'), {
+            type: 'doughnut',
+            data: {
+                labels: sectLabels,
+                datasets: [{
+                    data: sectData,
+                    backgroundColor: [C.primary, C.pink, C.success, C.warning, C.info],
+                    borderWidth: 0,
+                    hoverOffset: 5,
+                }],
+            },
+            options: {
+                ...baseOpts,
+                cutout: '67%',
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            padding: 14,
+                            font: { size: 11 },
+                            color: C.text,
+                        },
+                    },
+                    tooltip: baseOpts.plugins.tooltip,
+                },
+            },
+        });
+    }
+
+    /* ── 3. Graphique statut (bar) ── */
+    new Chart(document.getElementById('chartStatut'), {
         type: 'bar',
         data: {
             labels: ['Actives', 'En attente', 'Suspendues'],
             datasets: [{
                 label: 'Entreprises',
-                data: [{{ stats.entreprisesActives|default(0) }}, {{ stats.entreprisesEnAttente|default(0) }}, {{ stats.entreprisesSuspendues|default(0) }}],
-                backgroundColor: [colors.success, colors.warning, colors.danger],
-                borderRadius: 6, barThickness: 40
-            }]
+                data: [
+                    {{ stats.entreprisesActives|default(0) }},
+                    {{ stats.entreprisesEnAttente|default(0) }},
+                    {{ stats.entreprisesSuspendues|default(0) }},
+                ],
+                backgroundColor: [C.success, C.warning, C.danger],
+                borderRadius: 6,
+                barThickness: 36,
+            }],
         },
-        options: { ...commonOptions, scales: {
-            y: { beginAtZero: true, grid: { color: colors.grid }, ticks: { precision: 0 } },
-            x: { grid: { display: false } }
-        }}
+        options: {
+            ...baseOpts,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: C.grid },
+                    ticks: { color: C.text, precision: 0 },
+                },
+                x: { grid: { display: false }, ticks: { color: C.text } },
+            },
+        },
     });
-});
+
+    /* ── 4. Jauges circulaires (demi-cercle sur canvas natif) ── */
+    function drawGauge(canvasId, labelId, pct, color) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const cx = 55, cy = 68, r = 42;
+
+        ctx.clearRect(0, 0, 110, 80);
+
+        // Fond gris
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, Math.PI, 0);
+        ctx.lineWidth = 11;
+        ctx.strokeStyle = '#E8EEF4';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // Arc coloré
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, Math.PI, Math.PI + (pct / 100) * Math.PI);
+        ctx.lineWidth = 11;
+        ctx.strokeStyle = color;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        if (labelId) {
+            document.getElementById(labelId).textContent = Math.round(pct) + '%';
+        }
+    }
+
+    const total = ({{ stats.entreprisesActives|default(0) }}
+                 + {{ stats.entreprisesEnAttente|default(0) }}
+                 + {{ stats.entreprisesSuspendues|default(0) }}) || 1;
+
+    drawGauge('gaugeActif',    'gvActif',
+        ({{ stats.entreprisesActives|default(0) }}    / total) * 100, C.success);
+    drawGauge('gaugeAttente',  'gvAttente',
+        ({{ stats.entreprisesEnAttente|default(0) }}  / total) * 100, C.warning);
+    drawGauge('gaugeSuspendu', 'gvSuspendu',
+        ({{ stats.entreprisesSuspendues|default(0) }} / total) * 100, C.danger);
+
+}
+
+document.addEventListener('DOMContentLoaded', initDashboard);
+document.addEventListener('turbo:load',        initDashboard);
 </script>
 {% endblock %}

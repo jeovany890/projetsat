@@ -9,84 +9,141 @@
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="card">
-        <div class="card-header">
-            <h2>
-                <i class="bi bi-pencil-square" style="color: #E53E3E;"></i>
-                Modifier le module
-            </h2>
+<div class="module-form-container">
+    <form method="post" id="moduleForm">
+        <input type="hidden" name="simulation_contenu_json" id="simulationContenuJson">
+
+        {# --- Informations générales du module --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-pencil-square" style="color:#E53E3E;"></i> Informations générales</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Titre du module *</label>
+                    <input type="text" class="form-control" name="titre" required value="{{ module.titre }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea class="form-control" name="description" rows="4" required>{{ module.description }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catégorie *</label>
+                    <input type="text" class="form-control" name="categorie" required value="{{ module.categorie }}">
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
 
-                {# Informations générales #}
-                <div class="form-section">
-                    <h3 class="section-title">Informations générales</h3>
+        {# --- Paramètres du module --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-sliders2"></i> Paramètres</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Titre du module *</label>
-                        <input type="text" class="form-control" name="titre" required value="{{ module.titre }}">
+                        <label class="form-label">Difficulté</label>
+                        <select class="form-control" name="difficulte">
+                            <option value="debutant" {% if module.difficulte == 'debutant' %}selected{% endif %}>Débutant</option>
+                            <option value="intermediaire" {% if module.difficulte == 'intermediaire' %}selected{% endif %}>Intermédiaire</option>
+                            <option value="avance" {% if module.difficulte == 'avance' %}selected{% endif %}>Avancé</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Description *</label>
-                        <textarea class="form-control" name="description" rows="4" required>{{ module.description }}</textarea>
+                        <label class="form-label">Durée estimée (minutes)</label>
+                        <input type="number" class="form-control" name="duree_estimee" value="{{ module.dureeEstimee }}" min="5" max="300">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Catégorie *</label>
-                        <input type="text" class="form-control" name="categorie_nom" required value="{{ module.categorie }}">
-                        <small class="form-hint">Modifiez le nom de la catégorie si nécessaire.</small>
+                        <label class="form-label">Points à la réussite</label>
+                        <input type="number" class="form-control" name="points_reussite" value="{{ module.pointsReussite }}" min="0">
                     </div>
                 </div>
+            </div>
+        </div>
 
-                {# Paramètres #}
-                <div class="form-section">
-                    <h3 class="section-title">Paramètres</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Difficulté</label>
-                            <select class="form-control" name="difficulte">
-                                <option value="debutant" {% if module.difficulte == 'debutant' %}selected{% endif %}>Débutant</option>
-                                <option value="intermediaire" {% if module.difficulte == 'intermediaire' %}selected{% endif %}>Intermédiaire</option>
-                                <option value="avance" {% if module.difficulte == 'avance' %}selected{% endif %}>Avancé</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Durée estimée (minutes)</label>
-                            <input type="number" class="form-control" name="duree_estimee" value="{{ module.dureeEstimee }}" min="5" max="300">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Points à la réussite</label>
-                            <input type="number" class="form-control" name="points_reussite" value="{{ module.pointsReussite }}" min="0">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Étoiles à la réussite</label>
-                            <input type="number" class="form-control" name="etoiles_reussite" value="{{ module.etoilesReussite }}" min="0" max="5">
-                        </div>
+        {# --- Simulation interactive --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-joystick"></i> Simulation finale</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Titre de la simulation *</label>
+                    <input type="text" class="form-control" name="simulation_titre" value="{{ module.simulationTitre }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de simulation *</label>
+                    <select name="simulation_type" id="typeSelect" class="form-control" onchange="changerType()" required>
+                        <option value="">Choisir un type</option>
+                        <option value="GMAIL" {% if module.simulationType == 'GMAIL' %}selected{% endif %}>Gmail</option>
+                        <option value="SMS" {% if module.simulationType == 'SMS' %}selected{% endif %}>SMS</option>
+                        <option value="WHATSAPP" {% if module.simulationType == 'WHATSAPP' %}selected{% endif %}>WhatsApp</option>
+                    </select>
+                </div>
+
+                <div id="zoneVide" class="empty-zone" style="display: none;">
+                    <p>Sélectionnez un type pour ajouter du contenu</p>
+                </div>
+
+                {# --- Gmail --- #}
+                <div id="zoneGmail" class="zone-simulation" style="display: none;">
+                    <div class="liste-header">
+                        <span>Emails</span>
+                        <button type="button" onclick="ajouterGmail()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter un email
+                        </button>
                     </div>
+                    <div id="listeGmail"></div>
                 </div>
 
-                {# Publication #}
-                <div class="form-section">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="est_publie" {% if module.estPublie %}checked{% endif %}>
-                        <span>
-                            <strong>Module publié</strong><br>
-                            <small>Le module est visible et disponible pour les campagnes</small>
-                        </span>
-                    </label>
+                {# --- SMS --- #}
+                <div id="zoneSms" class="zone-simulation" style="display: none;">
+                    <div class="liste-header">
+                        <span>SMS</span>
+                        <button type="button" onclick="ajouterSms()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter un SMS
+                        </button>
+                    </div>
+                    <div id="listeSms"></div>
                 </div>
 
-                {# Actions #}
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Enregistrer
-                    </button>
-                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost">
-                        <i class="bi bi-x-lg"></i> Annuler
-                    </a>
+                {# --- WhatsApp --- #}
+                <div id="zoneWa" class="zone-simulation" style="display: none;">
+                    <div class="liste-header">
+                        <span>Conversations WhatsApp</span>
+                        <button type="button" onclick="ajouterWa()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter une conversation
+                        </button>
+                    </div>
+                    <div id="listeWa"></div>
                 </div>
+            </div>
+        </div>
 
-            </form>
+        {# --- Publication --- #}
+    
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" onclick="return construireJsonSimulation()">
+                <i class="bi bi-check-lg"></i> Enregistrer
+            </button>
+            <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{# ============ MODAL pour ajouter/modifier un email/SMS/conversation ============ #}
+<div id="modalElement" class="modal" style="display:none;">
+    <div class="modal-overlay" onclick="fermerModalElement()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalElementTitre">Ajouter un élément</h3>
+            <button type="button" class="btn-close" onclick="fermerModalElement()">&times;</button>
+        </div>
+        <div class="modal-body" id="modalElementBody"></div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-ghost" onclick="fermerModalElement()">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="sauvegarderElement()">Enregistrer</button>
         </div>
     </div>
 </div>
@@ -95,212 +152,592 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-  .form-container {
-        max-width: 900px;
-        margin: 0 auto;
+    .module-form-container { max-width: 900px; margin: 0 auto; }
+    
+    .card { 
+        background: white; 
+        border-radius: 1rem; 
+        border: 1px solid #E2E8F0; 
+        overflow: hidden; 
+        margin-bottom: 1.5rem; 
     }
-    .card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        overflow: hidden;
+    html.dark .card { background: #1E293B; border-color: #334155; }
+    
+    .card-header { 
+        padding: 1rem 1.25rem; 
+        border-bottom: 1px solid #E2E8F0; 
+        background: #F8FAFC; 
     }
-    html.dark .card {
-        background: #1E293B;
-        border-color: #334155;
+    html.dark .card-header { background: #0F172A; border-bottom-color: #334155; }
+    
+    .card-header h2 { 
+        font-size: 1rem; 
+        font-weight: 700; 
+        color: #0F172A; 
+        margin: 0; 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .card-header {
-        padding: 1.5rem 1.75rem;
-        border-bottom: 1px solid #E2E8F0;
-        background: #F8FAFC;
+    html.dark .card-header h2 { color: #F1F5F9; }
+    
+    .card-body { padding: 1.25rem; }
+    
+    .form-group { margin-bottom: 1rem; }
+    
+    .form-row { 
+        display: grid; 
+        grid-template-columns: repeat(3, 1fr); 
+        gap: 1rem; 
     }
-    html.dark .card-header {
-        background: #0F172A;
-        border-color: #334155;
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    
+    .form-label { 
+        display: block; 
+        font-size: 0.8125rem; 
+        font-weight: 600; 
+        color: #475569; 
+        margin-bottom: 0.375rem; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .card-header h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    html.dark .form-label { color: #94A3B8; }
+    
+    .form-control { 
+        width: 100%; 
+        padding: 0.5rem 0.75rem; 
+        border: 1px solid #E2E8F0; 
+        border-radius: 0.5rem; 
+        font-size: 0.875rem; 
+        background: white; 
+        color: #0F172A; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .card-subtitle {
-        font-size: 0.75rem;
-        color: #64748B;
-        margin: 0;
+    html.dark .form-control { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    .form-control:focus { outline: none; border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,0.2); }
+    
+    .btn { 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center; 
+        gap: 0.5rem; 
+        padding: 0.5rem 1rem; 
+        border-radius: 0.5rem; 
+        font-size: 0.8125rem; 
+        font-weight: 500; 
+        text-decoration: none; 
+        transition: all 0.2s; 
+        cursor: pointer; 
+        border: none; 
+        font-family: 'DM Sans', sans-serif;
+        min-width: 80px;
     }
-    html.dark .card-header h2 {
-        color: #F1F5F9;
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; min-width: 75px; }
+    .btn-primary { background: #E53E3E; color: white; }
+    .btn-primary:hover { background: #C53030; }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    html.dark .btn-ghost { border-color: #334155; color: #94A3B8; }
+    .btn-ghost:hover { background: #F8FAFC; }
+    html.dark .btn-ghost:hover { background: #1E293B; }
+    .btn-danger { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    html.dark .btn-danger { background: #7F1D1D; color: #FCA5A5; border-color: #991B1B; }
+    .btn-danger:hover { background: #FEE2E2; }
+    html.dark .btn-danger:hover { background: #991B1B; }
+    
+    .checkbox-label { 
+        display: flex; 
+        align-items: flex-start; 
+        gap: 0.75rem; 
+        cursor: pointer; 
+        padding: 0.75rem; 
+        background: #F8FAFC; 
+        border-radius: 0.75rem; 
+        border: 1px solid #E2E8F0; 
+        margin: 1rem 0; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .card-body {
-        padding: 1.75rem;
+    html.dark .checkbox-label { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    
+    .empty-zone { 
+        text-align: center; 
+        padding: 2rem; 
+        color: #94A3B8; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #E2E8F0;
+    
+    /* Liste des éléments */
+    .zone-simulation { margin-top: 1rem; }
+    
+    .liste-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 0.75rem; 
     }
-    html.dark .form-section {
-        border-color: #334155;
+    .liste-header span { 
+        font-size: 0.875rem; 
+        font-weight: 600; 
+        color: #475569; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    html.dark .liste-header span { color: #94A3B8; }
+    
+    .element-item { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0.75rem 1rem; 
+        background: #F8FAFC; 
+        border: 1px solid #E2E8F0; 
+        border-radius: 0.5rem; 
+        margin-bottom: 0.5rem;
+        font-family: 'DM Sans', sans-serif;
     }
-    .section-title:before {
-        content: '';
-        width: 4px;
-        height: 18px;
-        background: #E53E3E;
-        border-radius: 4px;
-        display: inline-block;
+    html.dark .element-item { background: #0F172A; border-color: #334155; }
+    
+    .element-info { 
+        flex: 1; 
+        display: flex; 
+        align-items: center; 
+        gap: 0.75rem; 
     }
-    html.dark .section-title {
-        color: #F1F5F9;
+    .element-texte { 
+        font-weight: 500; 
+        font-size: 0.8125rem; 
+        color: #0F172A; 
     }
-    .form-group {
-        margin-bottom: 1rem;
+    html.dark .element-texte { color: #F1F5F9; }
+    
+    .element-badge { 
+        font-size: 0.65rem; 
+        font-weight: 600; 
+        padding: 0.15rem 0.5rem; 
+        border-radius: 20px; 
     }
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+    .element-badge.phishing { background: #FEE2E2; color: #DC2626; }
+    .element-badge.legitime { background: #DCFCE7; color: #166534; }
+    
+    .element-actions { 
+        display: flex; 
+        gap: 0.5rem; 
+        flex-shrink: 0; 
     }
-    @media (max-width: 640px) {
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
+    
+    .empty-message { 
+        text-align: center; 
+        padding: 1.5rem; 
+        color: #94A3B8; 
+        border: 1px dashed #E2E8F0; 
+        border-radius: 0.5rem; 
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8125rem;
     }
-    .form-label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #475569;
-        margin-bottom: 0.4rem;
+    
+    .form-actions { 
+        display: flex; 
+        gap: 0.75rem; 
+        justify-content: flex-end; 
+        margin-top: 1rem; 
     }
-    .form-control {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        background: white;
-        color: #0F172A;
-        transition: all 0.15s;
+    
+    /* Modal */
+    .modal { 
+        position: fixed; 
+        top: 0; left: 0; right: 0; bottom: 0; 
+        z-index: 1000; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
     }
-    .form-control:focus {
-        outline: none;
-        border-color: #E53E3E;
-        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
+    .modal-overlay { 
+        position: absolute; 
+        top: 0; left: 0; right: 0; bottom: 0; 
+        background: rgba(0,0,0,0.5); 
     }
-    textarea.form-control {
-        resize: vertical;
+    .modal-content { 
+        position: relative; 
+        background: white; 
+        border-radius: 1rem; 
+        width: 90%; 
+        max-width: 600px; 
+        max-height: 85vh; 
+        overflow-y: auto; 
+        box-shadow: 0 25px 50px rgba(0,0,0,0.25); 
+        font-family: 'DM Sans', sans-serif;
     }
-    html.dark .form-control {
-        background: #0F172A;
-        border-color: #334155;
-        color: #F1F5F9;
+    html.dark .modal-content { background: #1E293B; }
+    
+    .modal-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 1rem 1.25rem; 
+        border-bottom: 1px solid #E2E8F0; 
     }
-    .checkbox-label {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        cursor: pointer;
-        padding: 0.75rem;
-        background: #F8FAFC;
-        border-radius: 0.75rem;
-        border: 1px solid #E2E8F0;
+    html.dark .modal-header { border-bottom-color: #334155; }
+    .modal-header h3 { 
+        margin: 0; 
+        font-size: 1rem; 
+        font-weight: 700; 
+        color: #0F172A; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .checkbox-label input {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        accent-color: #E53E3E;
+    html.dark .modal-header h3 { color: #F1F5F9; }
+    
+    .btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94A3B8; }
+    .btn-close:hover { color: #0F172A; }
+    
+    .modal-body { padding: 1.25rem; }
+    .modal-footer { 
+        padding: 1rem 1.25rem; 
+        border-top: 1px solid #E2E8F0; 
+        display: flex; 
+        justify-content: flex-end; 
+        gap: 0.75rem; 
     }
-    .checkbox-label strong {
-        font-size: 0.875rem;
-        color: #0F172A;
+    html.dark .modal-footer { border-top-color: #334155; }
+    
+    /* Champs dans le modal */
+    .modal-champ { margin-bottom: 0.75rem; }
+    .modal-champ label { 
+        display: block; 
+        font-size: 0.75rem; 
+        font-weight: 600; 
+        color: #475569; 
+        margin-bottom: 0.25rem; 
+        font-family: 'DM Sans', sans-serif;
     }
-    .checkbox-label small {
-        font-size: 0.7rem;
-        color: #64748B;
+    html.dark .modal-champ label { color: #94A3B8; }
+    .modal-champ input,
+    .modal-champ textarea,
+    .modal-champ select { 
+        width: 100%; 
+        border: 1px solid #E2E8F0; 
+        border-radius: 0.5rem; 
+        padding: 0.4rem 0.6rem; 
+        font-size: 0.8125rem; 
+        background: white; 
+        font-family: 'DM Sans', sans-serif;
     }
-    html.dark .checkbox-label {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    html.dark .checkbox-label strong {
-        color: #F1F5F9;
-    }
-    .form-actions {
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-    .btn-primary {
-        background: #E53E3E;
-        color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-        background: #C53030;
-        transform: translateY(-1px);
-    }
-    .btn-ghost {
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-    }
-    .btn-ghost:hover {
-        background: #F8FAFC;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    html.dark .btn-ghost {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-ghost:hover {
-        background: #1E293B;
-        border-color: #475569;
-        color: #F1F5F9;
-    }
-    @media (max-width: 480px) {
-        .card-body {
-            padding: 1rem;
-        }
-        .form-actions {
-            flex-direction: column;
-        }
-        .form-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
+    html.dark .modal-champ input,
+    html.dark .modal-champ textarea,
+    html.dark .modal-champ select { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    
+    .modal-champ-row { display: flex; gap: 0.5rem; }
+    .modal-champ-row .modal-champ { flex: 1; }
+    
+    @media (max-width: 640px) { 
+        .form-actions { flex-direction: column; } 
+        .form-actions .btn { width: 100%; } 
+        .element-item { flex-direction: column; gap: 0.5rem; }
+        .element-actions { width: 100%; justify-content: flex-end; }
     }
 </style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    const PH_PRENOM = "{{ app.user.prenom ?? 'PRENOM' }}";
+    const PH_NOM = "{{ app.user.nom ?? 'NOM' }}";
+    const PH_EMAIL = "{{ app.user.email ?? 'EMAIL' }}";
+    const PH_TELEPHONE = "{{ app.user.telephone ?? 'TELEPHONE' }}";
+    const PH_ENTREPRISE = "{{ app.user.entreprise ?? 'ENTREPRISE' }}";
+    const HINT_GMAIL = `Placeholders : ${PH_PRENOM} ${PH_NOM} ${PH_EMAIL} ${PH_TELEPHONE} ${PH_ENTREPRISE}`;
+    const HINT_SMS = `Placeholders : ${PH_PRENOM} ${PH_TELEPHONE}`;
+
+    let type = '{{ module.simulationType }}';
+    let gmails = {{ module.simulationContenu.emails|default([])|json_encode|raw }};
+    let smss = {{ module.simulationContenu.sms|default([])|json_encode|raw }};
+    let was = {{ module.simulationContenu.conversations|default([])|json_encode|raw }};
+    
+    let currentEditType = null; // 'gmail', 'sms', 'wa'
+    let currentEditIndex = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        if (type) {
+            document.getElementById('typeSelect').value = type;
+            changerType();
+        }
+    });
+
+    function changerType() {
+        type = document.getElementById('typeSelect').value;
+        ['zoneVide','zoneGmail','zoneSms','zoneWa'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        if (!type) { document.getElementById('zoneVide').style.display = ''; return; }
+        if (type === 'GMAIL') { document.getElementById('zoneGmail').style.display = ''; renderListe(); }
+        if (type === 'SMS') { document.getElementById('zoneSms').style.display = ''; renderListe(); }
+        if (type === 'WHATSAPP') { document.getElementById('zoneWa').style.display = ''; renderListe(); }
+    }
+
+    // ==================== AFFICHAGE LISTE ====================
+    function renderListe() {
+        if (type === 'GMAIL') renderListeGmail();
+        else if (type === 'SMS') renderListeSms();
+        else if (type === 'WHATSAPP') renderListeWa();
+    }
+
+    function renderListeGmail() {
+        const container = document.getElementById('listeGmail');
+        if (!gmails.length) {
+            container.innerHTML = '<div class="empty-message">Aucun email. Cliquez sur "Ajouter un email".</div>';
+            return;
+        }
+        container.innerHTML = gmails.map((e, i) => `
+            <div class="element-item">
+                <div class="element-info">
+                    <span class="element-texte">${escapeHtml(e.sender_name || 'Sans nom')} — ${escapeHtml(e.subject || 'Sans sujet')}</span>
+                    <span class="element-badge ${e.is_phishing ? 'phishing' : 'legitime'}">${e.is_phishing ? 'Phishing' : 'Légitime'}</span>
+                </div>
+                <div class="element-actions">
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="ouvrirModalGmail(${i})">Modifier</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="supprimerGmail(${i})">Supprimer</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderListeSms() {
+        const container = document.getElementById('listeSms');
+        if (!smss.length) {
+            container.innerHTML = '<div class="empty-message">Aucun SMS. Cliquez sur "Ajouter un SMS".</div>';
+            return;
+        }
+        container.innerHTML = smss.map((s, i) => `
+            <div class="element-item">
+                <div class="element-info">
+                    <span class="element-texte">${escapeHtml(s.name || 'Sans nom')} — ${escapeHtml((s.message || '').slice(0, 50))}...</span>
+                    <span class="element-badge ${s.is_phishing ? 'phishing' : 'legitime'}">${s.is_phishing ? 'Smishing' : 'Légitime'}</span>
+                </div>
+                <div class="element-actions">
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="ouvrirModalSms(${i})">Modifier</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="supprimerSms(${i})">Supprimer</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function renderListeWa() {
+        const container = document.getElementById('listeWa');
+        if (!was.length) {
+            container.innerHTML = '<div class="empty-message">Aucune conversation. Cliquez sur "Ajouter une conversation".</div>';
+            return;
+        }
+        container.innerHTML = was.map((w, i) => `
+            <div class="element-item">
+                <div class="element-info">
+                    <span class="element-texte">${escapeHtml(w.name || 'Sans nom')} — ${w.messages.length} message(s)</span>
+                    <span class="element-badge ${w.is_phishing ? 'phishing' : 'legitime'}">${w.is_phishing ? 'Phishing' : 'Légitime'}</span>
+                </div>
+                <div class="element-actions">
+                    <button type="button" class="btn btn-sm btn-ghost" onclick="ouvrirModalWa(${i})">Modifier</button>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="supprimerWa(${i})">Supprimer</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ==================== SUPPRESSION ====================
+    function supprimerGmail(i) { if (confirm('Supprimer cet email ?')) { gmails.splice(i, 1); renderListeGmail(); } }
+    function supprimerSms(i) { if (confirm('Supprimer ce SMS ?')) { smss.splice(i, 1); renderListeSms(); } }
+    function supprimerWa(i) { if (confirm('Supprimer cette conversation ?')) { was.splice(i, 1); renderListeWa(); } }
+
+    // ==================== AJOUT ====================
+    function ajouterGmail() { ouvrirModalGmail(null); }
+    function ajouterSms() { ouvrirModalSms(null); }
+    function ajouterWa() { ouvrirModalWa(null); }
+
+    // ==================== MODAL GMAIL ====================
+    function ouvrirModalGmail(index) {
+        currentEditType = 'gmail';
+        currentEditIndex = index;
+        const e = index !== null ? gmails[index] : { is_phishing: true, sender_name: '', sender_email: '', subject: '', body: '', avatar_color: '#EA4335', avatar_text: '', time: "Aujourd'hui", explication: '' };
+        
+        document.getElementById('modalElementTitre').textContent = index !== null ? 'Modifier l\'email' : 'Ajouter un email';
+        document.getElementById('modalElementBody').innerHTML = `
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Type</label><select id="me_is_phishing"><option value="1" ${e.is_phishing?'selected':''}>Phishing</option><option value="0" ${!e.is_phishing?'selected':''}>Légitime</option></select></div>
+            </div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Nom affiché *</label><input type="text" id="me_sender_name" value="${escapeHtml(e.sender_name)}"></div>
+                <div class="modal-champ"><label>Email expéditeur *</label><input type="text" id="me_sender_email" value="${escapeHtml(e.sender_email)}"></div>
+            </div>
+            <div class="modal-champ"><label>Sujet *</label><input type="text" id="me_subject" value="${escapeHtml(e.subject)}"></div>
+            <div class="modal-champ"><label>Corps (HTML) *</label><textarea id="me_body" rows="4">${escapeHtml(e.body)}</textarea><small style="color:#94A3B8;">${HINT_GMAIL}</small></div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Couleur avatar</label><input type="color" id="me_avatar_color" value="${e.avatar_color || '#EA4335'}"></div>
+                <div class="modal-champ"><label>Texte avatar</label><input type="text" id="me_avatar_text" maxlength="2" value="${escapeHtml(e.avatar_text)}"></div>
+                <div class="modal-champ"><label>Heure</label><input type="text" id="me_time" value="${escapeHtml(e.time)}"></div>
+            </div>
+            <div class="modal-champ"><label>Explication *</label><textarea id="me_explication" rows="2">${escapeHtml(e.explication)}</textarea></div>
+        `;
+        document.getElementById('modalElement').style.display = 'flex';
+    }
+
+    // ==================== MODAL SMS ====================
+    function ouvrirModalSms(index) {
+        currentEditType = 'sms';
+        currentEditIndex = index;
+        const s = index !== null ? smss[index] : { is_phishing: true, name: '', num: '', message: '', date: "Aujourd'hui", hasLink: false, explication: '' };
+        
+        document.getElementById('modalElementTitre').textContent = index !== null ? 'Modifier le SMS' : 'Ajouter un SMS';
+        document.getElementById('modalElementBody').innerHTML = `
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Type</label><select id="me_is_phishing"><option value="1" ${s.is_phishing?'selected':''}>Smishing</option><option value="0" ${!s.is_phishing?'selected':''}>Légitime</option></select></div>
+            </div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Expéditeur *</label><input type="text" id="me_name" value="${escapeHtml(s.name)}"></div>
+                <div class="modal-champ"><label>Numéro</label><input type="text" id="me_num" value="${escapeHtml(s.num)}"></div>
+            </div>
+            <div class="modal-champ"><label>Contenu *</label><textarea id="me_message" rows="3">${escapeHtml(s.message)}</textarea><small style="color:#94A3B8;">${HINT_SMS}</small></div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Date</label><input type="text" id="me_date" value="${escapeHtml(s.date)}"></div>
+                <div class="modal-champ"><label><input type="checkbox" id="me_hasLink" ${s.hasLink?'checked':''}> Contient un lien suspect</label></div>
+            </div>
+            <div class="modal-champ"><label>Explication *</label><textarea id="me_explication" rows="2">${escapeHtml(s.explication)}</textarea></div>
+        `;
+        document.getElementById('modalElement').style.display = 'flex';
+    }
+
+    // ==================== MODAL WHATSAPP ====================
+    function ouvrirModalWa(index) {
+        currentEditType = 'wa';
+        currentEditIndex = index;
+        const w = index !== null ? was[index] : { is_phishing: true, name: '', status: 'en ligne', avatarBg: '#25D366', avatarText: '', messages: [], explication: '' };
+        
+        let messagesHtml = (w.messages || []).map((m, mi) => `
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;align-items:center;">
+                <select id="me_msg_out_${mi}"><option value="0" ${!m.out?'selected':''}>Reçu</option><option value="1" ${m.out?'selected':''}>Envoyé</option></select>
+                <input type="text" id="me_msg_text_${mi}" placeholder="Contenu" value="${escapeHtml(m.text||'')}" style="flex:1;">
+                <input type="text" id="me_msg_time_${mi}" placeholder="Heure" value="${escapeHtml(m.time||'')}" style="width:60px;">
+                <input type="text" id="me_msg_sender_${mi}" placeholder="Expéditeur" value="${escapeHtml(m.sender||'')}" style="width:80px;display:${m.out?'none':'block'};">
+                <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+            </div>
+        `).join('');
+        
+        document.getElementById('modalElementTitre').textContent = index !== null ? 'Modifier la conversation' : 'Ajouter une conversation';
+        document.getElementById('modalElementBody').innerHTML = `
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Type</label><select id="me_is_phishing"><option value="1" ${w.is_phishing?'selected':''}>Phishing</option><option value="0" ${!w.is_phishing?'selected':''}>Légitime</option></select></div>
+            </div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Nom *</label><input type="text" id="me_name" value="${escapeHtml(w.name)}"></div>
+                <div class="modal-champ"><label>Statut</label><input type="text" id="me_status" value="${escapeHtml(w.status)}"></div>
+            </div>
+            <div class="modal-champ-row">
+                <div class="modal-champ"><label>Couleur avatar</label><input type="color" id="me_avatarBg" value="${w.avatarBg || '#25D366'}"></div>
+                <div class="modal-champ"><label>Texte avatar</label><input type="text" id="me_avatarText" maxlength="3" value="${escapeHtml(w.avatarText)}"></div>
+            </div>
+            <div class="modal-champ">
+                <label>Messages</label>
+                <div id="me_messages_container">${messagesHtml || '<p style="color:#94A3B8;">Aucun message</p>'}</div>
+                <button type="button" class="btn btn-ghost btn-sm mt-2" onclick="ajouterMessageModal()">+ Ajouter un message</button>
+            </div>
+            <div class="modal-champ"><label>Explication *</label><textarea id="me_explication" rows="2">${escapeHtml(w.explication)}</textarea></div>
+        `;
+        document.getElementById('modalElement').style.display = 'flex';
+    }
+
+    function ajouterMessageModal() {
+        const container = document.getElementById('me_messages_container');
+        const index = container.querySelectorAll('div[style]').length;
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:0.5rem;margin-bottom:0.5rem;align-items:center;';
+        div.innerHTML = `
+            <select id="me_msg_out_${index}"><option value="0">Reçu</option><option value="1">Envoyé</option></select>
+            <input type="text" id="me_msg_text_${index}" placeholder="Contenu" style="flex:1;">
+            <input type="text" id="me_msg_time_${index}" placeholder="Heure" style="width:60px;">
+            <input type="text" id="me_msg_sender_${index}" placeholder="Expéditeur" style="width:80px;">
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">✕</button>
+        `;
+        if (container.querySelector('p')) container.innerHTML = '';
+        container.appendChild(div);
+    }
+
+    // ==================== SAUVEGARDE ====================
+    function sauvegarderElement() {
+        if (currentEditType === 'gmail') {
+            const data = {
+                is_phishing: document.getElementById('me_is_phishing').value === '1',
+                sender_name: document.getElementById('me_sender_name').value.trim(),
+                sender_email: document.getElementById('me_sender_email').value.trim(),
+                subject: document.getElementById('me_subject').value.trim(),
+                body: document.getElementById('me_body').value.trim(),
+                avatar_color: document.getElementById('me_avatar_color').value,
+                avatar_text: document.getElementById('me_avatar_text').value.trim(),
+                time: document.getElementById('me_time').value.trim(),
+                explication: document.getElementById('me_explication').value.trim()
+            };
+            if (!data.sender_name || !data.subject) { alert('Remplissez les champs obligatoires.'); return; }
+            if (currentEditIndex !== null) gmails[currentEditIndex] = data; else gmails.push(data);
+            renderListeGmail();
+        } else if (currentEditType === 'sms') {
+            const data = {
+                is_phishing: document.getElementById('me_is_phishing').value === '1',
+                name: document.getElementById('me_name').value.trim(),
+                num: document.getElementById('me_num').value.trim(),
+                message: document.getElementById('me_message').value.trim(),
+                date: document.getElementById('me_date').value.trim(),
+                hasLink: document.getElementById('me_hasLink').checked,
+                explication: document.getElementById('me_explication').value.trim()
+            };
+            if (!data.name || !data.message) { alert('Remplissez les champs obligatoires.'); return; }
+            if (currentEditIndex !== null) smss[currentEditIndex] = data; else smss.push(data);
+            renderListeSms();
+        } else if (currentEditType === 'wa') {
+            const messages = [];
+            document.getElementById('me_messages_container').querySelectorAll('div[style]').forEach(div => {
+                const idx = div.querySelector('select')?.id?.split('_').pop();
+                if (idx !== undefined) {
+                    messages.push({
+                        out: document.getElementById('me_msg_out_'+idx)?.value === '1',
+                        text: document.getElementById('me_msg_text_'+idx)?.value || '',
+                        time: document.getElementById('me_msg_time_'+idx)?.value || '',
+                        sender: document.getElementById('me_msg_sender_'+idx)?.value || ''
+                    });
+                }
+            });
+            const data = {
+                is_phishing: document.getElementById('me_is_phishing').value === '1',
+                name: document.getElementById('me_name').value.trim(),
+                status: document.getElementById('me_status').value.trim(),
+                avatarBg: document.getElementById('me_avatarBg').value,
+                avatarText: document.getElementById('me_avatarText').value.trim(),
+                messages: messages,
+                explication: document.getElementById('me_explication').value.trim()
+            };
+            if (!data.name) { alert('Remplissez le nom.'); return; }
+            if (currentEditIndex !== null) was[currentEditIndex] = data; else was.push(data);
+            renderListeWa();
+        }
+        fermerModalElement();
+    }
+
+    function fermerModalElement() {
+        document.getElementById('modalElement').style.display = 'none';
+        currentEditType = null;
+        currentEditIndex = null;
+    }
+
+    function construireJsonSimulation() {
+        type = document.getElementById('typeSelect').value;
+        if (!type) { alert('Sélectionnez un type de simulation.'); return false; }
+        let items = type === 'GMAIL' ? gmails : (type === 'SMS' ? smss : was);
+        if (items.length === 0) { alert('Ajoutez au moins un élément.'); return false; }
+        let contenu = {};
+        if (type === 'GMAIL') contenu = { type: 'gmail_banque', nb_a_tirer: Math.min(items.length, 6), emails: gmails };
+        else if (type === 'SMS') contenu = { type: 'sms_banque', nb_a_tirer: Math.min(items.length, 6), sms: smss };
+        else contenu = { type: 'whatsapp_banque', nb_a_tirer: Math.min(items.length, 6), conversations: was };
+        document.getElementById('simulationContenuJson').value = JSON.stringify(contenu);
+        return true;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]);
+    }
+</script>
 {% endblock %}

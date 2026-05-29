@@ -28,20 +28,25 @@ class CampagneFormation
     #[ORM\Column(type: 'integer')]
     private ?int $annee = null;
 
-    // ── DATES RENDUES NULLABLE ──────────────────
-    // Quand le RSSI ne fixe pas de délai, ces champs restent null.
-    // Une campagne sans dates est toujours en statut EN_COURS.
-
+    /**
+     * Timestamp de début — date ET heure exacte au moment du lancement.
+     * Rempli automatiquement quand la campagne passe EN_COURS.
+     */
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateDebut = null;
 
+    /**
+     * Date de fin saisie par le RSSI (deadline de la campagne).
+     */
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $dateFin = null;
 
-    // ────────────────────────────────────────────
-
-    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'PLANIFIEE'])]
-    private string $statut = 'PLANIFIEE';
+    /**
+     * Statut par défaut à la création : EN_COURS.
+     * Valeurs possibles : EN_COURS | TERMINEE | ANNULEE
+     */
+    #[ORM\Column(type: 'string', length: 20, options: ['default' => 'EN_COURS'])]
+    private string $statut = 'EN_COURS';
 
     #[ORM\Column(type: 'integer', options: ['default' => 50])]
     private int $pointsPenalite = 50;
@@ -60,7 +65,6 @@ class CampagneFormation
     #[ORM\OneToMany(targetEntity: ProgressionModule::class, mappedBy: 'campagne', cascade: ['persist', 'remove'])]
     private Collection $progressions;
 
-    // Propriétés calculées dynamiquement — pas en BD
     private int $totalParticipants = 0;
     private int $nombreTermines    = 0;
     private int $nombreEnCours     = 0;
@@ -72,8 +76,6 @@ class CampagneFormation
         $this->modules      = new ArrayCollection();
         $this->progressions = new ArrayCollection();
     }
-
-    // ── GETTERS / SETTERS ───────────────────────
 
     public function getId(): ?int { return $this->id; }
 
@@ -89,29 +91,31 @@ class CampagneFormation
     public function getAnnee(): ?int { return $this->annee; }
     public function setAnnee(int $annee): static { $this->annee = $annee; return $this; }
 
-    // ── Dates nullable — setters acceptent null ──
-
     public function getDateDebut(): ?\DateTimeInterface { return $this->dateDebut; }
+
     public function setDateDebut(?\DateTimeInterface $dateDebut): static
     {
-        $this->dateDebut = $dateDebut;
+        if ($dateDebut instanceof \DateTimeImmutable) {
+            $this->dateDebut = \DateTime::createFromImmutable($dateDebut);
+        } else {
+            $this->dateDebut = $dateDebut;
+        }
         return $this;
     }
 
     public function getDateFin(): ?\DateTimeInterface { return $this->dateFin; }
+
     public function setDateFin(?\DateTimeInterface $dateFin): static
     {
-        $this->dateFin = $dateFin;
+        if ($dateFin instanceof \DateTimeImmutable) {
+            $this->dateFin = \DateTime::createFromImmutable($dateFin);
+        } else {
+            $this->dateFin = $dateFin;
+        }
         return $this;
     }
 
-    // ── Helper : la campagne a-t-elle un délai fixé ? ──
-    public function aUnDelai(): bool
-    {
-        return $this->dateFin !== null;
-    }
-
-    // ────────────────────────────────────────────
+    public function aUnDelai(): bool { return $this->dateFin !== null; }
 
     public function getStatut(): string { return $this->statut; }
     public function setStatut(string $statut): static { $this->statut = $statut; return $this; }
@@ -131,11 +135,7 @@ class CampagneFormation
         if (!$this->modules->contains($module)) { $this->modules->add($module); }
         return $this;
     }
-    public function removeModule(ModuleFormation $module): static
-    {
-        $this->modules->removeElement($module);
-        return $this;
-    }
+    public function removeModule(ModuleFormation $module): static { $this->modules->removeElement($module); return $this; }
 
     public function getProgressions(): Collection { return $this->progressions; }
     public function addProgression(ProgressionModule $progression): static
@@ -149,26 +149,22 @@ class CampagneFormation
     public function removeProgression(ProgressionModule $progression): static
     {
         if ($this->progressions->removeElement($progression)) {
-            if ($progression->getCampagne() === $this) {
-                $progression->setCampagne(null);
-            }
+            if ($progression->getCampagne() === $this) { $progression->setCampagne(null); }
         }
         return $this;
     }
 
-    // ── Stats calculées dynamiquement ──
-
     public function getTotalParticipants(): int { return $this->totalParticipants; }
-    public function setTotalParticipants(int $totalParticipants): static { $this->totalParticipants = $totalParticipants; return $this; }
+    public function setTotalParticipants(int $v): static { $this->totalParticipants = $v; return $this; }
 
     public function getNombreTermines(): int { return $this->nombreTermines; }
-    public function setNombreTermines(int $nombreTermines): static { $this->nombreTermines = $nombreTermines; return $this; }
+    public function setNombreTermines(int $v): static { $this->nombreTermines = $v; return $this; }
 
     public function getNombreEnCours(): int { return $this->nombreEnCours; }
-    public function setNombreEnCours(int $nombreEnCours): static { $this->nombreEnCours = $nombreEnCours; return $this; }
+    public function setNombreEnCours(int $v): static { $this->nombreEnCours = $v; return $this; }
 
     public function getNombreEnRetard(): int { return $this->nombreEnRetard; }
-    public function setNombreEnRetard(int $nombreEnRetard): static { $this->nombreEnRetard = $nombreEnRetard; return $this; }
+    public function setNombreEnRetard(int $v): static { $this->nombreEnRetard = $v; return $this; }
 
     public function __toString(): string { return $this->titre ?? ''; }
 }

@@ -6,251 +6,296 @@
     {{ parent() }}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --font-display:'Syne',sans-serif; --font-body:'DM Sans',sans-serif; }
-        
-        body { font-family:var(--font-body); background-color:#060810; color:#e2e8f0; transition: all 0.4s ease-in-out; }
-        
-        html.light body { background-color: #f8fafc; color: #1e293b; }
-        html.light .bg-grid { background-image: linear-gradient(to right,rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,0,0,.05) 1px,transparent 1px); }
-        
-        nav { 
-            background-color: rgba(0, 0, 0, 0.1) !important; 
-            backdrop-blur: 24px !important; 
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease !important; 
+        :root {
+            --font-display: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --green: #00E5A0;
+            --red: #FF3B5C;
+            --dark-bg: #060810;
+            --dark-card: #0C0F1D;
         }
-        
-        .nav-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
-        
-        html.light nav { background-color: rgba(255, 255, 255, 0.3) !important; border-color: rgba(0,0,0,0.05) !important; }
-        html.light nav .text-white { color: #0f172a !important; }
-        
-        html.light .form-card { background-color: #ffffff !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.06); }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--dark-bg);
+            color: #e2e8f0;
+            min-height: 100vh;
+            transition: background 0.4s, color 0.4s;
+        }
+        h2 { font-family: var(--font-display); }
+
+        /* ========== LIGHT MODE ========== */
+        html.light body { background: #f8fafc; color: #1e293b; }
+        html.light nav { background: rgba(255,255,255,0.7) !important; border-color: rgba(0,0,0,0.05) !important; }
+        html.light .nav-white { color: #0f172a !important; }
+        html.light .form-card { background: #fff !important; border-color: rgba(0,0,0,0.06) !important; box-shadow: 0 10px 40px rgba(0,0,0,0.04); }
         html.light .form-card h2 { color: #0f172a !important; }
         html.light .form-card p { color: #475569 !important; }
-        html.light .input-sat { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
-        
-        .bg-grid { background-size:40px 40px; background-image:linear-gradient(to right,rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(to bottom,rgba(255,255,255,.03) 1px,transparent 1px); }
-        .glow-emerald { background:radial-gradient(circle at center,rgba(0,229,160,.15) 0%,transparent 70%); }
-        .glow-red { background:radial-gradient(circle at center,rgba(255,59,92,.1) 0%,transparent 70%); }
-        .anim-fade-up { animation:fadeUp .7s cubic-bezier(.22,.68,0,1.2) both; }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
-        
-        .input-sat { background: #0C0F1D; border: 1px solid rgba(255,255,255,0.07); color: #F9FAFB; border-radius: 1rem; padding: 0.75rem 1rem; width: 100%; transition: all 0.2s; }
-        .input-sat:focus { border-color: #00E5A0; outline: none; box-shadow: 0 0 0 2px rgba(0,229,160,0.15); }
-        
-        .btn-primary-sat { background: #00E5A0; color: #060810; border-radius: 9999px; padding: 0.875rem 1.5rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; width: 100%; box-shadow: 0 8px 20px rgba(0,229,160,0.2); }
-        .btn-primary-sat:hover { background: white; transform: scale(1.02); }
-        
-        .alert-sat { background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.2); border-radius: 1rem; padding: 1rem; display: flex; align-items: center; gap: 0.75rem; color: #e2e8f0; margin-bottom: 1.5rem; }
-        .alert-sat-error { background: rgba(255,59,92,0.1); border-color: rgba(255,59,92,0.2); }
-        html.light .alert-sat-error { background: rgba(255,59,92,0.1); color: #FF3B5C; }
-        .alert-sat i { font-size: 1.25rem; color: #00E5A0; }
-        .alert-sat-error i { color: #FF3B5C; }
-        
-        .strength-bar { height: 4px; background: #1e293b; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        html.light .input-field { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
+        html.light .alert-error { background: rgba(255,59,92,0.06); border-color: rgba(255,59,92,0.15); color: #dc2626; }
+        html.light .step-todo { background: #e2e8f0; }
         html.light .strength-bar { background: #e2e8f0; }
-        .strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; border-radius: 4px; }
-        .strength-label { font-size: 0.7rem; margin-top: 4px; transition: color 0.3s; }
-        .rules { font-size: 0.65rem; color: #64748B; margin-top: 6px; }
+
+        /* ========== NAVBAR ========== */
+        nav {
+            position: fixed; top: 0; left: 0; width: 100%; z-index: 50;
+            background: rgba(0,0,0,0.12); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.4s, opacity 0.4s, background 0.3s;
+        }
+        .nav-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+        .nav-inner { max-width: 72rem; margin: 0 auto; padding: 0 1rem; height: 3.5rem; display: flex; align-items: center; justify-content: space-between; }
+        .nav-logo { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
+        .nav-logo-icon { width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; color: var(--green); }
+        .nav-logo-icon svg { width: 16px; height: 16px; }
+        .nav-logo-text { line-height: 1; }
+        .nav-logo-title { font-family: var(--font-display); font-weight: 600; font-size: 1rem; text-transform: uppercase; letter-spacing: -0.03em; }
+        .nav-logo-sub { font-family: var(--font-display); font-weight: 500; font-size: 0.65rem; text-transform: uppercase; color: #64748b; }
+        .theme-btn { width: 2.25rem; height: 2.25rem; border-radius: 50%; border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #94a3b8; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .theme-btn:hover { color: var(--green); border-color: rgba(0,229,160,0.3); }
+        .theme-btn svg { width: 16px; height: 16px; }
+
+        /* ========== MAIN ========== */
+        .main-container {
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 5rem 1rem 2rem; position: relative; overflow: hidden;
+        }
+        .bg-grid {
+            position: absolute; inset: 0; pointer-events: none;
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,.03) 1px, transparent 1px);
+        }
+        html.light .bg-grid { background-image: linear-gradient(to right, rgba(0,0,0,.05) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,.05) 1px, transparent 1px); }
+        .glow-left, .glow-right { position: absolute; pointer-events: none; border-radius: 50%; filter: blur(100px); opacity: 0.25; }
+        .glow-left { width: 500px; height: 500px; background: rgba(0,229,160,0.08); top: -100px; left: -100px; }
+        .glow-right { width: 400px; height: 400px; background: rgba(255,59,92,0.05); bottom: -100px; right: -100px; }
+
+        /* ========== FORM CARD ========== */
+        .form-card {
+            max-width: 28rem; width: 100%; position: relative; z-index: 10;
+            background: rgba(12,15,29,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border-radius: 1.5rem; border: 1px solid rgba(255,255,255,0.04);
+            padding: 2rem; animation: fadeUp 0.7s ease both;
+        }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 480px) { .form-card { padding: 1.25rem; } }
+
+        /* ========== PROGRESS STEPS ========== */
+        .progress-steps { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .progress-step { flex: 1; height: 4px; border-radius: 4px; transition: background 0.3s; }
+        .progress-step.active { background: var(--green); }
+        .progress-step.done { background: #10B981; }
+        .progress-step.todo { background: #1e293b; }
+        html.light .progress-step.todo { background: #e2e8f0; }
+
         .step-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(0,229,160,0.1);
-            color: #00E5A0;
-            border: 1px solid rgba(0,229,160,0.2);
-            border-radius: 9999px;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            background: rgba(0,229,160,0.1); color: var(--green);
+            border: 1px solid rgba(0,229,160,0.2); border-radius: 999px;
+            padding: 0.25rem 0.75rem; font-size: 0.75rem; font-weight: 600; margin-bottom: 1rem;
         }
-        .progress-steps {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
+        .step-badge svg { width: 14px; height: 14px; }
+
+        .form-card h2 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .form-card .subtitle { font-size: 0.8125rem; color: #94a3b8; line-height: 1.5; margin-bottom: 1.5rem; }
+
+        /* ========== INPUTS ========== */
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; margin-bottom: 0.3rem; }
+        .input-wrap { position: relative; }
+        .input-field {
+            width: 100%; padding: 0.65rem 0.75rem; padding-right: 2.5rem;
+            background: var(--dark-card); border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 0.75rem; color: #F9FAFB; font-size: 0.8125rem;
+            font-family: var(--font-body); transition: all 0.2s;
         }
-        .step {
-            flex: 1;
-            height: 4px;
-            border-radius: 4px;
+        .input-field:focus { border-color: var(--green); outline: none; box-shadow: 0 0 0 2px rgba(0,229,160,0.12); }
+
+        .eye-btn { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: #64748b; cursor: pointer; padding: 0.25rem; display: flex; align-items: center; transition: color 0.2s; }
+        .eye-btn:hover { color: var(--green); }
+        .eye-btn svg { width: 18px; height: 18px; }
+
+        /* ========== STRENGTH BAR ========== */
+        .strength-bar { height: 4px; background: #1e293b; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; border-radius: 4px; background: #E2E8F0; }
+        .strength-label { font-size: 0.7rem; margin-top: 4px; transition: color 0.3s; color: #94a3b8; }
+        .rules { font-size: 0.65rem; color: #64748B; margin-top: 6px; }
+
+        /* ========== BUTTON ========== */
+        .btn-submit {
+            width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+            padding: 0.75rem 1.25rem; border-radius: 999px; font-size: 0.8125rem; font-weight: 600;
+            cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-body);
+            background: var(--green); color: #060810; box-shadow: 0 4px 16px rgba(0,229,160,0.2);
+            margin-top: 0.5rem;
         }
-        .step.active { background: #00E5A0; }
-        .step.done { background: #10B981; }
-        .step.todo { background: #1e293b; }
-        html.light .step.todo { background: #e2e8f0; }
+        .btn-submit:hover { background: #fff; transform: scale(1.02); }
+        .btn-submit svg { width: 16px; height: 16px; }
+
+        /* ========== ALERT ========== */
+        .alert-error {
+            display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem;
+            border-radius: 0.75rem; background: rgba(255,59,92,0.06);
+            border: 1px solid rgba(255,59,92,0.12); color: #f87171;
+            font-size: 0.75rem; font-weight: 500; margin-bottom: 1rem;
+        }
+        .alert-error svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        /* ========== SVG ICONS ========== */
+        .svg-icon { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
 {% endblock %}
 
 {% block body %}
-<nav id="main-nav" class="fixed top-0 left-0 w-full z-50 border-b border-white/5">
-    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <div class="flex items-center gap-6">
-            <a href="{{ path('app_home') }}" class="flex items-center gap-2 group">
-                <div class="w-8 h-8 rounded-lg bg-[#0C0F1D]/50 border border-white/10 flex items-center justify-center text-[#00E5A0] transition-all">
-                    <iconify-icon icon="solar:shield-linear" width="20"></iconify-icon>
-                </div>
-                <div class="flex flex-col leading-none">
-                    <span class="font-display font-semibold text-white tracking-tighter text-lg uppercase transition-colors">SAT</span>
-                    <span class="font-display font-medium text-slate-500 tracking-tighter text-xs uppercase">Platform</span>
-                </div>
-            </a>
-        </div>
-        <div class="flex items-center gap-3">
-            <button id="theme-toggle" class="w-10 h-10 rounded-full border border-white/10 text-slate-400 hover:text-[#00E5A0] hover:border-[#00E5A0]/50 transition-all flex items-center justify-center">
-                <iconify-icon id="theme-icon" icon="solar:moon-stars-bold-duotone" width="20"></iconify-icon>
-            </button>
+
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="svg-shield" viewBox="0 0 24 24" class="svg-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="svg-shield-check" viewBox="0 0 24 24" class="svg-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="svg-moon" viewBox="0 0 24 24" class="svg-icon"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></symbol>
+    <symbol id="svg-sun" viewBox="0 0 24 24" class="svg-icon"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="svg-eye" viewBox="0 0 24 24" class="svg-icon"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="svg-eye-off" viewBox="0 0 24 24" class="svg-icon"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></symbol>
+    <symbol id="svg-arrow-up-right" viewBox="0 0 24 24" class="svg-icon"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></symbol>
+    <symbol id="svg-close-circle" viewBox="0 0 24 24" class="svg-icon"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></symbol>
+</svg>
+
+<nav id="main-nav">
+    <div class="nav-inner">
+        <a href="{{ path('app_home') }}" class="nav-logo">
+            <div class="nav-logo-icon"><svg><use href="#svg-shield"/></svg></div>
+            <div class="nav-logo-text">
+                <div class="nav-logo-title nav-white">SAT</div>
+                <div class="nav-logo-sub">Platform</div>
+            </div>
+        </a>
+        <div class="nav-actions" style="display:flex;align-items:center;gap:0.5rem;">
+            <button id="theme-toggle" class="theme-btn"><svg id="theme-icon"><use href="#svg-sun"/></svg></button>
         </div>
     </div>
 </nav>
 
-<main class="min-h-screen flex items-center justify-center pt-28 pb-12 px-4 bg-grid relative overflow-hidden transition-colors duration-300">
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] glow-emerald pointer-events-none opacity-40"></div>
-    <div class="absolute bottom-0 right-0 w-[600px] h-[600px] glow-red pointer-events-none opacity-30"></div>
+<main class="main-container">
+    <div class="bg-grid"></div>
+    <div class="glow-left"></div>
+    <div class="glow-right"></div>
 
-    <div class="max-w-md w-full relative z-10 anim-fade-up">
-        <div class="form-card transition-all duration-300 rounded-3xl border border-white/5 shadow-2xl bg-[#0C0F1D]/80 backdrop-blur-md p-8 lg:p-10">
+    <div class="form-card">
 
-            {# Indicateur d'étapes #}
-            <div class="progress-steps">
-                <div class="step active"></div>
-                <div class="step todo"></div>
+        <div class="progress-steps">
+            <div class="progress-step active"></div>
+            <div class="progress-step todo"></div>
+        </div>
+
+        <div class="step-badge">
+            <svg><use href="#svg-shield-check"/></svg>
+            Étape 1 sur 2
+        </div>
+
+        <h2 class="nav-white">Bienvenue, {{ employe.prenom }} !</h2>
+        <p class="subtitle">
+            Pour sécuriser votre compte, vous devez choisir un nouveau mot de passe personnel
+            avant d'accéder à la plateforme.
+        </p>
+
+        {% for message in app.flashes('error') %}
+            <div class="alert-error">
+                <svg><use href="#svg-close-circle"/></svg>
+                <span>{{ message }}</span>
             </div>
+        {% endfor %}
 
-            <div class="step-badge">
-                <iconify-icon icon="solar:shield-check-linear" width="16"></iconify-icon>
-                Étape 1 sur 2
-            </div>
-
-            <h2 class="font-display font-semibold text-3xl text-white tracking-tight mb-2">
-                Bienvenue, {{ employe.prenom }} !
-            </h2>
-            <p class="text-slate-400 text-sm mb-6">
-                Pour sécuriser votre compte, vous devez choisir un nouveau mot de passe personnel
-                avant d'accéder à la plateforme.
-            </p>
-
-            {% for message in app.flashes('error') %}
-                <div class="alert-sat alert-sat-error">
-                    <iconify-icon icon="solar:close-circle-linear" width="20"></iconify-icon>
-                    <span>{{ message }}</span>
-                </div>
-            {% endfor %}
-
-            <form method="post" id="form">
-                <div class="space-y-5">
-                    <div>
-                        <label for="nouveau" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Nouveau mot de passe</label>
-                        <div class="relative">
-                            <input type="password" id="nouveau" name="nouveau_mot_de_passe" placeholder="Minimum 8 caractères" required class="input-sat pr-12" oninput="evaluerForce(this.value)">
-                            <button type="button" onclick="togglePasswordVisibility('nouveau')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#00E5A0]">
-                                <iconify-icon id="eye-icon-nouveau" icon="solar:eye-linear" width="20"></iconify-icon>
-                            </button>
-                        </div>
-                        <div class="strength-bar mt-2"><div class="strength-fill" id="strength-fill"></div></div>
-                        <div class="strength-label" id="strength-label">Entrez votre mot de passe</div>
-                        <div class="rules">Au moins 8 caractères. Recommandé : majuscule, chiffre, symbole.</div>
-                    </div>
-
-                    <div>
-                        <label for="confirm" class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Confirmer le mot de passe</label>
-                        <div class="relative">
-                            <input type="password" id="confirm" name="confirmation" placeholder="Répétez le mot de passe" required class="input-sat pr-12">
-                            <button type="button" onclick="togglePasswordVisibility('confirm')" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-[#00E5A0]">
-                                <iconify-icon id="eye-icon-confirm" icon="solar:eye-linear" width="20"></iconify-icon>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-primary-sat w-full mt-4">
-                        Confirmer et continuer
-                        <iconify-icon icon="solar:arrow-right-up-linear" width="18"></iconify-icon>
+        <form method="post" id="form">
+            <div class="form-group">
+                <label for="nouveau">Nouveau mot de passe</label>
+                <div class="input-wrap">
+                    <input type="password" id="nouveau" name="nouveau_mot_de_passe" placeholder="Minimum 8 caractères" required class="input-field" oninput="evaluerForce(this.value)">
+                    <button type="button" class="eye-btn" onclick="togglePass('nouveau','eye1')" title="Afficher">
+                        <svg id="eye1"><use href="#svg-eye"/></svg>
                     </button>
                 </div>
-            </form>
-        </div>
+                <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+                <div class="strength-label" id="strength-label">Entrez votre mot de passe</div>
+                <div class="rules">Au moins 8 caractères. Recommandé : majuscule, chiffre, symbole.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm">Confirmer le mot de passe</label>
+                <div class="input-wrap">
+                    <input type="password" id="confirm" name="confirmation" placeholder="Répétez le mot de passe" required class="input-field">
+                    <button type="button" class="eye-btn" onclick="togglePass('confirm','eye2')" title="Afficher">
+                        <svg id="eye2"><use href="#svg-eye"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit">
+                Confirmer et continuer
+                <svg><use href="#svg-arrow-up-right"/></svg>
+            </button>
+        </form>
     </div>
 </main>
 
 <script>
-    // --- LOGIQUE DE LA NAVBAR (HIDE ON SCROLL) ---
-    let lastScrollY = window.scrollY;
+    let lastY = window.scrollY;
     const nav = document.getElementById('main-nav');
-
     window.addEventListener('scroll', () => {
-        if (window.scrollY > lastScrollY && window.scrollY > 100) {
-            nav.classList.add('nav-hidden');
-        } else {
-            nav.classList.remove('nav-hidden');
-        }
-        lastScrollY = window.scrollY;
+        if (window.scrollY > lastY && window.scrollY > 80) nav.classList.add('nav-hidden');
+        else nav.classList.remove('nav-hidden');
+        lastY = window.scrollY;
     });
 
-    // --- LOGIQUE DU THEME (CLAIR/SOMBRE) ---
-    const themeBtn = document.getElementById('theme-toggle');
-    const themeIcon = document.getElementById('theme-icon');
     const html = document.documentElement;
-
-    function applyTheme(theme) {
-        if (theme === 'light') {
-            html.classList.add('light');
-            themeIcon.setAttribute('icon', 'solar:sun-bold-duotone');
-        } else {
-            html.classList.remove('light');
-            themeIcon.setAttribute('icon', 'solar:moon-stars-bold-duotone');
-        }
+    const themeIcon = document.getElementById('theme-icon');
+    function setTheme(t) {
+        if (t === 'light') { html.classList.add('light'); themeIcon.innerHTML = '<use href="#svg-sun"/>'; }
+        else { html.classList.remove('light'); themeIcon.innerHTML = '<use href="#svg-moon"/>'; }
     }
-
-    const savedTheme = localStorage.getItem('sat-theme') || 'light';
-    applyTheme(savedTheme);
-
-    themeBtn.addEventListener('click', () => {
-        const newTheme = html.classList.contains('light') ? 'dark' : 'light';
-        applyTheme(newTheme);
-        localStorage.setItem('sat-theme', newTheme);
+    setTheme(localStorage.getItem('sat-theme') || 'light');
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+        const n = html.classList.contains('light') ? 'dark' : 'light';
+        setTheme(n); localStorage.setItem('sat-theme', n);
     });
 
-    // --- LOGIQUE DE L'OEIL MOT DE PASSE ---
-    function togglePasswordVisibility(fieldId) {
-        const input = document.getElementById(fieldId);
-        const icon = document.getElementById('eye-icon-' + fieldId);
+    function togglePass(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
         if (input.type === 'password') {
             input.type = 'text';
-            icon.setAttribute('icon', 'solar:eye-closed-linear');
+            icon.innerHTML = '<use href="#svg-eye-off"/>';
         } else {
             input.type = 'password';
-            icon.setAttribute('icon', 'solar:eye-linear');
+            icon.innerHTML = '<use href="#svg-eye"/>';
         }
     }
 
-    // --- ÉVALUATION DE LA FORCE DU MOT DE PASSE ---
     function evaluerForce(mdp) {
-        const fill  = document.getElementById('strength-fill');
+        const fill = document.getElementById('strength-fill');
         const label = document.getElementById('strength-label');
-        let force   = 0;
-        if (mdp.length >= 8)  force++;
+        let force = 0;
+        if (mdp.length >= 8) force++;
         if (mdp.length >= 12) force++;
         if (/[A-Z]/.test(mdp)) force++;
         if (/[0-9]/.test(mdp)) force++;
         if (/[^A-Za-z0-9]/.test(mdp)) force++;
 
         const niveaux = [
-            { pct: '0%',   color: '#E2E8F0', txt: 'Entrez votre mot de passe' },
-            { pct: '25%',  color: '#EF4444', txt: 'Très faible' },
-            { pct: '45%',  color: '#F97316', txt: 'Faible' },
-            { pct: '65%',  color: '#EAB308', txt: 'Moyen' },
-            { pct: '82%',  color: '#22C55E', txt: 'Fort' },
+            { pct: '0%', color: '#E2E8F0', txt: 'Entrez votre mot de passe' },
+            { pct: '25%', color: '#EF4444', txt: 'Très faible' },
+            { pct: '45%', color: '#F97316', txt: 'Faible' },
+            { pct: '65%', color: '#EAB308', txt: 'Moyen' },
+            { pct: '82%', color: '#22C55E', txt: 'Fort' },
             { pct: '100%', color: '#10B981', txt: 'Très fort' },
         ];
         const n = niveaux[Math.min(force, 5)];
-        fill.style.width      = n.pct;
+        fill.style.width = n.pct;
         fill.style.background = n.color;
-        label.textContent     = n.txt;
-        label.style.color     = n.color;
+        label.textContent = n.txt;
+        label.style.color = n.color;
     }
 </script>
 {% endblock %}

@@ -3,7 +3,6 @@
 {% block page_title %}Toutes les entreprises{% endblock %}
 
 {% block topbar_actions %}
- 
 {% endblock %}
 
 {% block content %}
@@ -54,7 +53,7 @@
                         <th>Secteur</th>
                         <th class="text-center">Employés</th>
                         <th class="text-center">Statut</th>
-                        <th class="text-center">Actions</th>
+                        <th class="text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -82,21 +81,21 @@
                                     <span class="badge badge-gray">{{ entreprise.statut }}</span>
                                 {% endif %}
                             </td>
-                            <td class="text-center">
+                            <td class="text-right">
                                 <div class="action-buttons">
-                                    <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn-icon" title="Voir détails">
-                                        <i class="bi bi-eye"></i>
+                                    <a href="{{ path('admin_entreprise_details', {id: entreprise.id}) }}" class="btn btn-sm btn-ghost" title="Voir détails">
+                                        Détails
                                     </a>
                                     {% if entreprise.statut == 'ACTIF' %}
                                         <form method="post" action="{{ path('admin_entreprise_suspendre', {id: entreprise.id}) }}" class="action-form">
-                                            <button type="submit" class="btn-icon btn-warning-icon" onclick="return confirm('Suspendre cette entreprise ?')" title="Suspendre">
-                                                <i class="bi bi-pause-circle"></i>
+                                            <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Suspendre cette entreprise ?')" title="Suspendre">
+                                                Suspendre
                                             </button>
                                         </form>
                                     {% elseif entreprise.statut == 'SUSPENDU' %}
                                         <form method="post" action="{{ path('admin_entreprise_reactiver', {id: entreprise.id}) }}" class="action-form">
-                                            <button type="submit" class="btn-icon btn-success-icon" onclick="return confirm('Réactiver cette entreprise ?')" title="Réactiver">
-                                                <i class="bi bi-play-circle"></i>
+                                            <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Réactiver cette entreprise ?')" title="Réactiver">
+                                                Réactiver
                                             </button>
                                         </form>
                                     {% endif %}
@@ -133,16 +132,8 @@
         grid-template-columns: repeat(4, 1fr);
         gap: 1rem;
     }
-    @media (max-width: 900px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    @media (max-width: 550px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+    @media (max-width: 900px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 550px) { .stats-grid { grid-template-columns: 1fr; } }
     .stat-card {
         background: white;
         border-radius: 0.75rem;
@@ -152,157 +143,47 @@
         align-items: center;
         gap: 0.875rem;
     }
+    html.dark .stat-card { background: #1E293B; border-color: #334155; }
     .stat-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 12px;
-        background: #F1F5F9;
-        color: #475569;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-        flex-shrink: 0;
+        width: 48px; height: 48px; border-radius: 12px;
+        background: #F1F5F9; color: #475569;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.5rem; flex-shrink: 0;
     }
     .stat-icon.success { background: #DCFCE7; color: #166534; }
     .stat-icon.warning { background: #FEF9C3; color: #D97706; }
     .stat-icon.danger { background: #FEE2E2; color: #DC2626; }
-    .stat-value {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #0F172A;
-        line-height: 1.2;
-    }
-    .stat-label {
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: #64748B;
-        margin-top: 0.2rem;
-    }
-    html.dark .stat-card {
-        background: #1E293B;
-        border-color: #334155;
-    }
+    .stat-value { font-size: 1.75rem; font-weight: 800; color: #0F172A; line-height: 1.2; }
     html.dark .stat-value { color: #F1F5F9; }
+    .stat-label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #64748B; margin-top: 0.2rem; }
 
     /* Carte tableau */
-    .card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        overflow: hidden;
-    }
-    html.dark .card {
-        background: #1E293B;
-        border-color: #334155;
-    }
-    .card-header {
-        padding: 1rem 1.25rem;
-        border-bottom: 1px solid #E2E8F0;
-        background: #F8FAFC;
-    }
-    .card-header h3 {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    html.dark .card-header {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    html.dark .card-header h3 {
-        color: #F1F5F9;
-    }
+    .card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; overflow: hidden; }
+    html.dark .card { background: #1E293B; border-color: #334155; }
+    .card-header { padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+    html.dark .card-header { background: #0F172A; border-color: #334155; }
+    .card-header h3 { font-size: 1rem; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    html.dark .card-header h3 { color: #F1F5F9; }
 
-    /* Tableau responsive */
-    .table-responsive {
-        overflow-x: auto;
-    }
-    .entreprises-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.8125rem;
-    }
-    .entreprises-table th {
-        text-align: left;
-        padding: 0.75rem 1rem;
-        background: #F8FAFC;
-        color: #475569;
-        font-weight: 600;
-        border-bottom: 1px solid #E2E8F0;
-    }
-    .entreprises-table td {
-        padding: 0.75rem 1rem;
-        border-bottom: 1px solid #E2E8F0;
-        vertical-align: middle;
-    }
-    .entreprises-table tr:hover td {
-        background: #F8FAFC;
-    }
-    html.dark .entreprises-table th {
-        background: #1E293B;
-        color: #94A3B8;
-        border-bottom-color: #334155;
-    }
-    html.dark .entreprises-table td {
-        border-bottom-color: #334155;
-    }
-    html.dark .entreprises-table tr:hover td {
-        background: #0F172A;
-    }
-    .text-center {
-        text-align: center;
-    }
-    .entreprise-name {
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 0.2rem;
-    }
-    .entreprise-email {
-        font-size: 0.7rem;
-        color: #64748B;
-        display: flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-    .entreprise-ifu {
-        font-family: monospace;
-        font-size: 0.75rem;
-        color: #475569;
-    }
-    .employes-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        background: #EFF6FF;
-        color: #1D4ED8;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-    }
-    html.dark .employes-badge {
-        background: #1E3A8A;
-        color: #60A5FA;
-    }
+    /* Tableau */
+    .table-responsive { overflow-x: auto; }
+    .entreprises-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    .entreprises-table th { text-align: left; padding: 0.75rem 1rem; background: #F8FAFC; color: #475569; font-weight: 600; border-bottom: 2px solid #E2E8F0; }
+    html.dark .entreprises-table th { background: #1E293B; color: #94A3B8; border-bottom-color: #334155; }
+    .entreprises-table td { padding: 0.75rem 1rem; border-bottom: 1px solid #E2E8F0; vertical-align: middle; color: #334155; }
+    html.dark .entreprises-table td { border-bottom-color: #334155; color: #CBD5E1; }
+    .entreprises-table tbody tr:last-child td { border-bottom: none; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .entreprise-name { font-weight: 700; color: #0F172A; margin-bottom: 0.2rem; }
+    html.dark .entreprise-name { color: #F1F5F9; }
+    .entreprise-email { font-size: 0.7rem; color: #64748B; display: flex; align-items: center; gap: 0.25rem; }
+    .entreprise-ifu { font-family: monospace; font-size: 0.75rem; color: #475569; }
+    .employes-badge { display: inline-flex; align-items: center; gap: 0.25rem; background: #EFF6FF; color: #1D4ED8; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    html.dark .employes-badge { background: #1E3A8A; color: #60A5FA; }
 
     /* Badges statut */
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
+    .badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; white-space: nowrap; }
     .badge-success { background: #DCFCE7; color: #166534; }
     .badge-warning { background: #FEF9C3; color: #854D0E; }
     .badge-danger  { background: #FEE2E2; color: #991B1B; }
@@ -312,77 +193,39 @@
     html.dark .badge-danger  { background: #7F1D1D; color: #FCA5A5; }
     html.dark .badge-gray    { background: #1E293B; color: #94A3B8; }
 
-    /* Actions */
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-        justify-content: center;
+    /* ========== BOUTONS D'ACTION (comme page modules) ========== */
+    .action-buttons { display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap; }
+    .action-form { display: inline; margin: 0; }
+
+    .btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+        padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 500;
+        text-decoration: none; transition: all 0.2s; cursor: pointer; border: none;
+        white-space: nowrap; min-width: 80px; height: 34px; box-sizing: border-box;
+        font-family: inherit;
     }
-    .action-form {
-        display: inline;
-    }
-    .btn-icon {
-        width: 32px;
-        height: 32px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        color: #64748B;
-        transition: all 0.15s;
-        cursor: pointer;
-        text-decoration: none;
-    }
-    .btn-icon:hover {
-        background: #F1F5F9;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    .btn-warning-icon:hover {
-        background: #FEF9C3;
-        border-color: #FDE68A;
-        color: #D97706;
-    }
-    .btn-success-icon:hover {
-        background: #DCFCE7;
-        border-color: #BBF7D0;
-        color: #166534;
-    }
-    html.dark .btn-icon {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-icon:hover {
-        background: #1E293B;
-        color: #F1F5F9;
-    }
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; height: 32px; min-width: 75px; }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #1E293B; }
+    html.dark .btn-ghost { border-color: #334155; color: #94A3B8; }
+    html.dark .btn-ghost:hover { background: #1E293B; border-color: #475569; color: #F1F5F9; }
+    .btn-warning { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+    .btn-warning:hover { background: #FEF3C7; color: #78350F; }
+    html.dark .btn-warning { background: #78350F; color: #FDE047; border-color: #A16207; }
+    html.dark .btn-warning:hover { background: #92400E; }
+    .btn-success { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+    .btn-success:hover { background: #BBF7D0; color: #14532D; }
+    html.dark .btn-success { background: #14532D; color: #4ADE80; border-color: #166534; }
+    html.dark .btn-success:hover { background: #166534; }
 
     /* Empty state */
-    .empty-table {
-        text-align: center;
-        padding: 3rem 1rem;
-        color: #94A3B8;
-    }
-    .empty-table i {
-        font-size: 3rem;
-        display: block;
-        margin-bottom: 0.5rem;
-    }
+    .empty-table { text-align: center; padding: 3rem 1rem; color: #94A3B8; }
+    .empty-table i { font-size: 3rem; display: block; margin-bottom: 0.5rem; }
 
     @media (max-width: 640px) {
-        .action-buttons {
-            flex-direction: column;
-            align-items: center;
-        }
-        .btn-icon {
-            width: 28px;
-            height: 28px;
-        }
-        .entreprise-name {
-            font-size: 0.875rem;
-        }
+        .action-buttons { flex-direction: column; align-items: flex-end; }
+        .action-buttons .btn { width: 100%; }
+        .entreprise-name { font-size: 0.875rem; }
     }
 </style>
 {% endblock %}

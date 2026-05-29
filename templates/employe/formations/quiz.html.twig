@@ -1,5 +1,5 @@
 {% extends 'employe/layout.html.twig' %}
-{% block page_title %}Quiz : {{ quiz.titre }}{% endblock %}
+{% block page_title %}Quiz : {{ chapitre.titre }}{% endblock %}
 
 {% block stylesheets %}
 {{ parent() }}
@@ -24,6 +24,7 @@
     padding-left: 24px;
     padding-right: 24px;
 }
+html.dark .quiz-progress-bar { background: #1E293B; border-color: #334155; }
 .quiz-progress-meta {
     display: flex;
     justify-content: space-between;
@@ -125,6 +126,7 @@
     color: #0F172A;
     line-height: 1.55;
 }
+html.dark .q-text { color: #CBD5E1; }
 .q-options {
     display: flex;
     flex-direction: column;
@@ -143,6 +145,7 @@
     color: #334155;
     background: white;
 }
+html.dark .q-option { background: #1E293B; border-color: #475569; color: #CBD5E1; }
 .q-option:hover {
     border-color: #86EFAC;
     background: #F0FDF4;
@@ -186,6 +189,7 @@
     margin-top: 8px;
     flex-wrap: wrap;
 }
+html.dark .quiz-footer { background: #1E293B; border-color: #334155; }
 .btn-quiz-submit {
     display: inline-flex;
     align-items: center;
@@ -203,17 +207,7 @@
 .btn-quiz-submit:disabled { background: #94A3B8; cursor: not-allowed; }
 
 /* Dark mode */
-html.dark .quiz-progress-bar,
-html.dark .quiz-footer,
-html.dark .q-card {
-    background: #1E293B;
-    border-color: #334155;
-}
-html.dark .q-text,
-html.dark .q-option {
-    color: #CBD5E1;
-}
-html.dark .q-option { background: #1E293B; border-color: #475569; }
+html.dark .q-card { background: #1E293B; border-color: #334155; }
 html.dark .q-num { background: #334155; color: #94A3B8; }
 </style>
 {% endblock %}
@@ -234,48 +228,56 @@ html.dark .q-num { background: #334155; color: #94A3B8; }
         <a href="{{ path('employe_formation_detail', {id: module.id}) }}" class="quiz-back">
             <i class="bi bi-arrow-left"></i> Retour au module
         </a>
-        <h1 class="quiz-title">{{ quiz.titre }}</h1>
+        <h1 class="quiz-title">{{ chapitre.titre }}</h1>
         <div class="quiz-chips">
             <span class="quiz-chip"><i class="bi bi-question-circle"></i> {{ questions|length }} questions</span>
-            {% if quiz.scoreMinimum > 0 %}
-            <span class="quiz-chip quiz-chip-warn"><i class="bi bi-trophy"></i> Score min : {{ quiz.scoreMinimum }}%</span>
+            {% if chapitre.quizScoreMinimum > 0 %}
+            <span class="quiz-chip quiz-chip-warn"><i class="bi bi-trophy"></i> Score min : {{ chapitre.quizScoreMinimum }}%</span>
             {% endif %}
+            <span class="quiz-chip"><i class="bi bi-arrow-repeat"></i> Tentative {{ numeroTentative }} / {{ chapitre.quizNombreTentativesMax }}</span>
             {% if tentative %}
             <span class="quiz-chip {% if tentative.aReussi %}quiz-chip-ok{% else %}quiz-chip-warn{% endif %}">
-                <i class="bi bi-clock-history"></i> Dernière tentative : {{ tentative.score }}/{{ tentative.totalQuestions }} ({{ tentative.aReussi ? 'Réussi' : 'Échoué' }})
+                <i class="bi bi-clock-history"></i> Dernière : {{ tentative.reponsesCorrectes }}/{{ tentative.totalQuestions }} ({{ tentative.aReussi ? 'Réussi' : 'Échoué' }})
             </span>
             {% endif %}
         </div>
     </div>
 
-    <form method="post" id="quizForm">
-        {% set letters = ['A','B','C','D','E','F'] %}
-        {% for question in questions %}
-        <div class="q-card" id="qcard-{{ loop.index }}">
-            <div class="q-header">
-                <div class="q-num">{{ loop.index }}</div>
-                <div class="q-text">{{ question.question }}</div>
-            </div>
-            <div class="q-options">
-                {% for option in question.options %}
-                <label class="q-option" onclick="selectOption({{ loop.parent.loop.index }}, this)">
-                    {# Utilisation de l'index de la question (base 0) pour le name #}
-                    <input type="radio" name="reponses[{{ loop.parent.loop.index0 }}]" value="{{ option }}" required>
-                    <span class="q-option-letter">{{ letters[loop.index0] ?? loop.index }}</span>
-                    <span>{{ option }}</span>
-                </label>
-                {% endfor %}
-            </div>
+    {% if limiteAtteinte %}
+        <div class="quiz-footer" style="justify-content:center;">
+            <a href="{{ path('employe_formation_detail', {id: module.id}) }}" class="btn-quiz-submit" style="background:linear-gradient(135deg,#64748B,#475569);">
+                <i class="bi bi-arrow-left"></i> Retour au module
+            </a>
         </div>
-        {% endfor %}
+    {% else %}
+        <form method="post" id="quizForm">
+            {% set letters = ['A','B','C','D','E','F'] %}
+            {% for question in questions %}
+            <div class="q-card" id="qcard-{{ loop.index }}">
+                <div class="q-header">
+                    <div class="q-num">{{ loop.index }}</div>
+                    <div class="q-text">{{ question.question }}</div>
+                </div>
+                <div class="q-options">
+                    {% for option in question.options %}
+                    <label class="q-option" onclick="selectOption({{ loop.parent.loop.index }}, this)">
+                        <input type="radio" name="reponses[{{ loop.parent.loop.index0 }}]" value="{{ option }}" required>
+                        <span class="q-option-letter">{{ letters[loop.index0] ?? loop.index }}</span>
+                        <span>{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
 
-        <div class="quiz-footer">
-            <div><strong id="footerAnswered">0</strong> / {{ questions|length }} répondues</div>
-            <button type="submit" class="btn-quiz-submit" id="btnSubmit">
-                <i class="bi bi-send-fill"></i> Valider le quiz
-            </button>
-        </div>
-    </form>
+            <div class="quiz-footer">
+                <div><strong id="footerAnswered">0</strong> / {{ questions|length }} répondues</div>
+                <button type="submit" class="btn-quiz-submit" id="btnSubmit">
+                    <i class="bi bi-send-fill"></i> Valider le quiz
+                </button>
+            </div>
+        </form>
+    {% endif %}
 </div>
 
 <script>
@@ -301,7 +303,7 @@ function updateProgress() {
     document.getElementById('footerAnswered').innerText = count;
 }
 
-document.getElementById('quizForm').addEventListener('submit', function(e) {
+document.getElementById('quizForm')?.addEventListener('submit', function(e) {
     if (answered.size < TOTAL) {
         e.preventDefault();
         for (let i = 1; i <= TOTAL; i++) {

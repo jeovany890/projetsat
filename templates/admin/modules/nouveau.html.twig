@@ -1,6 +1,6 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block page_title %}Nouveau module{% endblock %}
+{% block page_title %}Nouveau module avec simulation{% endblock %}
 
 {% block topbar_actions %}
     <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost btn-sm">
@@ -9,296 +9,472 @@
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="card">
-        <div class="card-header">
-            <h2>
-                <i class="bi bi-plus-circle" style="color: #E53E3E;"></i>
-                Créer un module de formation
-            </h2>
+<div class="simulation-form-container">
+    <form method="post" id="moduleForm">
+        <input type="hidden" name="simulation_contenu_json" id="simulationContenuJson">
+
+        {# --- Informations générales du module --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-plus-circle" style="color:#E53E3E;"></i> Informations générales</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Titre du module *</label>
+                    <input type="text" class="form-control" name="titre" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description *</label>
+                    <textarea class="form-control" name="description" rows="4" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Catégorie *</label>
+                    <input type="text" class="form-control" name="categorie" placeholder="Ex: CyberSécurité, RGPD, Phishing..." required>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
 
-                {# Informations générales #}
-                <div class="form-section">
-                    <h3 class="section-title">Informations générales</h3>
+        {# --- Paramètres du module --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-sliders2"></i> Paramètres</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Titre du module *</label>
-                        <input type="text" class="form-control" name="titre" required>
+                        <label class="form-label">Difficulté</label>
+                        <select class="form-control" name="difficulte">
+                            <option value="debutant">Débutant</option>
+                            <option value="intermediaire">Intermédiaire</option>
+                            <option value="avance">Avancé</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Description *</label>
-                        <textarea class="form-control" name="description" rows="4" required></textarea>
+                        <label class="form-label">Durée estimée (minutes)</label>
+                        <input type="number" class="form-control" name="duree_estimee" value="30" min="5" max="300">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Catégorie *</label>
-                        <input type="text" class="form-control" name="categorie_nom" placeholder="Ex: CyberSécurité, RGPD, Phishing..." required>
-                        <small class="form-hint">Saisissez le nom de la catégorie (libre).</small>
+                        <label class="form-label">Points à la réussite</label>
+                        <input type="number" class="form-control" name="points_reussite" value="100" min="0">
                     </div>
                 </div>
-
-                {# Paramètres #}
-                <div class="form-section">
-                    <h3 class="section-title">Paramètres</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">Difficulté</label>
-                            <select class="form-control" name="difficulte">
-                                <option value="debutant">Débutant</option>
-                                <option value="intermediaire">Intermédiaire</option>
-                                <option value="avance">Avancé</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Durée estimée (minutes)</label>
-                            <input type="number" class="form-control" name="duree_estimee" value="30" min="5" max="300">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Points à la réussite</label>
-                            <input type="number" class="form-control" name="points_reussite" value="100" min="0">
-                        </div>
-                    
-                    </div>
-                </div>
-
-                {# Publication #}
-                <div class="form-section">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="est_publie" checked>
-                        <span>
-                            <strong>Module publié</strong><br>
-                            <small>Le module est visible et disponible pour les campagnes</small>
-                        </span>
-                    </label>
-                </div>
-
-                {# Actions #}
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Créer le module
-                    </button>
-                    <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost">
-                        <i class="bi bi-x-lg"></i> Annuler
-                    </a>
-                </div>
-
-            </form>
+            </div>
         </div>
-    </div>
+
+        {# --- Simulation interactive (reprise de l'ancien template simulation) --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-joystick"></i> Simulation finale (optionnelle)</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Titre de la simulation</label>
+                    <input type="text" class="form-control" name="simulation_titre" placeholder="Ex: Simulation – Boîte Gmail">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Type de simulation</label>
+                    <select name="simulation_type" id="typeSelect" class="form-control" onchange="changerType()">
+                        <option value="">Aucune</option>
+                        <option value="GMAIL">Gmail</option>
+                        <option value="SMS">SMS</option>
+                        <option value="WHATSAPP">WhatsApp</option>
+                    </select>
+                </div>
+
+                <div id="zoneVide" class="empty-zone">
+                    <i class="bi bi-arrow-up-circle"></i>
+                    <p>Sélectionnez un type pour ajouter du contenu</p>
+                </div>
+
+                <div id="zoneGmail" class="zone-simulation" style="display:none;">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3>Emails de la boite Gmail</h3>
+                            <p class="card-subtitle">Ajoutez des emails. Précisez si chacun est phishing ou légitime.</p>
+                        </div>
+                        <button type="button" onclick="ajouterGmail()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter un email
+                        </button>
+                    </div>
+                    <div class="card-body" id="listeGmail">
+                        <div class="empty-message">Aucun email. Cliquez "+ Ajouter un email".</div>
+                    </div>
+                </div>
+
+                <div id="zoneSms" class="zone-simulation" style="display:none;">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3>SMS de la messagerie</h3>
+                            <p class="card-subtitle">Ajoutez des SMS. Précisez si chacun est du smishing ou légitime.</p>
+                        </div>
+                        <button type="button" onclick="ajouterSms()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter un SMS
+                        </button>
+                    </div>
+                    <div class="card-body" id="listeSms">
+                        <div class="empty-message">Aucun SMS. Cliquez "+ Ajouter un SMS".</div>
+                    </div>
+                </div>
+
+                <div id="zoneWa" class="zone-simulation" style="display:none;">
+                    <div class="card-header-flex">
+                        <div>
+                            <h3>Conversations WhatsApp</h3>
+                            <p class="card-subtitle">Ajoutez des conversations. Rédigez les messages et précisez si c'est du phishing.</p>
+                        </div>
+                        <button type="button" onclick="ajouterWa()" class="btn btn-primary btn-sm">
+                            <i class="bi bi-plus-lg"></i> Ajouter une conversation
+                        </button>
+                    </div>
+                    <div class="card-body" id="listeWa">
+                        <div class="empty-message">Aucune conversation. Cliquez "+ Ajouter une conversation".</div>
+                    </div>
+                </div>
+
+                {# Aperçu à droite – sera caché sur mobile #}
+                <div class="sim-right">
+                    <div class="card">
+                        <div class="card-header-flex">
+                            <span>Aperçu de l'interface</span>
+                            <span id="compteur" class="text-muted">—</span>
+                        </div>
+                    </div>
+                    <div id="apercuGmail" class="apercu-card" style="display:none;">
+                        <div class="apercu-header"><i class="bi bi-envelope-fill"></i> Gmail</div>
+                        <div class="apercu-subheader">Simulation en cours — Phishing ou légitime ?</div>
+                        <div class="apercu-content"><div class="inbox-header">Principal</div><div id="apercuGmailRows"></div></div>
+                    </div>
+                    <div id="apercuSms" class="apercu-card apercu-dark" style="display:none;">
+                        <div class="apercu-header-dark">Messages</div>
+                        <div class="apercu-subheader-dark">Simulation SMS en cours</div>
+                        <div id="apercuSmsRows"></div>
+                    </div>
+                    <div id="apercuWa" class="apercu-card apercu-wa" style="display:none;">
+                        <div class="apercu-header-wa">WhatsApp</div>
+                        <div class="apercu-subheader-wa">Simulation WhatsApp en cours</div>
+                        <div id="apercuWaRows"></div>
+                    </div>
+                    <div id="apercuVide" class="apercu-empty">
+                        <i class="bi bi-phone-fill"></i><p>L'aperçu apparaîtra ici</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary" onclick="return construireJsonSimulation()">
+                <i class="bi bi-check-lg"></i> Créer le module
+            </button>
+            <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost">Annuler</a>
+        </div>
+    </form>
 </div>
 {% endblock %}
 
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    /* (Les styles sont identiques à ceux du template modifier, vous pouvez les copier depuis le fichier modifier) */
-     .form-container {
-        max-width: 900px;
-        margin: 0 auto;
-    }
-    .card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        overflow: hidden;
-    }
-    html.dark .card {
-        background: #1E293B;
-        border-color: #334155;
-    }
-    .card-header {
-        padding: 1.5rem 1.75rem;
-        border-bottom: 1px solid #E2E8F0;
-        background: #F8FAFC;
-    }
-    html.dark .card-header {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    .card-header h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .card-subtitle {
-        font-size: 0.75rem;
-        color: #64748B;
-        margin: 0;
-    }
-    html.dark .card-header h2 {
-        color: #F1F5F9;
-    }
-    .card-body {
-        padding: 1.75rem;
-    }
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #E2E8F0;
-    }
-    html.dark .form-section {
-        border-color: #334155;
-    }
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .section-title:before {
-        content: '';
-        width: 4px;
-        height: 18px;
-        background: #E53E3E;
-        border-radius: 4px;
-        display: inline-block;
-    }
-    html.dark .section-title {
-        color: #F1F5F9;
-    }
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-    @media (max-width: 640px) {
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-    }
-    .form-label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #475569;
-        margin-bottom: 0.4rem;
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        background: white;
-        color: #0F172A;
-        transition: all 0.15s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: #E53E3E;
-        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
-    }
-    textarea.form-control {
-        resize: vertical;
-    }
-    html.dark .form-control {
-        background: #0F172A;
-        border-color: #334155;
-        color: #F1F5F9;
-    }
-    .checkbox-label {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        cursor: pointer;
-        padding: 0.75rem;
-        background: #F8FAFC;
-        border-radius: 0.75rem;
-        border: 1px solid #E2E8F0;
-    }
-    .checkbox-label input {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        accent-color: #E53E3E;
-    }
-    .checkbox-label strong {
-        font-size: 0.875rem;
-        color: #0F172A;
-    }
-    .checkbox-label small {
-        font-size: 0.7rem;
-        color: #64748B;
-    }
-    html.dark .checkbox-label {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    html.dark .checkbox-label strong {
-        color: #F1F5F9;
-    }
-    .form-actions {
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-    .btn-primary {
-        background: #E53E3E;
-        color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-        background: #C53030;
-        transform: translateY(-1px);
-    }
-    .btn-ghost {
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-    }
-    .btn-ghost:hover {
-        background: #F8FAFC;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    html.dark .btn-ghost {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-ghost:hover {
-        background: #1E293B;
-        border-color: #475569;
-        color: #F1F5F9;
-    }
-    @media (max-width: 480px) {
-        .card-body {
-            padding: 1rem;
-        }
-        .form-actions {
-            flex-direction: column;
-        }
-        .form-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
+    /* Styles repris de l'ancien template simulation */
+    .simulation-form-container { max-width: 1300px; margin: 0 auto; }
+    .card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; overflow: hidden; margin-bottom: 1.5rem; }
+    .card-header { padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+    .card-header h2 { font-size: 1rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    .card-header-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 1.25rem; border-bottom: 1px solid #E2E8F0; }
+    .card-body { padding: 1.25rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    @media (max-width: 640px) { .form-row { grid-template-columns: 1fr; } }
+    .form-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 0.4rem; }
+    .form-control { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E1; border-radius: 0.5rem; font-size: 0.875rem; background: white; color: #0F172A; transition: all 0.15s; }
+    .form-control:focus { outline: none; border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,0.2); }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+    .btn-primary { background: #E53E3E; color: white; }
+    .btn-primary:hover { background: #C53030; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    .btn-sm { padding: 0.25rem 0.75rem; font-size: 0.75rem; }
+    .checkbox-label { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: #F8FAFC; border-radius: 0.75rem; border: 1px solid #E2E8F0; margin: 1rem 0; }
+    .empty-zone { text-align: center; padding: 2rem; background: #F8FAFC; border: 2px dashed #CBD5E1; border-radius: 1rem; color: #94A3B8; margin: 1rem 0; }
+    .zone-simulation { margin-top: 1rem; }
+    .empty-message { text-align: center; padding: 1rem; color: #94A3B8; border: 1px dashed #E2E8F0; border-radius: 0.75rem; }
+    .sim-right { margin-top: 1.5rem; }
+    .apercu-card { border-radius: 1rem; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-top: 1rem; }
+    .apercu-header { background: #F6F8FC; padding: 0.5rem 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #DADCE0; font-weight: 500; }
+    .apercu-subheader { background: #FFF8E1; padding: 0.3rem 1rem; border-bottom: 1px solid #FFD54F; font-size: 0.7rem; color: #5D4037; }
+    .apercu-dark { background: #1C1C1E; color: white; }
+    .apercu-header-dark { padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 700; }
+    .apercu-subheader-dark { background: rgba(255,166,0,0.1); padding: 0.3rem 1rem; font-size: 0.7rem; color: #FFD60A; }
+    .apercu-wa { background: #111; }
+    .apercu-header-wa { padding: 0.75rem 1rem; border-bottom: 1px solid #2A2A2A; font-weight: 700; color: #E9EDF0; }
+    .apercu-subheader-wa { background: rgba(255,166,0,0.1); padding: 0.3rem 1rem; font-size: 0.7rem; color: #FFD60A; }
+    .apercu-empty { text-align: center; padding: 2rem; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 1rem; margin-top: 1rem; color: #94A3B8; }
+    .gmail-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-bottom: 1px solid #F6F8FC; }
+    .gmail-av { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: white; flex-shrink: 0; }
+    .gmail-body { flex: 1; }
+    .gmail-sender { font-size: 0.7rem; font-weight: 700; color: #202124; }
+    .gmail-subj { font-size: 0.65rem; color: #5F6368; }
+    .sms-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sms-av { width: 38px; height: 38px; border-radius: 50%; background: #3A3A3C; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: white; }
+    .sms-name { font-size: 0.7rem; font-weight: 700; color: white; }
+    .sms-preview { font-size: 0.65rem; color: rgba(255,255,255,0.5); }
+    .wa-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .wa-av { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; color: white; }
+    .wa-name { font-size: 0.7rem; font-weight: 600; color: #E9EDF0; }
+    .wa-last { font-size: 0.65rem; color: #8696A0; }
+    .text-muted { color: #94A3B8; font-size: 0.7rem; }
+    /* Styles pour les messages dynamiques (identique à l'ancien) */
+    .msg-card { border: 1px solid #E2E8F0; border-radius: 0.75rem; margin-bottom: 1rem; overflow: hidden; }
+    .msg-card.phishing { border-color: #FCA5A5; }
+    .msg-card.legitime { border-color: #86EFAC; }
+    .msg-card-header { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .msg-card-body { padding: 1rem; }
+    .type-toggle { display: inline-flex; border-radius: 8px; overflow: hidden; border: 1px solid #E2E8F0; margin-bottom: 1rem; }
+    .type-toggle button { padding: 0.25rem 0.75rem; border: none; background: white; font-size: 0.7rem; cursor: pointer; }
+    .type-toggle button.actif-phish { background: #EF4444; color: white; font-weight: 700; }
+    .type-toggle button.actif-legit { background: #22C55E; color: white; font-weight: 700; }
+    .champ { margin-bottom: 0.75rem; }
+    .champ label { display: block; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.25rem; }
+    .champ input, .champ textarea, .champ select { width: 100%; border: 1px solid #E2E8F0; border-radius: 0.5rem; padding: 0.4rem 0.6rem; font-size: 0.75rem; background: white; }
+    .btn-del { background: transparent; border: 1px solid #E2E8F0; border-radius: 6px; width: 28px; height: 28px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+    .badge-phish { background: #FEE2E2; color: #DC2626; font-size: 0.6rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 20px; }
+    .badge-legit { background: #DCFCE7; color: #166534; font-size: 0.6rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 20px; }
+    .option-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .option-check { width: 18px; height: 18px; accent-color: #E53E3E; }
+    .option-text { flex: 1; }
+    .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+    @media (max-width: 640px) { .form-actions { flex-direction: column; } .form-actions .btn { width: 100%; justify-content: center; } }
+    html.dark .card { background: #1E293B; border-color: #334155; }
+    html.dark .card-header { background: #0F172A; }
+    html.dark .form-control { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    html.dark .checkbox-label { background: #0F172A; border-color: #334155; color: #F1F5F9; }
 </style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    // Placeholders pour les emails/SMS
+    const PH_PRENOM     = "{{ app.user.prenom ?? 'PRENOM' }}";
+    const PH_NOM        = "{{ app.user.nom ?? 'NOM' }}";
+    const PH_EMAIL      = "{{ app.user.email ?? 'EMAIL' }}";
+    const PH_TELEPHONE  = "{{ app.user.telephone ?? 'TELEPHONE' }}";
+    const PH_ENTREPRISE = "{{ app.user.entreprise ?? 'ENTREPRISE' }}";
+    const HINT_GMAIL    = `Placeholders : ${PH_PRENOM} ${PH_NOM} ${PH_EMAIL} ${PH_TELEPHONE} ${PH_ENTREPRISE}`;
+    const HINT_SMS      = `Placeholders : ${PH_PRENOM} ${PH_TELEPHONE}`;
+    const HINT_CORPS    = `<p>Bonjour ${PH_PRENOM},</p><br><p>...</p>`;
+
+    let type = '';
+    let gmails = [];
+    let smss = [];
+    let was = [];
+
+    function changerType() {
+        type = document.getElementById('typeSelect').value;
+        ['zoneVide','zoneGmail','zoneSms','zoneWa'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        ['apercuGmail','apercuSms','apercuWa','apercuVide'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        if (!type) {
+            document.getElementById('zoneVide').style.display = '';
+            document.getElementById('apercuVide').style.display = '';
+            return;
+        }
+        if (type === 'GMAIL') document.getElementById('zoneGmail').style.display = '';
+        if (type === 'SMS') document.getElementById('zoneSms').style.display = '';
+        if (type === 'WHATSAPP') document.getElementById('zoneWa').style.display = '';
+        majApercu();
+    }
+
+    // Gmail functions
+    function ajouterGmail() {
+        gmails.push({
+            is_phishing: true, sender_name: '', sender_email: '',
+            subject: '', body: '', avatar_color: '#EA4335', avatar_text: '',
+            time: "Aujourd'hui", explication: ''
+        });
+        renderGmail();
+    }
+    function supprimerGmail(i) { gmails.splice(i,1); renderGmail(); majApercu(); }
+    function updateGmail(i, champ, val) {
+        gmails[i][champ] = (champ === 'is_phishing') ? (val === 'phishing') : val;
+        let card = document.getElementById('gmail-card-'+i);
+        if (card) {
+            card.className = 'msg-card ' + (gmails[i].is_phishing ? 'phishing' : 'legitime');
+            let header = card.querySelector('.msg-card-header');
+            if (header) header.className = 'msg-card-header ' + (gmails[i].is_phishing ? 'phishing' : 'legitime');
+        }
+        majApercu();
+    }
+    function renderGmail() {
+        let c = document.getElementById('listeGmail');
+        if (!gmails.length) { c.innerHTML = '<div class="empty-message">Aucun email. Cliquez "+ Ajouter un email".</div>'; return; }
+        c.innerHTML = gmails.map((e,i)=>{
+            return `<div class="msg-card ${e.is_phishing ? 'phishing' : 'legitime'}" id="gmail-card-${i}">
+                <div class="msg-card-header ${e.is_phishing ? 'phishing' : 'legitime'}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${e.avatar_color||'#9E9E9E'};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">${escapeHtml(e.avatar_text || (e.sender_name.slice(0,2).toUpperCase()) || '?')}</div>
+                    <span style="flex:1;font-weight:600;">${e.sender_name ? escapeHtml(e.sender_name) : '<em>Nom expediteur</em>'}</span>
+                    <span class="${e.is_phishing ? 'badge-phish' : 'badge-legit'}">${e.is_phishing ? 'Phishing' : 'Legitime'}</span>
+                    <button type="button" onclick="supprimerGmail(${i})" class="btn-del">✕</button>
+                </div>
+                <div class="msg-card-body">
+                    <div class="type-toggle">
+                        <button type="button" class="${e.is_phishing ? 'actif-phish' : ''}" onclick="updateGmail(${i},'is_phishing','phishing')">Phishing</button>
+                        <button type="button" class="${!e.is_phishing ? 'actif-legit' : ''}" onclick="updateGmail(${i},'is_phishing','legitime')">Legitime</button>
+                    </div>
+                    <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                        <div class="champ"><label>Nom affiché *</label><input type="text" value="${escapeHtml(e.sender_name)}" oninput="gmails[${i}].sender_name=this.value; majApercu()"></div>
+                        <div class="champ"><label>Email expéditeur *</label><input type="text" value="${escapeHtml(e.sender_email)}" oninput="gmails[${i}].sender_email=this.value"></div>
+                    </div>
+                    <div class="champ"><label>Sujet *</label><input type="text" value="${escapeHtml(e.subject)}" oninput="gmails[${i}].subject=this.value; majApercu()"></div>
+                    <div class="champ-row" style="grid-template-columns:60px 50px 1fr;">
+                        <div class="champ"><label>Couleur avatar</label><input type="color" value="${e.avatar_color||'#EA4335'}" oninput="gmails[${i}].avatar_color=this.value"></div>
+                        <div class="champ"><label>Texte</label><input type="text" maxlength="2" value="${escapeHtml(e.avatar_text)}" placeholder="BO" oninput="gmails[${i}].avatar_text=this.value"></div>
+                        <div class="champ"><label>Heure</label><input type="text" value="${escapeHtml(e.time)}" oninput="gmails[${i}].time=this.value"></div>
+                    </div>
+                    <div class="champ"><label>Corps (HTML) *</label><textarea rows="4" placeholder="${escapeHtml(HINT_CORPS)}" oninput="gmails[${i}].body=this.value">${escapeHtml(e.body)}</textarea><small style="color:#94A3B8;">${HINT_GMAIL}</small></div>
+                    <div class="champ"><label>Explication *</label><textarea rows="2" oninput="gmails[${i}].explication=this.value">${escapeHtml(e.explication)}</textarea></div>
+                </div>
+            </div>`;
+        }).join('');
+        majApercu();
+    }
+
+    // SMS functions (simplifiées)
+    function ajouterSms() {
+        smss.push({is_phishing:true, name:'', num:'', message:'', date:"Aujourd'hui", hasLink:false, explication:''});
+        renderSms();
+    }
+    function supprimerSms(i) { smss.splice(i,1); renderSms(); majApercu(); }
+    function renderSms() {
+        let c = document.getElementById('listeSms');
+        if (!smss.length) { c.innerHTML = '<div class="empty-message">Aucun SMS. Cliquez "+ Ajouter un SMS".</div>'; return; }
+        c.innerHTML = smss.map((s,i)=>{
+            return `<div class="msg-card ${s.is_phishing ? 'phishing' : 'legitime'}">
+                <div class="msg-card-header ${s.is_phishing ? 'phishing' : 'legitime'}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${s.is_phishing ? '#FF9F0A' : '#3A3A3C'};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${escapeHtml((s.name||'?').slice(0,2).toUpperCase())}</div>
+                    <span style="flex:1;font-weight:600;">${s.name ? escapeHtml(s.name) : '<em>Expediteur</em>'}</span>
+                    <span class="${s.is_phishing ? 'badge-phish' : 'badge-legit'}">${s.is_phishing ? 'Smishing' : 'Legitime'}</span>
+                    <button type="button" onclick="supprimerSms(${i})" class="btn-del">✕</button>
+                </div>
+                <div class="msg-card-body">
+                    <div class="type-toggle"><button class="${s.is_phishing ? 'actif-phish' : ''}" onclick="smss[${i}].is_phishing=true;renderSms()">Smishing</button><button class="${!s.is_phishing ? 'actif-legit' : ''}" onclick="smss[${i}].is_phishing=false;renderSms()">Legitime</button></div>
+                    <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                        <div class="champ"><label>Expediteur *</label><input type="text" value="${escapeHtml(s.name)}" oninput="smss[${i}].name=this.value; majApercu()"></div>
+                        <div class="champ"><label>Numéro</label><input type="text" value="${escapeHtml(s.num)}" oninput="smss[${i}].num=this.value"></div>
+                    </div>
+                    <div class="champ"><label>Contenu *</label><textarea rows="3" oninput="smss[${i}].message=this.value; majApercu()">${escapeHtml(s.message)}</textarea><small>${HINT_SMS}</small></div>
+                    <div class="champ-row" style="grid-template-columns:1fr auto;">
+                        <div class="champ"><label>Date</label><input type="text" value="${escapeHtml(s.date)}" oninput="smss[${i}].date=this.value"></div>
+                        <div class="champ"><input type="checkbox" ${s.hasLink ? 'checked' : ''} onchange="smss[${i}].hasLink=this.checked"> <label>Contient un lien suspect</label></div>
+                    </div>
+                    <div class="champ"><label>Explication *</label><textarea rows="2" oninput="smss[${i}].explication=this.value">${escapeHtml(s.explication)}</textarea></div>
+                </div>
+            </div>`;
+        }).join('');
+        majApercu();
+    }
+
+    // WhatsApp functions (version simplifiée)
+    function ajouterWa() {
+        was.push({is_phishing:true, name:'', status:'en ligne', avatarBg:'#25D366', avatarText:'', messages:[], explication:''});
+        renderWa();
+    }
+    function supprimerWa(i) { was.splice(i,1); renderWa(); majApercu(); }
+    function ajouterMsgWa(convIdx) { was[convIdx].messages.push({out:false, sender:'', text:'', time:''}); renderWa(); }
+    function supprimerMsgWa(convIdx, msgIdx) { was[convIdx].messages.splice(msgIdx,1); renderWa(); }
+    function renderWa() {
+        let c = document.getElementById('listeWa');
+        if (!was.length) { c.innerHTML = '<div class="empty-message">Aucune conversation. Cliquez "+ Ajouter une conversation".</div>'; return; }
+        c.innerHTML = was.map((conv,i)=>{
+            let msgsHtml = '';
+            if(conv.messages.length === 0){
+                msgsHtml = '<p class="text-muted" style="padding:0.5rem;">Aucun message. Cliquez "+ Message".</p>';
+            } else {
+                msgsHtml = conv.messages.map((m,mi)=>{
+                    return `<div class="wa-msg-ligne" style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                        <select onchange="was[${i}].messages[${mi}].out = (this.value==='out'); renderWa()" style="width:75px;">
+                            <option value="in" ${!m.out ? 'selected' : ''}>Reçu</option>
+                            <option value="out" ${m.out ? 'selected' : ''}>Envoyé</option>
+                        </select>
+                        <input type="text" placeholder="Contenu" style="flex:1;" value="${escapeHtml(m.text||'')}" oninput="was[${i}].messages[${mi}].text=this.value; majApercu()">
+                        <input type="text" placeholder="Heure" style="width:60px;" value="${escapeHtml(m.time||'')}" oninput="was[${i}].messages[${mi}].time=this.value">
+                        ${!m.out ? `<input type="text" placeholder="Expéditeur" style="width:80px;" value="${escapeHtml(m.sender||'')}" oninput="was[${i}].messages[${mi}].sender=this.value">` : ''}
+                        <button type="button" class="btn-del" onclick="supprimerMsgWa(${i},${mi})">✕</button>
+                    </div>`;
+                }).join('');
+            }
+            return `<div class="msg-card ${conv.is_phishing ? 'phishing' : 'legitime'}">
+                <div class="msg-card-header ${conv.is_phishing ? 'phishing' : 'legitime'}">
+                    <div style="width:28px;height:28px;border-radius:50%;background:${conv.avatarBg};display:flex;align-items:center;justify-content:center;font-weight:700;color:white;">${escapeHtml(conv.avatarText || conv.name.slice(0,2).toUpperCase() || '?')}</div>
+                    <span style="flex:1;font-weight:600;">${conv.name ? escapeHtml(conv.name) : '<em>Nom conversation</em>'}</span>
+                    <span class="${conv.is_phishing ? 'badge-phish' : 'badge-legit'}">${conv.is_phishing ? 'Phishing' : 'Legitime'}</span>
+                    <button type="button" onclick="supprimerWa(${i})" class="btn-del">✕</button>
+                </div>
+                <div class="msg-card-body">
+                    <div class="type-toggle"><button class="${conv.is_phishing ? 'actif-phish' : ''}" onclick="was[${i}].is_phishing=true;renderWa()">Phishing</button><button class="${!conv.is_phishing ? 'actif-legit' : ''}" onclick="was[${i}].is_phishing=false;renderWa()">Legitime</button></div>
+                    <div class="champ-row" style="grid-template-columns:1fr 1fr;">
+                        <div class="champ"><label>Nom *</label><input type="text" value="${escapeHtml(conv.name)}" oninput="was[${i}].name=this.value; majApercu()"></div>
+                        <div class="champ"><label>Statut</label><input type="text" value="${escapeHtml(conv.status)}" oninput="was[${i}].status=this.value"></div>
+                    </div>
+                    <div class="champ-row" style="grid-template-columns:60px 1fr;">
+                        <div class="champ"><label>Couleur</label><input type="color" value="${conv.avatarBg}" oninput="was[${i}].avatarBg=this.value"></div>
+                        <div class="champ"><label>Texte avatar</label><input type="text" maxlength="3" value="${escapeHtml(conv.avatarText)}" oninput="was[${i}].avatarText=this.value"></div>
+                    </div>
+                    <div><label>Messages</label> <button type="button" onclick="ajouterMsgWa(${i})" class="btn btn-ghost btn-sm">+ Ajouter un message</button></div>
+                    <div>${msgsHtml}</div>
+                    <div class="champ"><label>Explication *</label><textarea rows="2" oninput="was[${i}].explication=this.value">${escapeHtml(conv.explication)}</textarea></div>
+                </div>
+            </div>`;
+        }).join('');
+        majApercu();
+    }
+
+    function majApercu() {
+        ['apercuGmail','apercuSms','apercuWa','apercuVide'].forEach(id => {
+            let el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        if (type === 'GMAIL') {
+            document.getElementById('apercuGmail').style.display = '';
+            document.getElementById('compteur').innerHTML = `${gmails.length} email(s) — ${gmails.filter(e=>e.is_phishing).length} phishing`;
+            document.getElementById('apercuGmailRows').innerHTML = gmails.map(e => `<div class="gmail-row"><div class="gmail-av" style="background:${e.avatar_color||'#9E9E9E'};">${escapeHtml(e.avatar_text || (e.sender_name.slice(0,2).toUpperCase()) || '?')}</div><div class="gmail-body"><div class="gmail-sender">${escapeHtml(e.sender_name) || '...'}</div><div class="gmail-subj">${escapeHtml(e.subject) || '...'}</div></div><div><div class="gmail-time">${escapeHtml(e.time||'')}</div><span class="${e.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${e.is_phishing?'Phishing':'Legitime'}</span></div></div>`).join('');
+        } else if (type === 'SMS') {
+            document.getElementById('apercuSms').style.display = '';
+            document.getElementById('compteur').innerHTML = `${smss.length} SMS — ${smss.filter(s=>s.is_phishing).length} smishing`;
+            document.getElementById('apercuSmsRows').innerHTML = smss.map(s => `<div class="sms-row"><div class="sms-av">${escapeHtml((s.name||'?').slice(0,2).toUpperCase())}</div><div><div class="sms-name">${escapeHtml(s.name) || '...'}</div><div class="sms-preview">${escapeHtml((s.message||'').slice(0,50))}...</div></div><span class="${s.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${s.is_phishing?'Smishing':'Legitime'}</span></div>`).join('');
+        } else if (type === 'WHATSAPP') {
+            document.getElementById('apercuWa').style.display = '';
+            document.getElementById('compteur').innerHTML = `${was.length} conversation(s) — ${was.filter(w=>w.is_phishing).length} phishing`;
+            document.getElementById('apercuWaRows').innerHTML = was.map(conv => `<div class="wa-row"><div class="wa-av" style="background:${conv.avatarBg};">${escapeHtml(conv.avatarText || conv.name.slice(0,2).toUpperCase()||'?')}</div><div><div class="wa-name">${escapeHtml(conv.name) || '...'}</div><div class="wa-last">${conv.messages.length ? escapeHtml(conv.messages[conv.messages.length-1].text.slice(0,40)) : 'Aucun message'}</div></div><span class="${conv.is_phishing?'badge-phish':'badge-legit'}" style="font-size:9px;">${conv.is_phishing?'Phishing':'Legitime'}</span></div>`).join('');
+        } else {
+            document.getElementById('apercuVide').style.display = '';
+        }
+    }
+
+    function construireJsonSimulation() {
+        if (!type) return true; // pas de simulation
+        let items = type === 'GMAIL' ? gmails : (type === 'SMS' ? smss : was);
+        if (items.length === 0) return true;
+        let nb = Math.min(items.length, 6);
+        let contenu = {};
+        if (type === 'GMAIL') contenu = { type: 'gmail_banque', nb_a_tirer: nb, emails: gmails };
+        else if (type === 'SMS') contenu = { type: 'sms_banque', nb_a_tirer: nb, sms: smss };
+        else contenu = { type: 'whatsapp_banque', nb_a_tirer: nb, conversations: was };
+        document.getElementById('simulationContenuJson').value = JSON.stringify(contenu);
+        return true;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+</script>
 {% endblock %}

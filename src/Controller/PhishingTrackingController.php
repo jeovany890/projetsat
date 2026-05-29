@@ -9,6 +9,7 @@ use App\Entity\ResultatPhishing;
 use App\Entity\SignalementPhishing;
 use App\Repository\CampagnePhishingRepository;
 use App\Repository\ResultatPhishingRepository;
+use App\Service\NativeRateLimiter;
 use App\Service\ScoringMoteurService;
 use App\Service\ScoringResultat;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +24,10 @@ class PhishingTrackingController extends AbstractController
 {
     private const SOUMISSION_DELAY_MINUTES = 10;
 
-    public function __construct(private ScoringMoteurService $scoring) {}
+    public function __construct(
+        private ScoringMoteurService $scoring,
+        private NativeRateLimiter $rateLimiter
+    ) {}
 
     // ═════════════════════════════════════
 
@@ -32,8 +36,12 @@ class PhishingTrackingController extends AbstractController
     // Pénalité : -15 vigilance
     // ══════════════════════════════════════════
     #[Route('/track/click/{token}', name: 'phishing_track_click')]
-    public function trackClick(string $token, EntityManagerInterface $em): Response
+    public function trackClick(Request $request, string $token, EntityManagerInterface $em): Response
     {
+        if (!$this->isAllowedRequest($request, 'phishing-click', 20, 60)) {
+            return new Response('Trop de requêtes. Veuillez réessayer plus tard.', 429);
+        }
+
         $resultat = $em->getRepository(ResultatPhishing::class)
             ->findOneBy(['jetonTrackingUnique' => $token]);
 
@@ -68,6 +76,10 @@ class PhishingTrackingController extends AbstractController
     #[Route('/phishing/fake/submit', name: 'phishing_fake_submit', methods: ['POST'])]
     public function fakeSubmit(Request $request, EntityManagerInterface $em): Response
     {
+        if (!$this->isAllowedRequest($request, 'phishing-submit', 10, 60)) {
+            return new Response('Trop de requêtes. Veuillez réessayer plus tard.', 429);
+        }
+
         $token = $request->request->get('token');
         if (!$token) {
             return $this->redirectToRoute('employe_dashboard');
@@ -121,8 +133,12 @@ class PhishingTrackingController extends AbstractController
     // IMPORTANT : déclarée APRÈS phishing_fake_submit
     // ══════════════════════════════════════════
     #[Route('/phishing/fake/{token}', name: 'phishing_fake_page')]
-    public function fakePage(string $token, EntityManagerInterface $em): Response
+    public function fakePage(Request $request, string $token, EntityManagerInterface $em): Response
     {
+        if (!$this->isAllowedRequest($request, 'phishing-page', 30, 60)) {
+            return new Response('Trop de requêtes. Veuillez réessayer plus tard.', 429);
+        }
+
         $resultat = $em->getRepository(ResultatPhishing::class)
             ->findOneBy(['jetonTrackingUnique' => $token]);
 
@@ -165,8 +181,12 @@ class PhishingTrackingController extends AbstractController
     // PAGE ALERTE — après clic ou soumission
     // ══════════════════════════════════════════
     #[Route('/phishing-alerte/{token}', name: 'phishing_alerte')]
-    public function alerte(string $token, EntityManagerInterface $em): Response
+    public function alerte(Request $request, string $token, EntityManagerInterface $em): Response
     {
+        if (!$this->isAllowedRequest($request, 'phishing-alerte', 30, 60)) {
+            return new Response('Trop de requêtes. Veuillez réessayer plus tard.', 429);
+        }
+
         $resultat = $em->getRepository(ResultatPhishing::class)
             ->findOneBy(['jetonTrackingUnique' => $token]);
 
@@ -196,8 +216,12 @@ class PhishingTrackingController extends AbstractController
     // Récompense : +10 vigilance
     // ══════════════════════════════════════════
     #[Route('/phishing/signal/{token}', name: 'phishing_signal')]
-    public function signal(string $token, EntityManagerInterface $em): Response
+    public function signal(Request $request, string $token, EntityManagerInterface $em): Response
     {
+        if (!$this->isAllowedRequest($request, 'phishing-signal', 20, 60)) {
+            return new Response('Trop de requêtes. Veuillez réessayer plus tard.', 429);
+        }
+
         $resultat = $em->getRepository(ResultatPhishing::class)
             ->findOneBy(['jetonTrackingUnique' => $token]);
 
@@ -231,6 +255,11 @@ class PhishingTrackingController extends AbstractController
         ]);
     }
 
+    private function isAllowedRequest(Request $request, string $name, int $limit, int $intervalSeconds): bool
+    {
+        $key = sprintf('%s_%s', $name, $request->getClientIp() ?? 'unknown');
+        return $this->rateLimiter->check($key, $limit, $intervalSeconds);
+    }
 
     private function assignerFormation(
         \App\Entity\Employe $employe,

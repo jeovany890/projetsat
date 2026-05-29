@@ -3,15 +3,10 @@
 namespace App\Service;
 
 use App\Entity\CampagnePhishing;
-use App\Entity\EnvoiPhishing;
 use App\Entity\ResultatPhishing;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-/**
- * Service d'envoi phishing — utilisé par CampagnePhishingController::lancer()
- * et potentiellement par une commande CLI de retry.
- */
 class PhishingService
 {
     public function __construct(
@@ -20,23 +15,13 @@ class PhishingService
         private UrlGeneratorInterface $urlGenerator
     ) {}
 
-    /**
-     * Envoie un email phishing pour un EnvoiPhishing donné.
-     * Suppose que envoi->getResultat() existe et contient le token.
-     */
-    public function envoyerPourEnvoi(EnvoiPhishing $envoi): bool
+    public function envoyerPourResultat(ResultatPhishing $resultat): bool
     {
-        $resultat = $envoi->getResultat();
-        if (!$resultat) {
-            throw new \LogicException("EnvoiPhishing ID {$envoi->getId()} n'a pas de ResultatPhishing associé.");
-        }
-
         $token    = $resultat->getJetonTrackingUnique();
-        $campagne = $envoi->getCampagne();
+        $campagne = $resultat->getCampagne();
         $gabarit  = $campagne->getGabarit();
-        $employe  = $envoi->getEmploye();
+        $employe  = $resultat->getEmploye();
 
-        // URLs phishings
         $urlSignalement = $this->urlGenerator->generate('phishing_signal', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
         $urlFakePage    = $this->urlGenerator->generate('phishing_fake_page', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
         $urlClic        = $this->urlGenerator->generate('phishing_track_click', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
@@ -51,7 +36,7 @@ class PhishingService
         );
 
         $this->emailService->envoyerEmailPhishing(
-            destinataire:    $envoi->getEmailDestinataire(),
+            destinataire:    $resultat->getEmailDestinataire(),
             sujet:           $gabarit->getSujetEmail(),
             contenuHtml:     $contenu,
             nomExpediteur:   $gabarit->getNomExpediteur(),
@@ -59,8 +44,7 @@ class PhishingService
             compteEmailDsn:  $gabarit->getCompteEmailDsn(),
         );
 
-        $envoi->marquerCommeEnvoye();
-        $resultat->setEmailEnvoye(true)->setDateEnvoi(new \DateTime());
+        $resultat->marquerCommeEnvoye();
 
         return true;
     }
@@ -72,22 +56,19 @@ class PhishingService
             $campagne->setDateDebut(new \DateTime());
         }
 
-        $envois = $this->em->getRepository(EnvoiPhishing::class)->findBy([
-            'campagne' => $campagne,
-            'statut'   => EnvoiPhishing::STATUT_PLANIFIE,
-        ]);
+        $resultats = $this->em->getRepository(ResultatPhishing::class)->findPlanifiesPourCampagne($campagne);
 
         $envoyes = 0;
         $echoues = 0;
         $erreurs = [];
 
-        foreach ($envois as $envoi) {
+        foreach ($resultats as $resultat) {
             try {
-                $this->envoyerPourEnvoi($envoi);
+                $this->envoyerPourResultat($resultat);
                 $this->em->flush();
                 $envoyes++;
             } catch (\Throwable $e) {
-                $envoi->marquerCommeEchoue($e->getMessage());
+                $resultat->marquerCommeEchoue($e->getMessage());
                 $this->em->flush();
                 $echoues++;
                 $erreurs[] = $e->getMessage();

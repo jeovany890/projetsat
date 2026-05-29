@@ -15,6 +15,7 @@ use App\Service\EmailTemplateService;
 use App\Service\RapportPdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -124,6 +125,11 @@ class EmployeController extends AbstractController
                 return $this->render('rssi/employes/importer.html.twig', ['departements' => $departements]);
             }
 
+            if (!$this->isCsvFileValid($fichier)) {
+                $this->addFlash('error', 'Le fichier doit être un CSV valide.');
+                return $this->render('rssi/employes/importer.html.twig', ['departements' => $departements]);
+            }
+
             $departementId    = $request->request->get('departement_defaut');
             $departementDefaut = $departementId ? $em->getRepository(Departement::class)->find($departementId) : null;
 
@@ -171,6 +177,23 @@ class EmployeController extends AbstractController
         }
 
         return $this->render('rssi/employes/importer.html.twig', ['departements' => $departements]);
+    }
+
+    private function isCsvFileValid(UploadedFile $file): bool
+    {
+        $allowedMimeTypes = [
+            'text/csv',
+            'text/plain',
+            'application/csv',
+            'application/vnd.ms-excel',
+            'application/octet-stream',
+            'text/comma-separated-values',
+        ];
+
+        $mimeType = $file->getClientMimeType();
+        $extension = strtolower($file->getClientOriginalExtension());
+
+        return in_array($mimeType, $allowedMimeTypes, true) && $extension === 'csv';
     }
 
     #[Route('/{id}', name: 'rssi_employes_detail', requirements: ['id' => '\d+'])]

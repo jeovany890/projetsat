@@ -124,7 +124,7 @@
                         {% if scoreMoyen is not null %}
                             {{ scoreMoyen }}%
                         {% else %}
-                            <span class="text-muted">—</span>
+                            <span class="text-muted">0</span>
                         {% endif %}
                     </td>
                     <td data-label="Étoiles">
@@ -134,7 +134,7 @@
                         {% if nbRisque > 0 %}
                             <span class="badge badge-red"><i class="bi bi-exclamation-triangle-fill"></i> {{ nbRisque }} à risque</span>
                         {% elseif dept.employes|length == 0 %}
-                            <span class="badge badge-gray">Vide</span>
+                            <span class="badge badge-gray">0</span>
                         {% else %}
                             <span class="badge badge-green"><i class="bi bi-check-circle-fill"></i> OK</span>
                         {% endif %}

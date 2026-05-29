@@ -1,377 +1,294 @@
 {% extends 'admin/layout.html.twig' %}
 
-{% block page_title %}Chapitres - {{ module.titre }}{% endblock %}
+{% block page_title %}{{ module.titre }}{% endblock %}
 
 {% block topbar_actions %}
     <a href="{{ path('admin_modules_liste') }}" class="btn btn-ghost btn-sm">
         <i class="bi bi-arrow-left"></i> Retour aux modules
     </a>
-    <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary btn-sm">
-        <i class="bi bi-plus-lg"></i> Nouveau chapitre
-    </a>
 {% endblock %}
 
 {% block content %}
-<div class="chapitres-container">
+<div class="module-detail-container">
 
-    {# En-tête du module #}
-    <div class="module-header-card">
+    {# En-tête simplifié #}
+    <div class="module-header">
         <div>
-            <h2>{{ module.titre }}</h2>
-            <p class="module-description">{{ module.description }}</p>
+            <h1>{{ module.titre }}</h1>
         </div>
     </div>
 
-    {% if chapitres|length == 0 %}
-        <div class="empty-state">
-            <i class="bi bi-journal-text"></i>
-            <h3>Aucun chapitre</h3>
-            <p>Commencez par ajouter le premier chapitre de ce module</p>
-            <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary btn-md">
-                <i class="bi bi-plus-lg"></i> Ajouter le premier chapitre
+    {# Liste des chapitres #}
+    <div class="card">
+        <div class="card-header-flex">
+            <h2><i class="bi bi-journal-bookmark-fill"></i> Liste des chapitres</h2>
+            <a href="{{ path('admin_chapitre_nouveau', {moduleId: module.id}) }}" class="btn btn-primary btn-sm">
+                <i class="bi bi-plus-lg"></i> Ajouter un chapitre
             </a>
         </div>
-    {% else %}
-        <div class="chapitres-list">
-            {% for chapitre in chapitres %}
-                <div class="chapitre-card">
-                    <div class="chapitre-card-body">
-                        <div class="chapitre-header">
-                            <div class="chapitre-num">{{ loop.index }}</div>
-                            <div class="chapitre-content">
-                                <h3>{{ chapitre.titre }}</h3>
-                                <p class="chapitre-extrait">{{ chapitre.contenu|striptags|slice(0, 150) }}{% if chapitre.contenu|length > 150 %}...{% endif %}</p>
-                                {% if chapitre.urlVideo %}
-                                    <div class="chapitre-badge">
-                                        <span class="badge badge-info">
-                                            <i class="bi bi-play-circle"></i> Vidéo{% if chapitre.dureeVideo %} — {{ chapitre.dureeVideo }} min{% endif %}
-                                        </span>
-                                    </div>
+
+        {% if module.chapitres|length == 0 %}
+            <div class="empty-chapters">
+                <i class="bi bi-journal-text"></i>
+                <p>Aucun chapitre. Créez le premier chapitre de ce module.</p>
+            </div>
+        {% else %}
+            <div class="table-responsive">
+                <table class="chapitres-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Titre du chapitre</th>
+                            <th class="text-center">Questions</th>
+                            <th class="text-center">Points</th>
+                            <th class="text-center">Score min.</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chapitre in module.chapitres %}
+                            {# Calcul du nombre de questions #}
+                            {% set nbQuestions = chapitre.quizQuestions ? chapitre.quizQuestions|length : 0 %}
+                            
+                            {# Calcul de la somme des points de toutes les questions du quiz #}
+                            {% set sommePoints = 0 %}
+                            {% if chapitre.quizQuestions %}
+                                {% for question in chapitre.quizQuestions %}
+                                    {% if question.points is defined and question.points is not null %}
+                                        {% set sommePoints = sommePoints + question.points %}
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                            
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                <div class="chapitre-titre">{{ chapitre.titre }}</div>
+                                {% if chapitre.dureeVideo %}
+                                    <div class="chapitre-duree"><i class="bi bi-play-circle"></i> Vidéo : {{ chapitre.dureeVideo }} min</div>
                                 {% endif %}
-                            </div>
-                        </div>
-                        <div class="chapitre-actions">
-                            <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-ghost btn-sm">
-                                <i class="bi bi-pencil"></i> Modifier
-                            </a>
-                            <a href="{{ path('admin_chapitre_quiz', {moduleId: module.id, id: chapitre.id}) }}" class="btn btn-ghost btn-sm">
-                                <i class="bi bi-patch-question{{ chapitre.quiz ? '-fill' : '' }}"></i>
-                                {{ chapitre.quiz ? 'Quiz (' ~ chapitre.quiz.questions|length ~ ')' : 'Ajouter quiz' }}
-                            </a>
-                            <form method="post" action="{{ path('admin_chapitre_supprimer', {moduleId: module.id, id: chapitre.id}) }}" class="delete-form" onsubmit="return confirm('Supprimer ce chapitre ?')">
-                                <button type="submit" class="btn btn-ghost btn-sm btn-danger">
-                                    <i class="bi bi-trash"></i> Supprimer
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
+                            </td>
+                            <td class="text-center">{{ nbQuestions }}</td>
+                            <td class="text-center">{{ sommePoints }} pts</td>
+                            <td class="text-center">
+                                {{ chapitre.quizScoreMinimum ? chapitre.quizScoreMinimum ~ '%' : '0' }}
+                            </td>
+                            <td class="text-right">
+                                <div class="action-buttons">
+                                    <a href="{{ path('admin_chapitre_modifier', {moduleId: module.id, id: chapitre.id}) }}" 
+                                       class="btn btn-sm btn-ghost" title="Modifier le chapitre">
+                                        Modifier
+                                    </a>
+                                    <form method="post" 
+                                          action="{{ path('admin_chapitre_supprimer', {moduleId: module.id, id: chapitre.id}) }}"
+                                          id="form-supp-chap-{{ chapitre.id }}" style="display: inline;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('supprimer_chapitre_' ~ chapitre.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer"
+                                                data-confirm="Supprimer ce chapitre ?"
+                                                data-form="form-supp-chap-{{ chapitre.id }}">
+                                            Supprimer
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
 </div>
 {% endblock %}
 
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .chapitres-container {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
+    .module-detail-container { display: flex; flex-direction: column; gap: 1.5rem; }
+    .module-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+    .module-header h1 { font-size: 1.5rem; font-weight: 800; color: #0F172A; margin: 0 0 0.5rem 0; }
+    
+    .card { 
+        background: white; 
+        border-radius: 1rem; 
+        border: 1px solid #E2E8F0; 
+        padding: 1.25rem; 
     }
-
-    /* En-tête module */
-    .module-header-card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        padding: 1rem 1.5rem;
+    html.dark .card { background: #1E293B; border-color: #334155; }
+    
+    .card-header-flex { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 1rem; 
+        padding-bottom: 0.75rem; 
+        border-bottom: 1px solid #E2E8F0; 
     }
-    .module-header-card h2 {
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: #0F172A;
-        margin: 0 0 0.5rem 0;
+    html.dark .card-header-flex { border-bottom-color: #334155; }
+    
+    .card-header-flex h2 { 
+        font-size: 1rem; 
+        font-weight: 700; 
+        color: #0F172A; 
+        margin: 0; 
+        display: flex; 
+        align-items: center; 
+        gap: 0.5rem; 
     }
-    .module-description {
-        font-size: 0.8125rem;
-        color: #475569;
-        margin: 0;
-        line-height: 1.5;
+    html.dark .card-header-flex h2 { color: #F1F5F9; }
+    
+    .table-responsive { overflow-x: auto; }
+    
+    .chapitres-table { 
+        width: 100%; 
+        border-collapse: collapse; 
+        font-size: 0.8125rem; 
     }
-    html.dark .module-header-card {
-        background: #1E293B;
-        border-color: #334155;
+    
+    .chapitres-table th { 
+        text-align: left; 
+        padding: 0.75rem; 
+        background: #F8FAFC; 
+        font-weight: 600; 
+        color: #475569; 
+        border-bottom: 2px solid #E2E8F0; 
     }
-    html.dark .module-header-card h2 {
-        color: #F1F5F9;
+    html.dark .chapitres-table th { 
+        background: #0F172A; 
+        color: #94A3B8; 
+        border-bottom-color: #334155; 
     }
-    html.dark .module-description {
-        color: #94A3B8;
+    
+    .chapitres-table td { 
+        padding: 0.75rem; 
+        border-bottom: 1px solid #E2E8F0; 
+        vertical-align: middle; 
+        color: #334155;
     }
-
-    /* Liste des chapitres */
-    .chapitres-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    .chapitre-card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        transition: all 0.2s;
-    }
-    .chapitre-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border-color: #CBD5E1;
-    }
-    .chapitre-card-body {
-        padding: 1.25rem;
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-    html.dark .chapitre-card {
-        background: #1E293B;
-        border-color: #334155;
-    }
-
-    /* En-tête du chapitre */
-    .chapitre-header {
-        display: flex;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-    .chapitre-ordre {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, #E53E3E, #C53030);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 1.25rem;
-        color: white;
-        flex-shrink: 0;
-        box-shadow: 0 2px 5px rgba(229,62,62,0.3);
-    }
-    .chapitre-content {
-        flex: 1;
-        min-width: 0;
-    }
-    .chapitre-content h3 {
-        font-size: 1.125rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 0.5rem 0;
-    }
-    .chapitre-extrait {
-        font-size: 0.8125rem;
-        color: #475569;
-        margin: 0 0 0.5rem 0;
-        line-height: 1.5;
-    }
-    .chapitre-badge {
-        margin-top: 0.25rem;
-    }
-    .badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.2rem 0.6rem;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    .badge-info {
-        background: #DBEAFE;
-        color: #1D4ED8;
-    }
-    html.dark .badge-info {
-        background: #1E3A8A;
-        color: #60A5FA;
-    }
-    .chapitre-ordre-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-    .order-form {
-        display: inline;
-    }
-    .btn-icon {
-        width: 32px;
-        height: 32px;
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        border-radius: 8px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: #64748B;
-        transition: all 0.15s;
-    }
-    .btn-icon:hover:not(:disabled) {
-        background: #F1F5F9;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    .btn-icon:disabled {
-        opacity: 0.3;
-        cursor: not-allowed;
-    }
-    html.dark .btn-icon {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-icon:hover:not(:disabled) {
-        background: #1E293B;
-        color: #F1F5F9;
-    }
-
-    /* Actions */
-    .chapitre-actions {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        align-items: center;
-        border-top: 1px solid #E2E8F0;
-        padding-top: 1rem;
-        margin-top: 0.25rem;
-    }
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-    .btn-sm {
-        padding: 0.25rem 0.75rem;
-        font-size: 0.75rem;
-    }
-    .btn-primary {
-        background: #E53E3E;
-        color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-        background: #C53030;
-        transform: translateY(-1px);
-    }
-    .btn-ghost {
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-    }
-    .btn-ghost:hover {
-        background: #F8FAFC;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    .btn-danger {
-        color: #DC2626;
-        border-color: #FECACA;
-    }
-    .btn-danger:hover {
-        background: #FEE2E2;
-        border-color: #FECACA;
-        color: #991B1B;
-    }
-    html.dark .btn-ghost {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-ghost:hover {
-        background: #1E293B;
-        border-color: #475569;
-        color: #F1F5F9;
-    }
-    .delete-form {
-        margin-left: auto;
-    }
-
-    /* Empty state */
-    .empty-state {
-        text-align: center;
-        padding: 3rem 1.5rem;
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-    }
-    .empty-state i {
-        font-size: 3rem;
+    html.dark .chapitres-table td { 
+        border-bottom-color: #334155; 
         color: #CBD5E1;
-        margin-bottom: 1rem;
-        display: inline-block;
     }
-    .empty-state h3 {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin-bottom: 0.5rem;
+    
+    /* Suppression du trait sur la dernière ligne */
+    .chapitres-table tbody tr:last-child td {
+        border-bottom: none;
     }
-    .empty-state p {
-        color: #64748B;
-        font-size: 0.8125rem;
-        margin-bottom: 1.5rem;
+    
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    
+    .chapitre-titre { 
+        font-weight: 600; 
+        color: #0F172A; 
     }
-    html.dark .empty-state {
-        background: #1E293B;
-        border-color: #334155;
+    html.dark .chapitre-titre { color: #F1F5F9; }
+    
+    .chapitre-duree { 
+        font-size: 0.65rem; 
+        color: #94A3B8; 
+        margin-top: 0.2rem; 
     }
-    html.dark .empty-state h3 {
-        color: #F1F5F9;
+    
+    .action-buttons { 
+        display: flex; 
+        gap: 0.5rem; 
+        justify-content: flex-end; 
+        flex-wrap: wrap; 
     }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-        .chapitre-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .chapitre-ordre-buttons {
-            flex-direction: row;
-            justify-content: flex-end;
-        }
-        .chapitre-actions {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        .chapitre-actions .btn {
-            justify-content: center;
-        }
-        .delete-form {
-            margin-left: 0;
-        }
-        .module-header-card {
-            padding: 1rem;
-        }
+    
+    .btn { 
+        display: inline-flex; 
+        align-items: center; 
+        justify-content: center;
+        gap: 0.5rem; 
+        padding: 0.375rem 0.75rem; 
+        border-radius: 6px; 
+        font-size: 0.75rem; 
+        font-weight: 500; 
+        text-decoration: none; 
+        transition: all 0.2s; 
+        cursor: pointer; 
+        border: none;
+        line-height: 1.4;
+        white-space: nowrap;
+        min-width: 80px;
     }
-    @media (max-width: 480px) {
-        .chapitre-card-body {
-            padding: 1rem;
-        }
-        .chapitre-ordre {
-            width: 40px;
-            height: 40px;
-            font-size: 1rem;
-        }
-        .chapitre-content h3 {
-            font-size: 1rem;
-        }
+    
+    .btn-sm { 
+        padding: 0.25rem 0.5rem; 
+        font-size: 0.7rem; 
+        min-width: 75px;
     }
+    
+    .btn-primary { 
+        background: #E53E3E; 
+        color: white; 
+    }
+    .btn-primary:hover { 
+        background: #C53030; 
+        transform: translateY(-1px); 
+    }
+    
+    .btn-ghost { 
+        background: transparent; 
+        border: 1px solid #E2E8F0; 
+        color: #475569; 
+    }
+    .btn-ghost:hover { 
+        background: #F8FAFC; 
+        border-color: #CBD5E1; 
+        color: #1E293B; 
+    }
+    html.dark .btn-ghost { 
+        border-color: #334155; 
+        color: #94A3B8; 
+    }
+    html.dark .btn-ghost:hover { 
+        background: #1E293B; 
+        border-color: #475569; 
+        color: #F1F5F9; 
+    }
+    
+    .btn-danger { 
+        background: #FEF2F2; 
+        color: #DC2626; 
+        border: 1px solid #FECACA; 
+    }
+    .btn-danger:hover { 
+        background: #FEE2E2; 
+        color: #991B1B; 
+    }
+    html.dark .btn-danger { 
+        background: #7F1D1D; 
+        color: #FCA5A5; 
+        border-color: #991B1B; 
+    }
+    html.dark .btn-danger:hover { 
+        background: #991B1B; 
+        color: #FEE2E2; 
+    }
+    
+    .empty-chapters { 
+        text-align: center; 
+        padding: 2rem; 
+        color: #94A3B8; 
+    }
+    .empty-chapters i { 
+        font-size: 2rem; 
+        display: block; 
+        margin-bottom: 0.5rem; 
+    }
+    
+    @media (max-width: 640px) { 
+        .action-buttons { flex-direction: column; align-items: flex-end; } 
+        .module-header { flex-direction: column; align-items: stretch; } 
+        .module-header .btn-primary { align-self: flex-start; }
+        .chapitres-table th, .chapitres-table td { padding: 0.5rem; }
+    }
+    
+    html.dark .module-header h1 { color: #F1F5F9; }
+    html.dark .chapitre-titre { color: #F1F5F9; }
 </style>
 {% endblock %}

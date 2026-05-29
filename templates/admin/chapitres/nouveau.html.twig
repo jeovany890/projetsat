@@ -4,62 +4,149 @@
 
 {% block topbar_actions %}
     <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm">
-        <i class="bi bi-arrow-left"></i> Retour aux chapitres
+        <i class="bi bi-arrow-left"></i> Retour
     </a>
 {% endblock %}
 
 {% block content %}
-<div class="form-container">
-    <div class="card">
-        <div class="card-header">
-            <h2>
-                <i class="bi bi-journal-plus" style="color: #E53E3E;"></i>
-                Nouveau chapitre
-            </h2>
-            
+<div class="chapitre-form-container">
+    <form method="post" id="chapitreForm" onsubmit="event.preventDefault(); construireJson();">
+        <input type="hidden" name="quiz_questions_json" id="quizQuestionsJson">
+
+        {# --- Informations générales du chapitre --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-journal-plus"></i> Informations du chapitre</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label">Titre *</label>
+                    <input type="text" name="titre" class="form-control" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Contenu *</label>
+                    <textarea name="contenu" rows="8" class="form-control" required></textarea>
+                </div>
+                <div class="form-row-2col">
+                    <div class="form-group">
+                        <label class="form-label">URL vidéo</label>
+                        <input type="url" name="url_video" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Durée vidéo (min)</label>
+                        <input type="number" name="duree_video" class="form-control" min="1">
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <form method="post">
 
-                {# Informations générales #}
-                <div class="form-section">
-                    <h3 class="section-title">Informations générales</h3>
+        {# --- Paramètres du quiz --- #}
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2><i class="bi bi-patch-question"></i> Quiz du chapitre</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-row-2col">
                     <div class="form-group">
-                        <label class="form-label">Titre du chapitre *</label>
-                        <input type="text" class="form-control" name="titre" required placeholder="Ex: Qu'est-ce que le phishing ?" autofocus>
+                        <label class="form-label">Nombre de tentatives</label>
+                        <input type="number" name="quiz_nombre_tentatives_max" class="form-control" value="3" min="1">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Contenu du chapitre *</label>
-                        <textarea class="form-control" name="contenu" rows="12" required placeholder="Le contenu pédagogique du chapitre..."></textarea>
-                        <small class="form-hint">💡 Vous pouvez utiliser du HTML pour formater le texte (gras, listes, titres...)</small>
+                        <label class="form-label">Score minimum (%)</label>
+                        <input type="number" name="quiz_score_minimum" class="form-control" value="70" min="0" max="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# --- Questions du quiz --- #}
+        <div class="card mb-4">
+            <div class="card-header-flex">
+                <h2><i class="bi bi-list-ul"></i> Questions du quiz</h2>
+                <button type="button" class="btn btn-primary btn-sm" onclick="ouvrirModalAjout()">
+                    <i class="bi bi-plus-lg"></i> Ajouter une question
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="questionsList" class="questions-stack"></div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-lg"></i> Créer le chapitre
+            </button>
+            <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost">Annuler</a>
+        </div>
+    </form>
+</div>
+
+{# ============ MODAL ============ #}
+<div id="modalQuestion" class="modal" style="display:none;">
+    <div class="modal-overlay" onclick="fermerModal()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitre"><i class="bi bi-plus-circle" style="color:#E53E3E;"></i> Ajouter une question</h3>
+            <button type="button" class="btn-close" onclick="fermerModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="questionForm" onsubmit="event.preventDefault(); sauvegarderQuestion();">
+
+                <div class="form-row-2col">
+                    <div class="form-group">
+                        <label class="form-label">Type *</label>
+                        <select id="type_question" class="form-control" onchange="updateFormType(this.value)">
+                            <option value="QCM_UNIQUE">QCM — 1 seule réponse</option>
+                            <option value="QCM_MULTIPLE">QCM — Plusieurs réponses</option>
+                            <option value="VRAI_FAUX">Vrai / Faux</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Points</label>
+                        <input type="number" id="points" class="form-control" value="10" min="1" max="100">
                     </div>
                 </div>
 
-                {# Paramètres vidéo #}
-                <div class="form-section">
-                    <h3 class="section-title">Vidéo (optionnelle)</h3>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label"><i class="bi bi-play-circle"></i> URL vidéo YouTube</label>
-                            <input type="url" class="form-control" name="url_video" placeholder="https://www.youtube.com/watch?v=...">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Durée vidéo (minutes)</label>
-                            <input type="number" class="form-control" name="duree_video" placeholder="Ex: 10" min="1">
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Question *</label>
+                    <textarea id="question" class="form-control" rows="3"
+                              placeholder="Ex: Que faites-vous si vous recevez un SMS suspect ?" required></textarea>
                 </div>
 
-                {# Actions #}
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-lg"></i> Créer le chapitre
+                <div id="optionsSection" class="form-group">
+                    <label class="form-label">Réponses proposées *</label>
+                    <div id="optionsList" class="options-list-editor">
+                        <div class="option-row">
+                            <input type="checkbox" class="option-check" title="Cocher si bonne réponse">
+                            <input type="text" class="form-control form-control-sm option-text" placeholder="Option A" oninput="syncCheckValue(this)">
+                        </div>
+                        <div class="option-row">
+                            <input type="checkbox" class="option-check" title="Cocher si bonne réponse">
+                            <input type="text" class="form-control form-control-sm option-text" placeholder="Option B" oninput="syncCheckValue(this)">
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-sm mt-2" onclick="addOption()">
+                        <i class="bi bi-plus"></i> Ajouter une option
                     </button>
-                    <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost">
-                        <i class="bi bi-x-lg"></i> Annuler
-                    </a>
+                    <p class="form-hint">☑ Cochez la ou les bonne(s) réponse(s)</p>
                 </div>
 
+                <div id="vraiFauxSection" class="form-group" style="display:none;">
+                    <label class="form-label">Bonne réponse *</label>
+                    <div class="radio-group">
+                        <label><input type="radio" name="vf" value="Vrai"> Vrai</label>
+                        <label><input type="radio" name="vf" value="Faux"> Faux</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Explication (optionnel)</label>
+                    <textarea id="explication" class="form-control" rows="3" placeholder="Pourquoi cette réponse est correcte ?"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block mt-3">
+                    <i class="bi bi-plus-circle"></i> <span id="btnSubmitTexte">Ajouter la question</span>
+                </button>
             </form>
         </div>
     </div>
@@ -69,187 +156,270 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .form-container {
-        max-width: 900px;
-        margin: 0 auto;
+    .chapitre-form-container { max-width: 900px; margin: 0 auto; }
+
+    .card { 
+        background: white; border-radius: 1rem; border: 1px solid #E2E8F0; 
+        overflow: hidden; margin-bottom: 1.5rem; 
     }
-    .card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        overflow: hidden;
+    html.dark .card { background: #1E293B; border-color: #334155; }
+
+    .card-header { 
+        padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; 
     }
-    html.dark .card {
-        background: #1E293B;
-        border-color: #334155;
+    html.dark .card-header { background: #0F172A; border-bottom-color: #334155; }
+
+    .card-header h2 { font-size: 1rem; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    html.dark .card-header h2 { color: #F1F5F9; }
+
+    .card-header-flex { 
+        display: flex; justify-content: space-between; align-items: center; 
+        padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; 
     }
-    .card-header {
-        padding: 1.5rem 1.75rem;
-        border-bottom: 1px solid #E2E8F0;
-        background: #F8FAFC;
+    html.dark .card-header-flex { background: #0F172A; border-bottom-color: #334155; }
+
+    .card-header-flex h2 { font-size: 1rem; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+    html.dark .card-header-flex h2 { color: #F1F5F9; }
+
+    .card-body { padding: 1.25rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 0.4rem; }
+    html.dark .form-label { color: #94A3B8; }
+
+    .form-control { 
+        width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E1; border-radius: 0.5rem; 
+        font-size: 0.875rem; background: white; color: #0F172A; transition: all 0.15s; 
     }
-    html.dark .card-header {
-        background: #0F172A;
-        border-color: #334155;
+    html.dark .form-control { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+    .form-control:focus { outline: none; border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,0.2); }
+    .form-control-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+    .form-hint { font-size: 0.7rem; color: #94A3B8; margin-top: 0.25rem; }
+    .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .form-row-2col { grid-template-columns: 1fr; } }
+
+    .option-row { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; }
+    .option-check { width: 18px; height: 18px; accent-color: #E53E3E; }
+    .option-text { flex: 1; }
+    .radio-group { display: flex; gap: 1rem; align-items: center; }
+    .radio-group label { display: flex; align-items: center; gap: 0.25rem; cursor: pointer; }
+
+    /* ========== BOUTONS ========== */
+    .btn { 
+        display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; 
+        padding: 0.5rem 1rem; border-radius: 0.5rem; font-size: 0.8125rem; font-weight: 500; 
+        text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; 
+        white-space: nowrap; height: 34px; box-sizing: border-box; font-family: inherit;
     }
-    .card-header h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+    .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.7rem; height: 32px; }
+    .btn-primary { background: #E53E3E; color: white; }
+    .btn-primary:hover { background: #C53030; transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+    html.dark .btn-ghost { border-color: #334155; color: #94A3B8; }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #1E293B; }
+    html.dark .btn-ghost:hover { background: #1E293B; border-color: #475569; color: #F1F5F9; }
+    .btn-danger { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+    html.dark .btn-danger { background: #7F1D1D; color: #FCA5A5; border-color: #991B1B; }
+    .btn-danger:hover { background: #FEE2E2; color: #991B1B; }
+    html.dark .btn-danger:hover { background: #991B1B; color: #FEE2E2; }
+    .btn-block { width: 100%; justify-content: center; }
+
+    /* ========== QUESTIONS LIST ========== */
+    .questions-stack { display: flex; flex-direction: column; gap: 1rem; }
+    .question-card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; transition: all 0.2s; }
+    html.dark .question-card { background: #1E293B; border-color: #334155; }
+    .question-header { padding: 1rem; display: flex; gap: 1rem; align-items: flex-start; }
+    .question-num { 
+        width: 32px; height: 32px; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 0.75rem; 
+        display: flex; align-items: center; justify-content: center; font-weight: 700; color: #E53E3E; flex-shrink: 0; font-size: 13px; 
     }
-    .card-subtitle {
-        font-size: 0.75rem;
-        color: #64748B;
-        margin: 0;
-    }
-    html.dark .card-header h2 {
-        color: #F1F5F9;
-    }
-    .card-body {
-        padding: 1.75rem;
-    }
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #E2E8F0;
-    }
-    html.dark .form-section {
-        border-color: #334155;
-    }
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .section-title:before {
-        content: '';
-        width: 4px;
-        height: 18px;
-        background: #E53E3E;
-        border-radius: 4px;
-        display: inline-block;
-    }
-    html.dark .section-title {
-        color: #F1F5F9;
-    }
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    .form-row {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 1rem;
-    }
-    @media (max-width: 640px) {
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-    }
-    .form-label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #475569;
-        margin-bottom: 0.4rem;
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        background: white;
-        color: #0F172A;
-        transition: all 0.15s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: #E53E3E;
-        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
-    }
-    textarea.form-control {
-        resize: vertical;
-    }
-    html.dark .form-control {
-        background: #0F172A;
-        border-color: #334155;
-        color: #F1F5F9;
-    }
-    .form-hint {
-        display: block;
-        margin-top: 0.25rem;
-        font-size: 0.7rem;
-        color: #94A3B8;
-    }
-    .form-actions {
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-    .btn-primary {
-        background: #E53E3E;
-        color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-        background: #C53030;
-        transform: translateY(-1px);
-    }
-    .btn-ghost {
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-    }
-    .btn-ghost:hover {
-        background: #F8FAFC;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    html.dark .btn-ghost {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-ghost:hover {
-        background: #1E293B;
-        border-color: #475569;
-        color: #F1F5F9;
-    }
-    @media (max-width: 480px) {
-        .card-body {
-            padding: 1rem;
-        }
-        .form-actions {
-            flex-direction: column;
-        }
-        .form-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
+    .question-content { flex: 1; min-width: 0; }
+    .question-badge { margin-bottom: 0.5rem; display: flex; flex-wrap: wrap; gap: 4px; }
+    .badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; }
+    .badge-qcm { background: #DBEAFE; color: #1D4ED8; }
+    .badge-qcm-multi { background: #CFFAFE; color: #0E7490; }
+    .badge-vf { background: #FEF3C7; color: #B45309; }
+    .question-text { font-weight: 600; color: #0F172A; margin: 0 0 0.75rem 0; line-height: 1.4; font-size: 14px; }
+    html.dark .question-text { color: #F1F5F9; }
+    .options-list { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.5rem; }
+    .option-badge { padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0; }
+    .option-badge.correct { background: #DCFCE7; color: #166534; border-color: #BBF7D0; }
+    .explanation { font-size: 0.7rem; color: #64748B; font-style: italic; margin: 0.5rem 0 0; }
+    .question-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; flex-shrink: 0; }
+    .points-badge { background: #FEF9C3; color: #854D0E; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+
+    .empty-state { text-align: center; padding: 2rem 1.5rem; }
+    .empty-state i { font-size: 3rem; color: #CBD5E1; margin-bottom: 1rem; display: block; }
+    .empty-state p { color: #64748B; font-size: 0.8125rem; }
+
+    /* ========== MODAL ========== */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); }
+    .modal-content { position: relative; background: white; border-radius: 1rem; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+    html.dark .modal-content { background: #1E293B; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+    html.dark .modal-header { background: #0F172A; border-bottom-color: #334155; }
+    .modal-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: #0F172A; display: flex; align-items: center; gap: 0.5rem; }
+    html.dark .modal-header h3 { color: #F1F5F9; }
+    .btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #94A3B8; line-height: 1; }
+    .btn-close:hover { color: #0F172A; }
+    .modal-body { padding: 1.25rem; }
+    .mt-2 { margin-top: 0.5rem; }
+    .mt-3 { margin-top: 0.75rem; }
+
+    .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+    @media (max-width: 640px) { 
+        .form-actions { flex-direction: column; } 
+        .form-actions .btn { width: 100%; justify-content: center; } 
     }
 </style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+    let questions = [];
+    let editingIndex = null;
+
+    afficherQuestions();
+
+    function afficherQuestions() {
+        const container = document.getElementById('questionsList');
+        if (!questions.length) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-patch-question"></i>
+                    <p>Aucune question pour l'instant. Cliquez sur "Ajouter une question".</p>
+                </div>`;
+            return;
+        }
+        container.innerHTML = questions.map((q, idx) => `
+            <div class="question-card">
+                <div class="question-header">
+                    <div class="question-num">${idx + 1}</div>
+                    <div class="question-content">
+                        <div class="question-badge">
+                            <span class="badge ${q.type_question === 'QCM_UNIQUE' ? 'badge-qcm' : (q.type_question === 'QCM_MULTIPLE' ? 'badge-qcm-multi' : 'badge-vf')}">
+                                ${q.type_question === 'QCM_UNIQUE' ? 'QCM — 1 réponse' : (q.type_question === 'QCM_MULTIPLE' ? 'QCM — Plusieurs réponses' : 'Vrai / Faux')}
+                            </span>
+                        </div>
+                        <p class="question-text">${escapeHtml(q.question)}</p>
+                        <div class="options-list">
+                            ${q.options.map(opt => `
+                                <span class="option-badge ${q.reponses_correctes.includes(opt) ? 'correct' : ''}">
+                                    ${q.reponses_correctes.includes(opt) ? '✓ ' : ''}${escapeHtml(opt)}
+                                </span>
+                            `).join('')}
+                        </div>
+                        ${q.explication ? `<p class="explanation"><i class="bi bi-lightbulb"></i> ${escapeHtml(q.explication)}</p>` : ''}
+                    </div>
+                    <div class="question-actions">
+                        <span class="points-badge">${q.points} pts</span>
+                        <div style="display:flex;gap:0.5rem;">
+                            <button type="button" class="btn btn-sm btn-ghost" onclick="ouvrirModalModif(${idx})">Modifier</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="supprimerQuestion(${idx})">Supprimer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function ouvrirModalAjout() {
+        editingIndex = null;
+        document.getElementById('modalTitre').innerHTML = '<i class="bi bi-plus-circle" style="color:#E53E3E;"></i> Ajouter une question';
+        document.getElementById('btnSubmitTexte').textContent = 'Ajouter la question';
+        document.getElementById('question').value = '';
+        document.getElementById('type_question').value = 'QCM_UNIQUE';
+        document.getElementById('points').value = 10;
+        document.getElementById('explication').value = '';
+        document.querySelectorAll('input[name="vf"]').forEach(r => r.checked = false);
+        updateFormType('QCM_UNIQUE');
+        document.getElementById('optionsList').innerHTML = `
+            <div class="option-row">
+                <input type="checkbox" class="option-check"><input type="text" class="form-control form-control-sm option-text" placeholder="Option A" oninput="syncCheckValue(this)">
+            </div>
+            <div class="option-row">
+                <input type="checkbox" class="option-check"><input type="text" class="form-control form-control-sm option-text" placeholder="Option B" oninput="syncCheckValue(this)">
+            </div>`;
+        document.getElementById('modalQuestion').style.display = 'flex';
+    }
+
+    function ouvrirModalModif(idx) {
+        editingIndex = idx;
+        const q = questions[idx];
+        document.getElementById('modalTitre').innerHTML = '<i class="bi bi-pencil" style="color:#E53E3E;"></i> Modifier la question';
+        document.getElementById('btnSubmitTexte').textContent = 'Enregistrer les modifications';
+        document.getElementById('question').value = q.question;
+        document.getElementById('type_question').value = q.type_question;
+        document.getElementById('points').value = q.points;
+        document.getElementById('explication').value = q.explication || '';
+        updateFormType(q.type_question);
+        if (q.type_question === 'VRAI_FAUX') {
+            document.querySelectorAll('input[name="vf"]').forEach(r => { r.checked = q.reponses_correctes.includes(r.value); });
+        } else {
+            const container = document.getElementById('optionsList');
+            container.innerHTML = '';
+            q.options.forEach(opt => {
+                const row = document.createElement('div');
+                row.className = 'option-row';
+                row.innerHTML = `
+                    <input type="checkbox" class="option-check" ${q.reponses_correctes.includes(opt) ? 'checked' : ''}>
+                    <input type="text" class="form-control form-control-sm option-text" value="${escapeHtml(opt)}" oninput="syncCheckValue(this)">
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.option-row').remove()">×</button>`;
+                container.appendChild(row);
+            });
+        }
+        document.getElementById('modalQuestion').style.display = 'flex';
+    }
+
+    function fermerModal() { document.getElementById('modalQuestion').style.display = 'none'; editingIndex = null; }
+    function updateFormType(type) {
+        document.getElementById('optionsSection').style.display = (type === 'VRAI_FAUX') ? 'none' : 'block';
+        document.getElementById('vraiFauxSection').style.display = (type === 'VRAI_FAUX') ? 'block' : 'none';
+    }
+    function syncCheckValue(input) { const cb = input.closest('.option-row').querySelector('.option-check'); if (cb) cb.value = input.value; }
+    function addOption() {
+        const list = document.getElementById('optionsList');
+        const count = list.querySelectorAll('.option-row').length;
+        const labels = ['A','B','C','D','E','F'];
+        const letter = labels[count] || (count + 1);
+        const row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML = `
+            <input type="checkbox" class="option-check">
+            <input type="text" class="form-control form-control-sm option-text" placeholder="Option ${letter}" oninput="syncCheckValue(this)">
+            <button type="button" class="btn btn-sm btn-danger" onclick="this.closest('.option-row').remove()">×</button>`;
+        list.appendChild(row);
+    }
+    function supprimerQuestion(idx) { if (confirm('Supprimer cette question ?')) { questions.splice(idx, 1); afficherQuestions(); } }
+    function sauvegarderQuestion() {
+        const questionTexte = document.getElementById('question').value.trim();
+        if (!questionTexte) { alert('La question est obligatoire.'); return; }
+        const type = document.getElementById('type_question').value;
+        const points = parseInt(document.getElementById('points').value) || 10;
+        const explication = document.getElementById('explication').value.trim();
+        let options = [], reponsesCorrectes = [];
+        if (type === 'VRAI_FAUX') {
+            options = ['Vrai', 'Faux'];
+            const sel = document.querySelector('input[name="vf"]:checked');
+            if (!sel) { alert('Choisissez la bonne réponse.'); return; }
+            reponsesCorrectes = [sel.value];
+        } else {
+            document.querySelectorAll('#optionsList .option-row').forEach(row => {
+                const text = row.querySelector('.option-text').value.trim();
+                if (text) { options.push(text); if (row.querySelector('.option-check').checked) reponsesCorrectes.push(text); }
+            });
+            if (options.length < 2) { alert('Au moins deux options sont requises.'); return; }
+            if (reponsesCorrectes.length === 0) { alert('Sélectionnez au moins une bonne réponse.'); return; }
+        }
+        const nouvelleQuestion = { question: questionTexte, type_question: type, options: options, reponses_correctes: reponsesCorrectes, points: points, explication: explication || null };
+        if (editingIndex !== null) questions[editingIndex] = nouvelleQuestion;
+        else questions.push(nouvelleQuestion);
+        fermerModal(); afficherQuestions();
+    }
+    function construireJson() { document.getElementById('quizQuestionsJson').value = JSON.stringify(questions); document.getElementById('chapitreForm').submit(); }
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+    document.getElementById('modalQuestion').addEventListener('click', function(e) { if (e.target === this) fermerModal(); });
+</script>
 {% endblock %}

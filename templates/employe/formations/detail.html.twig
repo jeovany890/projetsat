@@ -19,7 +19,6 @@
             grid-template-columns: 1fr;
             gap: 1.5rem;
         }
-        /* Sur mobile, la sidebar passe au-dessus du contenu */
         .sidebar-right {
             order: -1;
         }
@@ -148,7 +147,6 @@
         font-size: 1rem;
         color: #0f172a;
     }
-    /* Barre de progression globale */
     .global-progress {
         padding: 1rem 1.2rem;
         background: #f1f5f9;
@@ -174,7 +172,6 @@
         border-radius: 99px;
         transition: width 0.3s;
     }
-    /* Liste des chapitres */
     .chapter-list {
         display: flex;
         flex-direction: column;
@@ -231,15 +228,9 @@
         background: #dcfce7;
         color: #166534;
     }
-    /* Simulation */
     .simulation-item {
         margin-top: 0.5rem;
         border-top: 1px solid #e2e8f0;
-    }
-    .simulation-item.disabled {
-        opacity: 0.6;
-        cursor: default;
-        pointer-events: none;
     }
     .simulation-badge {
         font-size: 0.7rem;
@@ -303,11 +294,11 @@
                 <h1 class="chapter-title">{{ chapitreActif.titre }}</h1>
                 <div class="chapter-meta">
                     {% if chapitreActif.urlVideo %}
-                        <span>Vidéo incluse</span>
+                        <span>📹 Vidéo incluse</span>
                     {% endif %}
-                    {% if chapitreActif.quiz %}
+                    {% if chapitreActif.hasQuiz() %}
                         {% set t = tentativesChapitres[chapitreActif.id] ?? null %}
-                        {% if t and t.aReussi %}
+                        {% if t and t.isAReussi() %}
                             <span class="badge-success">Quiz réussi</span>
                         {% elseif t %}
                             <span class="badge-success" style="background:#fee2e2;color:#991b1b;">Quiz échoué</span>
@@ -331,14 +322,14 @@
             {% endif %}
 
             <div class="chapter-actions">
-                {# Bouton précédent #}
                 {% set chapitresTries = chapitres|sort((a,b) => a.id <=> b.id) %}
-                {% set currentIdx = 0 %}
+                {% set currentIdx = -1 %}
                 {% for chap in chapitresTries %}
                     {% if chap.id == chapitreActif.id %}
                         {% set currentIdx = loop.index0 %}
                     {% endif %}
                 {% endfor %}
+
                 {% if currentIdx > 0 %}
                     {% set prevChap = chapitresTries[currentIdx - 1] %}
                     <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: prevChap.id}) }}" class="btn btn-secondary">
@@ -348,10 +339,9 @@
                     <div></div>
                 {% endif %}
 
-                {# Bouton principal #}
-                {% set chapDone = (not chapitreActif.quiz) or (tentativesChapitres[chapitreActif.id] and tentativesChapitres[chapitreActif.id].aReussi) %}
+                {% set chapDone = (not chapitreActif.hasQuiz()) or (tentativesChapitres[chapitreActif.id] is defined and tentativesChapitres[chapitreActif.id] and tentativesChapitres[chapitreActif.id].isAReussi()) %}
                 {% if not chapDone %}
-                    {% if chapitreActif.quiz %}
+                    {% if chapitreActif.hasQuiz() %}
                         <a href="{{ path('employe_chapitre_quiz', {moduleId: module.id, chapitreId: chapitreActif.id}) }}" class="btn btn-primary">
                             Passer le quiz
                         </a>
@@ -366,8 +356,8 @@
                         <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: nextChap.id}) }}" class="btn btn-primary">
                             Suivant →
                         </a>
-                    {% elseif tousChapitresTermines and module.simulation %}
-                        <a href="{{ path('employe_simulation_jouer', {id: module.simulation.id}) }}" class="btn btn-primary">
+                    {% elseif tousChapitresTermines and module.hasSimulation() %}
+                        <a href="{{ path('employe_simulation_jouer', {id: module.id}) }}" class="btn btn-primary">
                             Passer la simulation
                         </a>
                     {% else %}
@@ -401,7 +391,7 @@
             {% set chapitresTries = chapitres|sort((a,b) => a.id <=> b.id) %}
             {% for chap in chapitresTries %}
                 {% set t = tentativesChapitres[chap.id] ?? null %}
-                {% set done = (not chap.quiz) or (t and t.aReussi) %}
+                {% set done = (not chap.hasQuiz()) or (t and t.isAReussi()) %}
                 {% set isActive = chapitreActif and chap.id == chapitreActif.id %}
                 <a href="{{ path('employe_formation_chapitre', {id: module.id, chapitreActifId: chap.id}) }}"
                    class="chapter-item {{ isActive ? 'active' : '' }}">
@@ -410,7 +400,7 @@
                     </span>
                     <div class="chapter-info">
                         <div>{{ chap.titre }}</div>
-                        {% if chap.quiz %}
+                        {% if chap.hasQuiz() %}
                             <div class="chapter-badge {% if done %}quiz-pass{% endif %}">
                                 {% if done %}Quiz réussi{% else %}Quiz à passer{% endif %}
                             </div>
@@ -419,21 +409,21 @@
                 </a>
             {% endfor %}
 
-            {% if module.simulation %}
+            {% if module.hasSimulation() %}
                 <div class="simulation-item">
-                    <a href="{{ tousChapitresTermines ? path('employe_simulation_jouer', {id: module.simulation.id}) : '#' }}"
+                    <a href="{{ tousChapitresTermines ? path('employe_simulation_jouer', {id: module.id}) : '#' }}"
                        class="chapter-item {{ not chapitreActif and tousChapitresTermines ? 'active' : '' }}"
                        style="{% if not tousChapitresTermines %}opacity:0.6; cursor:default;{% endif %}">
-                        <span class="chapter-number {% if resultatSimulation and resultatSimulation.aReussi %}done{% endif %}">
-                            {% if resultatSimulation and resultatSimulation.aReussi %}✓{% else %}🎮{% endif %}
+                        <span class="chapter-number {% if resultatSimulation and resultatSimulation.isAReussi() %}done{% endif %}">
+                            {% if resultatSimulation and resultatSimulation.isAReussi() %}✓{% else %}🎮{% endif %}
                         </span>
                         <div class="chapter-info">
                             <div>Simulation finale</div>
                             <div class="simulation-badge 
-                                {% if resultatSimulation and resultatSimulation.aReussi %}done
+                                {% if resultatSimulation and resultatSimulation.isAReussi() %}done
                                 {% elseif tousChapitresTermines %}available
                                 {% endif %}">
-                                {% if resultatSimulation and resultatSimulation.aReussi %}
+                                {% if resultatSimulation and resultatSimulation.isAReussi() %}
                                     Score {{ resultatSimulation.score }}%
                                 {% elseif tousChapitresTermines %}
                                     Disponible

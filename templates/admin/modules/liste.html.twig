@@ -5,7 +5,7 @@
 {% block topbar_actions %}
     <div class="flex items-center gap-3">
         <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-plus-lg"></i> Nouveau module
+            <iconify-icon icon="solar:add-circle-linear" width="18"></iconify-icon> Nouveau module
         </a>
     </div>
 {% endblock %}
@@ -16,21 +16,27 @@
     {# Statistiques rapides #}
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-icon success"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-icon success">
+                <iconify-icon icon="solar:check-circle-linear" width="24"></iconify-icon>
+            </div>
             <div class="stat-info">
                 <div class="stat-value">{{ modules|filter(m => m.estPublie)|length }}</div>
                 <div class="stat-label">Publiés</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon warning"><i class="bi bi-pencil-square"></i></div>
+            <div class="stat-icon warning">
+                <iconify-icon icon="solar:pen-linear" width="24"></iconify-icon>
+            </div>
             <div class="stat-info">
                 <div class="stat-value">{{ modules|filter(m => not m.estPublie)|length }}</div>
                 <div class="stat-label">Brouillons</div>
             </div>
         </div>
         <div class="stat-card">
-            <div class="stat-icon info"><i class="bi bi-folder-fill"></i></div>
+            <div class="stat-icon info">
+                <iconify-icon icon="solar:folder-linear" width="24"></iconify-icon>
+            </div>
             <div class="stat-info">
                 <div class="stat-value">{{ modules|filter(m => m.categorie is empty)|length }}</div>
                 <div class="stat-label">Sans catégorie</div>
@@ -40,10 +46,10 @@
 
     {% if modules|length == 0 %}
         <div class="empty-state">
-            <i class="bi bi-book"></i>
+            <iconify-icon icon="solar:book-linear" width="48" class="empty-icon"></iconify-icon>
             <p>Aucun module créé</p>
             <a href="{{ path('admin_module_nouveau') }}" class="btn btn-primary btn-md">
-                <i class="bi bi-plus-lg"></i> Créer un module
+                <iconify-icon icon="solar:add-circle-linear" width="18"></iconify-icon> Créer un module
             </a>
         </div>
     {% else %}
@@ -55,18 +61,37 @@
                         <div>
                             <h3>{{ module.titre }}</h3>
                             <div class="module-meta">
-                                <span><i class="bi bi-folder"></i> {{ module.categorie ?: 'Non catégorisé' }}</span>
-                                <span><i class="bi bi-signal"></i> {{ module.difficulte|capitalize }}</span>
-                                <span><i class="bi bi-clock"></i> {{ module.dureeEstimee }} min</span>
-                                <span><i class="bi bi-trophy"></i> {{ module.pointsReussite }} pts</span>
-                                <span><i class="bi bi-book"></i> {{ module.chapitres|length }} chapitre(s)</span>
+                                <span>
+                                    <iconify-icon icon="solar:folder-linear" width="14"></iconify-icon>
+                                    {{ module.categorie ?: 'Non catégorisé' }}
+                                </span>
+                                <span>
+                                    <iconify-icon icon="solar:signal-linear" width="14"></iconify-icon>
+                                    {{ module.difficulte|capitalize }}
+                                </span>
+                                <span>
+                                    <iconify-icon icon="solar:clock-circle-linear" width="14"></iconify-icon>
+                                    {{ module.dureeEstimee }} min
+                                </span>
+                                <span>
+                                    <iconify-icon icon="solar:cup-star-linear" width="14"></iconify-icon>
+                                    {{ module.pointsReussite }} pts
+                                </span>
+                                <span>
+                                    <iconify-icon icon="solar:book-linear" width="14"></iconify-icon>
+                                    {{ module.chapitres|length }} chapitre(s)
+                                </span>
                             </div>
                         </div>
                         <div class="module-badges">
                             {% if module.estPublie %}
-                                <span class="badge badge-success">Publié</span>
+                                <span class="badge badge-success">
+                                    <iconify-icon icon="solar:check-circle-linear" width="14"></iconify-icon> Publié
+                                </span>
                             {% else %}
-                                <span class="badge badge-gray">Brouillon</span>
+                                <span class="badge badge-gray">
+                                    <iconify-icon icon="solar:pen-linear" width="14"></iconify-icon> Brouillon
+                                </span>
                             {% endif %}
                         </div>
                     </div>
@@ -74,29 +99,38 @@
                     <p class="module-description">{{ module.description|slice(0, 150) }}{% if module.description|length > 150 %}…{% endif %}</p>
 
                     <div class="module-actions">
-                        <a href="{{ path('admin_module_details', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Voir">
-                            <i class="bi bi-eye"></i> <span class="action-label">Voir</span>
+                        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm" title="Voir les chapitres">
+                            <iconify-icon icon="solar:documents-linear" width="16"></iconify-icon>
+                            <span class="action-label">Chapitres ({{ module.chapitres|length }})</span>
                         </a>
-                        <a href="{{ path('admin_chapitres_liste', {moduleId: module.id}) }}" class="btn btn-ghost btn-sm" title="Chapitres">
-                            <i class="bi bi-journal-text"></i> <span class="action-label">Chapitres ({{ module.chapitres|length }})</span>
-                        </a>
-                        <a href="{{ path('admin_module_lier_simulation', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Associer une simulation">
-                            <i class="bi bi-joystick"></i> <span class="action-label">Simulation</span>
-                        </a>
+                        
                         <a href="{{ path('admin_module_modifier', {id: module.id}) }}" class="btn btn-ghost btn-sm" title="Modifier">
-                            <i class="bi bi-pencil"></i> <span class="action-label">Modifier</span>
+                            <iconify-icon icon="solar:pen-linear" width="16"></iconify-icon>
+                            <span class="action-label">Modifier</span>
                         </a>
-                        <form method="post" action="{{ path('admin_module_toggle_publication', {id: module.id}) }}" class="action-form">
-                            <button type="submit" class="btn btn-ghost btn-sm" title="{{ module.estPublie ? 'Dépublier' : 'Publier' }}">
-                                <i class="bi bi-{{ module.estPublie ? 'eye-slash' : 'check-circle' }}"></i>
-                                <span class="action-label">{{ module.estPublie ? 'Dépublier' : 'Publier' }}</span>
-                            </button>
-                        </form>
+                        
+                        {% if module.estPublie %}
+                            <form method="post" action="{{ path('admin_module_depublier', {id: module.id}) }}" class="action-form">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="Dépublier">
+                                    <iconify-icon icon="solar:eye-closed-linear" width="16"></iconify-icon>
+                                    <span class="action-label">Dépublier</span>
+                                </button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{{ path('admin_module_publier', {id: module.id}) }}" class="action-form">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="Publier">
+                                    <iconify-icon icon="solar:check-circle-linear" width="16"></iconify-icon>
+                                    <span class="action-label">Publier</span>
+                                </button>
+                            </form>
+                        {% endif %}
+                        
                         <form method="post" action="{{ path('admin_module_supprimer', {id: module.id}) }}" id="form-supp-mod-{{ module.id }}" class="action-form">
                             <button type="submit" class="btn btn-ghost btn-sm btn-danger" title="Supprimer"
                                     data-confirm="Supprimer ce module ? Cette action est irréversible."
                                     data-form="form-supp-mod-{{ module.id }}">
-                                <i class="bi bi-trash"></i> <span class="action-label">Supprimer</span>
+                                <iconify-icon icon="solar:trash-bin-trash-linear" width="16"></iconify-icon>
+                                <span class="action-label">Supprimer</span>
                             </button>
                         </form>
                     </div>
@@ -111,7 +145,7 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-      .modules-container {
+    .modules-container {
         display: flex;
         flex-direction: column;
         gap: 1.75rem;
@@ -219,6 +253,7 @@
         margin: 0;
         word-break: break-word;
     }
+    html.dark .module-header h3 { color: #F1F5F9; }
     .module-meta {
         display: flex;
         gap: 1rem;
@@ -228,6 +263,7 @@
         color: #64748B;
         margin-top: 0.25rem;
     }
+    html.dark .module-meta { color: #94A3B8; }
     .module-badges {
         display: flex;
         gap: 0.5rem;
@@ -254,20 +290,29 @@
         margin: 0;
         line-height: 1.4;
     }
+    html.dark .module-description { color: #94A3B8; }
 
     /* Actions */
     .module-actions {
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: stretch;
         border-top: 1px solid #E2E8F0;
         padding-top: 0.75rem;
         margin-top: 0.25rem;
     }
+    html.dark .module-actions { border-top-color: #334155; }
+    
     .action-form {
-        display: inline;
+        display: flex;
+        margin: 0;
     }
+    
+    .action-form .btn {
+        height: 100%;
+    }
+    
     .btn {
         display: inline-flex;
         align-items: center;
@@ -283,10 +328,13 @@
         line-height: 1.4;
         white-space: nowrap;
         padding: 0.375rem 0.875rem;
+        height: 34px;
+        box-sizing: border-box;
     }
     .btn-sm {
         padding: 0.25rem 0.75rem;
         font-size: 0.75rem;
+        height: 32px;
     }
     .btn-primary {
         background: #E53E3E;
@@ -326,7 +374,6 @@
         color: #F1F5F9;
     }
 
-    /* Responsive actions */
     @media (max-width: 768px) {
         .module-header {
             flex-direction: column;
@@ -339,9 +386,6 @@
             flex-direction: row;
             justify-content: flex-start;
         }
-        .module-actions .btn {
-            flex: 0 0 auto;
-        }
         .action-label {
             display: inline;
         }
@@ -351,20 +395,19 @@
             flex-direction: column;
             align-items: stretch;
         }
+        .module-actions .btn,
+        .module-actions .action-form {
+            width: 100%;
+        }
         .module-actions .btn {
             width: 100%;
             justify-content: center;
-        }
-        .action-form {
-            display: block;
-            width: 100%;
         }
         .module-header h3 {
             font-size: 1rem;
         }
     }
 
-    /* Empty state */
     .empty-state {
         text-align: center;
         padding: 3rem 1.5rem;
@@ -372,7 +415,7 @@
         border-radius: 1rem;
         border: 1px solid #E2E8F0;
     }
-    .empty-state i {
+    .empty-state .empty-icon {
         font-size: 3rem;
         color: #CBD5E1;
         margin-bottom: 1rem;

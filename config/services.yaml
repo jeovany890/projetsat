@@ -8,13 +8,20 @@ services:
     _defaults:
         autowire: true
         autoconfigure: true
-
+        
+    App\EventSubscriber\EntrepriseStatusSubscriber:
+        autowire: true
+        autoconfigure: true
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\NativeRateLimiter:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
 
     App\EventSubscriber\AccessDeniedListener:
         tags:

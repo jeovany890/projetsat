@@ -6,13 +6,12 @@ use App\Entity\Employe;
 use App\Entity\ProgressionModule;
 use App\Entity\ModuleFormation;
 use App\Entity\Chapitre;
-use App\Entity\Quiz;
 use App\Entity\TentativeQuiz;
-use App\Entity\SimulationInteractive;
 use App\Entity\ResultatSimulation;
 use App\Service\ScoringMoteurService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -93,18 +92,12 @@ class EmployeController extends AbstractController
 
     // ══════════════════════════════════════════
     // COMMENCER UNE FORMATION
-    // Cas 1 : campagne normale  → refuser si module déjà actif via phishing
-    // Cas 2 : phishing détecté → reprendre la progression phishing existante
-    // Cas 3 : reprise volontaire → créer une nouvelle progression (REPRISE)
     // ══════════════════════════════════════════
     #[Route('/formations/{id}/commencer', name: 'employe_formation_commencer', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function commencerFormation(ModuleFormation $module, EntityManagerInterface $em): Response
     {
         $employe = $this->getEmploye();
 
-        // ── Cas 1 : une progression phishing active existe déjà ──────────
-        // Le RSSI ne peut pas lancer une campagne normale par-dessus.
-        // On redirige l'employé vers la progression phishing en cours.
         $progressionPhishingActive = $em->getRepository(ProgressionModule::class)->findOneBy([
             'employe'         => $employe,
             'module'          => $module,
@@ -113,14 +106,10 @@ class EmployeController extends AbstractController
         ]);
 
         if ($progressionPhishingActive) {
-            $this->addFlash('warning',
-                'Cette formation a déjà été attribuée suite à une campagne phishing. Veuillez la reprendre.');
-            return $this->redirectToRoute('employe_formation_detail', [
-                'id' => $module->getId(),
-            ]);
+            $this->addFlash('warning', 'Cette formation a déjà été attribuée suite à une campagne phishing. Veuillez la reprendre.');
+            return $this->redirectToRoute('employe_formation_detail', ['id' => $module->getId()]);
         }
 
-        // ── Cas 2 / Cas 3 : chercher une progression active (non terminée) ──
         $progressionActive = $em->getRepository(ProgressionModule::class)->findOneBy([
             'employe'     => $employe,
             'module'      => $module,
@@ -128,25 +117,13 @@ class EmployeController extends AbstractController
         ]);
 
         if ($progressionActive) {
-            // Cas 2 : progression existante non terminée → reprendre, ne pas recréer
             if ($progressionActive->getStatut() === 'NON_COMMENCE') {
-                $progressionActive->setStatut('EN_COURS')
-                    ->setDateDebut(new \DateTime());
+                $progressionActive->setStatut('EN_COURS')->setDateDebut(new \DateTime());
             }
             $progressionActive->setDateDernierAcces(new \DateTime());
             $em->flush();
-
-            return $this->redirectToRoute('employe_formation_detail', [
-                'id' => $module->getId(),
-            ]);
+            return $this->redirectToRoute('employe_formation_detail', ['id' => $module->getId()]);
         }
-
-        // ── Cas 3 : aucune progression active → reprise volontaire ──────────
-        // On relie la nouvelle progression à la dernière terminée (parent).
-        $dernierTermine = $em->getRepository(ProgressionModule::class)->findOneBy(
-            ['employe' => $employe, 'module' => $module],
-            ['id' => 'DESC']
-        );
 
         $progression = new ProgressionModule();
         $progression->setEmploye($employe)
@@ -161,10 +138,9 @@ class EmployeController extends AbstractController
         $em->persist($progression);
         $em->flush();
 
-        return $this->redirectToRoute('employe_formation_detail', [
-            'id' => $module->getId(),
-        ]);
+        return $this->redirectToRoute('employe_formation_detail', ['id' => $module->getId()]);
     }
+
     // ══════════════════════════════════════════
     // DÉTAIL D'UNE FORMATION
     // ══════════════════════════════════════════
@@ -176,7 +152,6 @@ class EmployeController extends AbstractController
         $campagneId  = $request->query->get('campagne');
         $progression = null;
 
-        // ── 1. Priorité : progression liée à une campagne spécifique ──────
         if ($campagneId) {
             $campagne    = $em->getRepository(\App\Entity\CampagneFormation::class)->find($campagneId);
             $progression = $campagne
@@ -188,55 +163,40 @@ class EmployeController extends AbstractController
                 : null;
         }
 
-        // ── 2. Fallback : progression active non terminée (toutes sources) ──
         if (!$progression) {
             $progressions = $em->getRepository(ProgressionModule::class)->findBy(
                 ['employe' => $employe, 'module' => $module],
                 ['id' => 'DESC']
             );
-
             foreach ($progressions as $p) {
-                if ($p->getStatut() !== 'TERMINE') {
-                    $progression = $p;
-                    break;
-                }
+                if ($p->getStatut() !== 'TERMINE') { $progression = $p; break; }
             }
-
-            // Si tout est terminé, afficher la dernière (lecture seule)
             if (!$progression && !empty($progressions)) {
                 $progression = $progressions[0];
             }
         }
 
-        // ── 3. Aucune progression → rediriger vers /commencer ────────────
-        // On ne crée plus de progression "fantôme" ici.
-        // L'employé doit passer par le bouton "Commencer" pour initialiser sa session.
         if (!$progression) {
             $this->addFlash('info', 'Veuillez cliquer sur "Commencer" pour démarrer cette formation.');
             return $this->redirectToRoute('employe_formations');
         }
 
-        // ── 4. Mettre à jour le statut et la date d'accès ─────────────────
         if ($progression->getStatut() === 'NON_COMMENCE') {
             $progression->setStatut('EN_COURS')->setDateDebut(new \DateTime());
         }
         $progression->setDateDernierAcces(new \DateTime());
         $em->flush();
 
-        // ── 5. Charger les tentatives FILTRÉES par la progression active ──
-        // Correction bug critique : on ne retourne plus les anciennes tentatives
-        // d'une session précédente. Le filtre par progression_id garantit
-        // que les quiz semblent vierges à chaque reprise.
         $chapitres = $module->getChapitres()->toArray();
         usort($chapitres, fn($a, $b) => $a->getId() <=> $b->getId());
 
         $tentativesChapitres = [];
         foreach ($chapitres as $chapitre) {
-            if ($chapitre->getQuiz()) {
+            if ($chapitre->hasQuiz()) {
                 $tentative = $em->getRepository(TentativeQuiz::class)->findOneBy([
                     'employe'     => $employe,
-                    'quiz'        => $chapitre->getQuiz(),
-                    'progression' => $progression,   // ← FILTRE PAR SESSION
+                    'chapitre'    => $chapitre,
+                    'progression' => $progression,
                 ]);
                 $tentativesChapitres[$chapitre->getId()] = $tentative;
             }
@@ -244,19 +204,15 @@ class EmployeController extends AbstractController
 
         $tousChapitresTermines = $this->tousQuizChapitresReussis($chapitres, $tentativesChapitres);
 
-        // ── 6. Résultat simulation filtré par progression active ───────────
-        // Correction bug critique : on ne retourne plus l'ancien résultat
-        // d'une simulation jouée lors d'une session précédente.
         $resultatSimulation = null;
-        if ($module->getSimulation()) {
+        if ($module->hasSimulation()) {
             $resultatSimulation = $em->getRepository(ResultatSimulation::class)->findOneBy([
                 'employe'     => $employe,
-                'simulation'  => $module->getSimulation(),
-                'progression' => $progression,       // ← FILTRE PAR SESSION
+                'module'      => $module,
+                'progression' => $progression,
             ]);
         }
 
-        // ── 7. Déterminer le chapitre actif (premier non validé) ─────────
         $chapitreActifObj = null;
         if ($chapitreActifId > 0) {
             foreach ($chapitres as $chap) {
@@ -266,7 +222,7 @@ class EmployeController extends AbstractController
         if (!$chapitreActifObj) {
             foreach ($chapitres as $chap) {
                 $t    = $tentativesChapitres[$chap->getId()] ?? null;
-                $done = !$chap->getQuiz() || ($t && $t->isAReussi());
+                $done = !$chap->hasQuiz() || ($t && $t->isAReussi());
                 if (!$done) { $chapitreActifObj = $chap; break; }
             }
         }
@@ -295,14 +251,12 @@ class EmployeController extends AbstractController
         $module   = $em->getRepository(ModuleFormation::class)->find($moduleId);
         $chapitre = $em->getRepository(Chapitre::class)->find($chapitreId);
 
-        if (!$module || !$chapitre) {
-            throw $this->createNotFoundException();
-        }
+        if (!$module || !$chapitre) throw $this->createNotFoundException();
 
         $progression = $em->getRepository(ProgressionModule::class)->findOneBy([
             'employe'     => $employe,
             'module'      => $module,
-            'dateTermine' => null,   // ← uniquement la session active
+            'dateTermine' => null,
         ]);
 
         if ($progression) {
@@ -311,7 +265,7 @@ class EmployeController extends AbstractController
                 $chapitres = $module->getChapitres()->toArray();
                 usort($chapitres, fn($a, $b) => $a->getId() <=> $b->getId());
                 $pos     = array_search($chapitre, $chapitres);
-                $max     = $module->getSimulation() ? 70 : 90;
+                $max     = $module->hasSimulation() ? 70 : 90;
                 $nouveau = (int)(($pos + 1) / $totalChapitres * $max);
                 if ($nouveau > $progression->getPourcentageProgression()) {
                     $progression->setPourcentageProgression($nouveau);
@@ -321,7 +275,7 @@ class EmployeController extends AbstractController
             $em->flush();
         }
 
-        if ($chapitre->getQuiz()) {
+        if ($chapitre->hasQuiz()) {
             return $this->redirectToRoute('employe_chapitre_quiz', [
                 'moduleId'   => $moduleId,
                 'chapitreId' => $chapitreId,
@@ -333,10 +287,6 @@ class EmployeController extends AbstractController
 
     // ══════════════════════════════════════════
     // QUIZ D'UN CHAPITRE
-    // Scoring via ScoringMoteurService :
-    //   Réussi       → +3 vigilance + points pédagogiques configurés en DB
-    //   Échoué       →  0 vigilance,  +0 points pédagogiques
-    //   Module fini  → +5 vigilance, +bonus de fin de module configuré en DB
     // ══════════════════════════════════════════
     #[Route('/formations/{moduleId}/chapitre/{chapitreId}/quiz', name: 'employe_chapitre_quiz')]
     public function quizChapitre(int $moduleId, int $chapitreId, Request $request, EntityManagerInterface $em): Response
@@ -345,42 +295,34 @@ class EmployeController extends AbstractController
         $module   = $em->getRepository(ModuleFormation::class)->find($moduleId);
         $chapitre = $em->getRepository(Chapitre::class)->find($chapitreId);
 
-        if (!$module || !$chapitre || !$chapitre->getQuiz()) {
-            throw $this->createNotFoundException();
-        }
+        if (!$module || !$chapitre || !$chapitre->hasQuiz()) throw $this->createNotFoundException();
 
-        $quiz      = $chapitre->getQuiz();
-        $questions = $quiz->getQuestions() ?? [];
+        $questions            = $chapitre->getQuizQuestions() ?? [];
+        $scoreMinimum         = $chapitre->getQuizScoreMinimum() ?? 70;
+        $nombreTentativesMax  = $chapitre->getQuizNombreTentativesMax() ?? 3;
 
-        // ── Récupérer la progression active pour filtrer les tentatives ──
         $progressionActive = $em->getRepository(ProgressionModule::class)->findOneBy([
             'employe'     => $employe,
             'module'      => $module,
             'dateTermine' => null,
         ]);
 
-        // Correction bug critique : on filtre par la progression active,
-        // pas par (employe + quiz) global → les anciennes tentatives sont ignorées.
         $tentativeExistante = $progressionActive
             ? $em->getRepository(TentativeQuiz::class)->findOneBy([
                 'employe'     => $employe,
-                'quiz'        => $quiz,
+                'chapitre'    => $chapitre,
                 'progression' => $progressionActive,
             ])
             : null;
 
-        // ── Limite de tentatives (nombreTentativesMax stocké dans Quiz) ──────
-        // Si l'employé a déjà réussi : inutile de recommencer, on bloque.
-        // Si la limite est atteinte sans réussite : on bloque aussi.
         $numeroActuel   = $tentativeExistante?->getNumeroTentative() ?? 0;
         $dejaReussi     = $tentativeExistante?->isAReussi() ?? false;
-        $limiteAtteinte = $dejaReussi || ($numeroActuel >= $quiz->getNombreTentativesMax());
+        $limiteAtteinte = $dejaReussi || ($numeroActuel >= $nombreTentativesMax);
 
         if ($limiteAtteinte && $request->isMethod('POST')) {
             $this->addFlash('warning', $dejaReussi
                 ? 'Vous avez déjà réussi ce quiz.'
-                : sprintf('Nombre maximum de tentatives atteint (%d/%d).', $numeroActuel, $quiz->getNombreTentativesMax())
-            );
+                : sprintf('Nombre maximum de tentatives atteint (%d/%d).', $numeroActuel, $nombreTentativesMax));
             return $this->redirectToRoute('employe_formation_detail', ['id' => $moduleId]);
         }
 
@@ -391,43 +333,45 @@ class EmployeController extends AbstractController
             $resultats = [];
 
             foreach ($questions as $index => $q) {
-                $rep            = $reponses[$index] ?? null;
-                $bonnesReponses = $q['reponses_correctes'] ?? [];
-                $correct        = $rep !== null && in_array($rep, $bonnesReponses);
+                $rep     = $reponses[$index] ?? null;
+                $bonnes  = $q['reponses_correctes'] ?? [];
+                $correct = $rep !== null && in_array($rep, $bonnes);
                 if ($correct) $score++;
                 $resultats[$index] = [
                     'correct'     => $correct,
                     'donnee'      => $rep,
-                    'bonne'       => $bonnesReponses[0] ?? null,
+                    'bonne'       => $bonnes[0] ?? null,
                     'explication' => $q['explication'] ?? null,
                 ];
             }
 
             $pourcentage = $total > 0 ? (int)(($score / $total) * 100) : 0;
-            $reussi      = $pourcentage >= $quiz->getScoreMinimum();
+            $reussi      = $pourcentage >= $scoreMinimum;
 
-            // Sauvegarder la tentative et la lier à la progression active
             $tentative = $tentativeExistante ?? new TentativeQuiz();
-            $tentative->setEmploye($employe)->setQuiz($quiz)
-                ->setScore($score)->setTotalQuestions($total)
-                ->setReponsesCorrectes($score)->setAReussi($reussi)
-                ->setNumeroTentative(($tentativeExistante?->getNumeroTentative() ?? 0) + 1)
+            $tentative->setEmploye($employe)
+                ->setChapitre($chapitre)
+                ->setReponsesCorrectes($score)
+                ->setNumeroTentative($numeroActuel + 1)
                 ->setReponses($resultats)
                 ->setTempsPasseSecondes(0)
-                ->setDateDebut(new \DateTime())->setDateTermine(new \DateTime())
-                ->setProgression($progressionActive);   // ← LIEN SESSION
+                ->setDateDebut(new \DateTime())
+                ->setDateTermine(new \DateTime())
+                ->setProgression($progressionActive);
             $em->persist($tentative);
 
-            // Scoring quiz
-            if ($reussi) {
-                $this->scoring->quizReussi($employe);   // +3 vigilance
-                $employe->ajouterPoints($quiz->getPointsTotal());
-            } else {
-                $this->scoring->quizEchoue($employe);   // 0 vigilance
+            // Points du quiz
+            $totalPoints = 0;
+            foreach ($questions as $q) {
+                $totalPoints += (int)($q['points'] ?? 0);
             }
 
-            // Progression du module
-            $progression = $progressionActive;  // déjà récupéré plus haut
+            if ($reussi) {
+                $this->scoring->quizReussi($employe);
+                $employe->ajouterPoints($totalPoints);
+            } else {
+                $this->scoring->quizEchoue($employe);
+            }
 
             $chapitresList = $module->getChapitres()->toArray();
             usort($chapitresList, fn($a, $b) => $a->getId() <=> $b->getId());
@@ -437,45 +381,40 @@ class EmployeController extends AbstractController
             foreach ($chapitresList as $idx => $chap) {
                 if ($chap->getId() === $chapitre->getId()) { $currentIdx = $idx; break; }
             }
-            $chapitresSuivant   = ($currentIdx !== null && isset($chapitresList[$currentIdx + 1]))
-                ? $chapitresList[$currentIdx + 1] : null;
+            $chapitresSuivant   = ($currentIdx !== null && isset($chapitresList[$currentIdx + 1])) ? $chapitresList[$currentIdx + 1] : null;
             $estDernierChapitre = ($currentIdx !== null && $currentIdx === $nbChap - 1);
 
             $chapitresValides = 0;
             foreach ($chapitresList as $chap) {
-                if (!$chap->getQuiz()) { $chapitresValides++; continue; }
+                if (!$chap->hasQuiz()) { $chapitresValides++; continue; }
                 if ($chap->getId() === $chapitre->getId()) {
                     if ($reussi) $chapitresValides++;
                 } else {
                     $t = $em->getRepository(TentativeQuiz::class)->findOneBy([
                         'employe'     => $employe,
-                        'quiz'        => $chap->getQuiz(),
-                        'progression' => $progressionActive,  // ← FILTRE SESSION
+                        'chapitre'    => $chap,
+                        'progression' => $progressionActive,
                     ]);
                     if ($t && $t->isAReussi()) $chapitresValides++;
                 }
             }
 
-            $aSimulation = $module->getSimulation() !== null;
+            $aSimulation = $module->hasSimulation();
             $maxPct      = $aSimulation ? 90 : 100;
             $nouveauPct  = $nbChap > 0 ? (int)(($chapitresValides / $nbChap) * $maxPct) : 0;
 
-            if ($progression) {
-                if ($nouveauPct > $progression->getPourcentageProgression()) {
-                    $progression->setPourcentageProgression($nouveauPct);
+            if ($progressionActive) {
+                if ($nouveauPct > $progressionActive->getPourcentageProgression()) {
+                    $progressionActive->setPourcentageProgression($nouveauPct);
                 }
-                $progression->setDateDernierAcces(new \DateTime());
-                if ($progression->getStatut() === 'NON_COMMENCE') {
-                    $progression->setStatut('EN_COURS')->setDateDebut(new \DateTime());
+                $progressionActive->setDateDernierAcces(new \DateTime());
+                if ($progressionActive->getStatut() === 'NON_COMMENCE') {
+                    $progressionActive->setStatut('EN_COURS')->setDateDebut(new \DateTime());
                 }
-
-                // Tous les chapitres validés + pas de simulation → module TERMINÉ
                 if ($chapitresValides === $nbChap && !$aSimulation) {
-                    $progression->setStatut('TERMINE')
+                    $progressionActive->setStatut('TERMINE')
                         ->setPourcentageProgression(100)
                         ->setDateTermine(new \DateTime());
-
-                    // Scoring formation terminée : +5 vigilance + module points
                     $this->scoring->formationTerminee($employe);
                     $employe->ajouterPoints($module->getPointsReussite());
                 }
@@ -484,13 +423,11 @@ class EmployeController extends AbstractController
             $em->flush();
 
             $tousTermines = ($chapitresValides === $nbChap);
-            $simulation   = ($tousTermines && $estDernierChapitre && $aSimulation)
-                ? $module->getSimulation() : null;
+            $simulation   = ($tousTermines && $estDernierChapitre && $aSimulation) ? $module : null;
 
             return $this->render('employe/formations/quiz_resultat.html.twig', [
                 'module'             => $module,
                 'chapitre'           => $chapitre,
-                'quiz'               => $quiz,
                 'score'              => $score,
                 'total'              => $total,
                 'pourcentage'        => $pourcentage,
@@ -508,107 +445,73 @@ class EmployeController extends AbstractController
         return $this->render('employe/formations/quiz.html.twig', [
             'module'          => $module,
             'chapitre'        => $chapitre,
-            'quiz'            => $quiz,
             'questions'       => $questions,
             'tentative'       => $tentativeExistante,
             'limiteAtteinte'  => $limiteAtteinte,
-            'numeroTentative' => $numeroActuel + 1,   // numéro de la tentative en cours
+            'numeroTentative' => $numeroActuel + 1,
         ]);
     }
 
     // ══════════════════════════════════════════
-    // LISTE SIMULATIONS
+    // JOUER LA SIMULATION (intégrée au module)
     // ══════════════════════════════════════════
-    #[Route('/simulations', name: 'employe_simulations')]
-    public function simulations(EntityManagerInterface $em): Response
-    {
-        $employe     = $this->getEmploye();
-        $simulations = $em->getRepository(SimulationInteractive::class)->findBy(
-            ['estPublie' => true],
-            ['dateCreation' => 'DESC']
-        );
-
-        $resultats = $em->getRepository(ResultatSimulation::class)->findBy(['employe' => $employe]);
-        $faites    = [];
-        foreach ($resultats as $r) {
-            $faites[$r->getSimulation()->getId()] = $r;
-        }
-
-        return $this->render('employe/simulations/liste.html.twig', [
-            'simulations'       => $simulations,
-            'simulationsFaites' => $faites,
-        ]);
-    }
-
-    // ══════════════════════════════════════════
-    // JOUER UNE SIMULATION
-    // Réussie → formation terminée → +5 vigilance, points pédagogiques depuis l'entité module/simulation
-    // ══════════════════════════════════════════
-    #[Route('/simulations/{id}/jouer', name: 'employe_simulation_jouer')]
-    public function jouerSimulation(SimulationInteractive $simulation, Request $request, EntityManagerInterface $em): Response
+    #[Route('/formations/{id}/simulation', name: 'employe_simulation_jouer')]
+    public function jouerSimulation(ModuleFormation $module, Request $request, EntityManagerInterface $em): Response
     {
         $employe = $this->getEmploye();
 
+        if (!$module->hasSimulation()) {
+            throw $this->createNotFoundException();
+        }
+
         if ($request->isMethod('POST')) {
             $data          = json_decode($request->request->get('resultat_json', '{}'), true);
-            $score         = (int)($data['score'] ?? 0);
-            $totalQ        = (int)($data['total'] ?? 1);
             $correctes     = (int)($data['correctes'] ?? 0);
             $reponses      = $data['reponses'] ?? [];
             $tempsSecondes = (int)($data['temps_secondes'] ?? 0);
-            $aReussi       = $score >= 75;
+            $totalQ        = count($module->getSimulationContenu()[$module->getSimulationType() === 'GMAIL' ? 'emails' : ($module->getSimulationType() === 'SMS' ? 'sms' : 'conversations')] ?? []);
+            $aReussi       = $totalQ > 0 && ($correctes / $totalQ * 100) >= 75;
 
             $resultat = new ResultatSimulation();
-            $resultat->setScore($score)->setNombreReponsesCorrectes($correctes)
-                ->setNombreTotalQuestions($totalQ)->setReponses($reponses)
-                ->setAReussi($aReussi)
-                ->setPointsGagnes($aReussi ? $simulation->getPointsReussite() : 0)
+            $resultat->setReponsesCorrectes($correctes)
+                ->setReponses($reponses)
                 ->setTempsPasseSecondes($tempsSecondes)
                 ->setDateDebut(new \DateTime('-' . $tempsSecondes . ' seconds'))
                 ->setDateTermine(new \DateTime())
-                ->setEmploye($employe)->setSimulation($simulation);
+                ->setEmploye($employe)
+                ->setModule($module);
 
             $em->persist($resultat);
 
-            if ($simulation->getModule()) {
-                // Correction bug critique : filtrer par progression ACTIVE (dateTermine null)
-                // pour ne pas marquer comme terminée une ancienne session.
-                $progression = $em->getRepository(ProgressionModule::class)->findOneBy([
-                    'employe'     => $employe,
-                    'module'      => $simulation->getModule(),
-                    'dateTermine' => null,   // ← uniquement la session active
-                ]);
-                if ($progression) {
-                    // Lier le résultat à la progression active
-                    $resultat->setProgression($progression);   // ← LIEN SESSION
+            // Trouver la progression active
+            $progression = $em->getRepository(ProgressionModule::class)->findOneBy([
+                'employe'     => $employe,
+                'module'      => $module,
+                'dateTermine' => null,
+            ]);
 
-                    if ($aReussi) {
-                        $progression->setStatut('TERMINE')
-                            ->setPourcentageProgression(100)
-                            ->setDateTermine(new \DateTime());
-
-                        // Scoring formation terminée : +5 vigilance + module completion bonus + simulation success points
-                        $this->scoring->formationTerminee($employe);
-                        $employe->ajouterPoints($simulation->getPointsReussite());
-                        $employe->ajouterPoints($simulation->getModule()?->getPointsBonus() ?? 0);
-                    }
+            if ($progression) {
+                $resultat->setProgression($progression);
+                if ($aReussi) {
+                    $progression->setStatut('TERMINE')
+                        ->setPourcentageProgression(100)
+                        ->setDateTermine(new \DateTime());
+                    $this->scoring->formationTerminee($employe);
+                    $employe->ajouterPoints($module->getPointsSimulation());
                 }
-            } elseif ($aReussi) {
-                // Simulation standalone : points pédagogiques de réussite
-                $employe->ajouterPoints($simulation->getPointsReussite());
             }
 
             $em->flush();
             return $this->redirectToRoute('employe_simulation_resultat', ['id' => $resultat->getId()]);
         }
 
-        $items = $this->preparerItems($simulation->getTypeSimulation(), $simulation->getContenuSimulation(), $employe);
+        $items = $this->preparerItems($module->getSimulationType(), $module->getSimulationContenu(), $employe);
 
         return $this->render('employe/simulations/jouer.html.twig', [
-            'simulation' => $simulation,
-            'employe'    => $employe,
-            'items'      => $items,
-            'type'       => $simulation->getTypeSimulation(),
+            'module' => $module,
+            'employe' => $employe,
+            'items'   => $items,
+            'type'    => $module->getSimulationType(),
         ]);
     }
 
@@ -622,8 +525,8 @@ class EmployeController extends AbstractController
             throw $this->createAccessDeniedException();
         }
         return $this->render('employe/simulations/resultat.html.twig', [
-            'resultat'   => $resultat,
-            'simulation' => $resultat->getSimulation(),
+            'resultat' => $resultat,
+            'module'   => $resultat->getModule(),
         ]);
     }
 
@@ -671,6 +574,7 @@ class EmployeController extends AbstractController
         $apiKey  = $_ENV['VIRUSTOTAL_API_KEY'] ?? '';
 
         if (!$fichier) return $this->json(['erreur' => 'Aucun fichier reçu.'], 400);
+        if (!$this->isAllowedUploadedFile($fichier)) return $this->json(['erreur' => 'Type de fichier non autorisé.'], 400);
         if ($fichier->getSize() > 32 * 1024 * 1024) return $this->json(['erreur' => 'Fichier trop volumineux.'], 400);
         if (!$apiKey) return $this->json(['erreur' => 'Clé API VirusTotal non configurée.'], 500);
 
@@ -690,6 +594,20 @@ class EmployeController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['erreur' => 'Erreur : ' . $e->getMessage()], 500);
         }
+    }
+
+    private function isAllowedUploadedFile(UploadedFile $file): bool
+    {
+        $allowedMimeTypes = [
+            'application/pdf', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'text/plain', 'application/rtf',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'image/png', 'image/jpeg', 'image/gif', 'application/zip',
+        ];
+        return in_array($file->getClientMimeType(), $allowedMimeTypes, true)
+            && strtolower($file->getClientOriginalExtension()) !== '';
     }
 
     // ══════════════════════════════════════════
@@ -758,7 +676,7 @@ class EmployeController extends AbstractController
     private function tousQuizChapitresReussis(array $chapitres, array $tentativesChapitres): bool
     {
         foreach ($chapitres as $chapitre) {
-            if ($chapitre->getQuiz()) {
+            if ($chapitre->hasQuiz()) {
                 $tentative = $tentativesChapitres[$chapitre->getId()] ?? null;
                 if (!$tentative || !$tentative->isAReussi()) return false;
             }
@@ -780,7 +698,6 @@ class EmployeController extends AbstractController
         } else {
             $niveau = 'safe'; $message = 'Aucun problème détecté. Semble sûr.';
         }
-
         return compact('niveau', 'message', 'malveillant', 'suspect', 'propre', 'total', 'nom');
     }
 
