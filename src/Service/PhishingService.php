@@ -38,11 +38,6 @@ class PhishingService
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        // ── URL absolue HTTPS du logo ──────────────────────────────
-        // Le projet est sur AlwaysData (HTTPS public).
-        // Gmail charge les images depuis des URLs HTTPS sans restriction
-        // dès que le destinataire a activé "Afficher les images" une fois.
-        // APP_URL doit valoir "https://satplatform.alwaysdata.net"
         $logoUrl = $this->resoudreLogoUrl($employe, $gabarit);
 
         $contenu = $this->personnaliserContenu(
@@ -78,9 +73,7 @@ class PhishingService
         $resultats = $this->em->getRepository(ResultatPhishing::class)
             ->findPlanifiesPourCampagne($campagne);
 
-        $envoyes = 0;
-        $echoues = 0;
-        $erreurs = [];
+        $envoyes = 0; $echoues = 0; $erreurs = [];
 
         foreach ($resultats as $resultat) {
             try {
@@ -99,47 +92,37 @@ class PhishingService
     }
 
     // ══════════════════════════════════════════════════════════════
-    // RÉSOLUTION DE L'URL DU LOGO
-    //
-    // Retourne une URL HTTPS absolue vers le logo.
-    // AlwaysData sert les fichiers en HTTPS → Gmail les charge.
+    // RÉSOLUTION DU LOGO
     //
     // Priorité :
-    //   1. logoPath sur l'entreprise → construit via APP_URL
-    //   2. logoPath sur le gabarit   → construit via APP_URL
-    //   3. Logo par défaut           → APP_URL/images/logo.jpeg
+    //   1. Logo uploadé sur le gabarit  → spécifique au gabarit
+    //      (BOA, MTN, Orange, SBEE...)
+    //   2. Logo de l'entreprise ciblée  → si le gabarit n'en a pas
+    //   3. Logo par défaut              → public/images/logo.jpeg
     // ══════════════════════════════════════════════════════════════
     private function resoudreLogoUrl(
         \App\Entity\Employe         $employe,
         \App\Entity\GabaritPhishing $gabarit
     ): string {
-        // APP_URL = "https://satplatform.alwaysdata.net" dans .env.local
         $baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://satplatform.alwaysdata.net', '/');
 
-        // 1. Logo de l'entreprise
+        // 1. Logo du gabarit (prioritaire — spécifique au scénario)
+        if ($gabarit->getLogoPath()) {
+            return $baseUrl . '/' . ltrim($gabarit->getLogoPath(), '/');
+        }
+
+        // 2. Logo de l'entreprise ciblée
         $entreprise = $employe->getEntreprise();
         if ($entreprise) {
             if (method_exists($entreprise, 'getLogoPath') && $entreprise->getLogoPath()) {
                 return $baseUrl . '/' . ltrim($entreprise->getLogoPath(), '/');
             }
-            if (method_exists($entreprise, 'getLogoUrl') && $entreprise->getLogoUrl()) {
-                return $entreprise->getLogoUrl();
-            }
         }
 
-        // 2. Logo du gabarit
-        if (method_exists($gabarit, 'getLogoPath') && $gabarit->getLogoPath()) {
-            return $baseUrl . '/' . ltrim($gabarit->getLogoPath(), '/');
-        }
-
-        // 3. Logo par défaut hébergé sur AlwaysData
+        // 3. Logo par défaut
         return $baseUrl . '/images/logo.jpeg';
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // PERSONNALISATION DU HTML
-    // {{LOGO_ENTREPRISE}} → URL HTTPS du logo
-    // ══════════════════════════════════════════════════════════════
     private function personnaliserContenu(
         string $contenu,
         \App\Entity\Employe $employe,
@@ -174,8 +157,7 @@ class PhishingService
                 '{{ "now"|date_modify("+24 hours")|date("d/m/Y à H:i") }}',
             ],
             [
-                $logoUrl, $logoUrl,
-                $logoUrl, $logoUrl,
+                $logoUrl, $logoUrl, $logoUrl, $logoUrl,
                 $urlSignalement, $urlSignalement,
                 $urlFakePage,    $urlFakePage,
                 $urlClic,        $urlClic,

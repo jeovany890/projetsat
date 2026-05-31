@@ -25,20 +25,15 @@ class GabaritPhishing
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $description = null;
 
-    // categorie reste en varchar pour l'instant — migration vers FK Categorie en Phase 2
     #[ORM\Column(type: 'string', length: 100)]
     private ?string $categorie = null;
 
     #[ORM\Column(type: 'string', length: 20)]
     private ?string $difficulte = null;
 
-    /**
-     * Clé du compte Gmail utilisé pour envoyer les emails phishing.
-     * Ex: 'MAILER_PHISHING_BOA', 'MAILER_PHISHING_SBEE', 'MAILER_PHISHING_UNICEF'
-     * Utilisée dans EmailService::envoyerEmailPhishing() pour choisir les credentials.
-     */
     #[ORM\Column(type: 'string', length: 100, nullable: true)]
     private ?string $compteEmailDsn = null;
+
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     private ?string $nomExpediteur = null;
 
@@ -50,6 +45,20 @@ class GabaritPhishing
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $contenuHtml = null;
+
+    /**
+     * Chemin relatif du logo propre à ce gabarit.
+     * Ex : "uploads/logos_gabarits/boa.jpeg"
+     *      "uploads/logos_gabarits/mtn.png"
+     *
+     * Stocké en BD, le fichier est uploadé dans public/.
+     * L'URL publique = APP_URL + '/' + logoPath.
+     *
+     * Si null → PhishingService utilise le logo par défaut
+     * (public/images/logo.jpeg).
+     */
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $logoPath = null;
 
     #[ORM\Column(type: 'json', nullable: true)]
     private ?array $indicesPieges = null;
@@ -108,6 +117,9 @@ class GabaritPhishing
     public function getContenuHtml(): ?string { return $this->contenuHtml; }
     public function setContenuHtml(?string $c): static { $this->contenuHtml = $c; return $this; }
 
+    public function getLogoPath(): ?string { return $this->logoPath; }
+    public function setLogoPath(?string $logoPath): static { $this->logoPath = $logoPath; return $this; }
+
     public function getIndicesPieges(): ?array { return $this->indicesPieges; }
     public function setIndicesPieges(?array $i): static { $this->indicesPieges = $i; return $this; }
 
@@ -123,6 +135,16 @@ class GabaritPhishing
     public function setAdministrateur(?Administrateur $a): static { $this->administrateur = $a; return $this; }
 
     public function getCampagnes(): Collection { return $this->campagnes; }
+
+    /**
+     * Retourne l'URL publique complète du logo de ce gabarit.
+     * Utilisé dans PhishingService pour construire le src de l'image.
+     */
+    public function getLogoUrl(string $baseUrl): ?string
+    {
+        if (!$this->logoPath) return null;
+        return rtrim($baseUrl, '/') . '/' . ltrim($this->logoPath, '/');
+    }
 
     public function __toString(): string { return $this->titre ?? ''; }
 }

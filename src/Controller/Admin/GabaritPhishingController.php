@@ -18,43 +18,18 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[IsGranted('ROLE_ADMIN')]
 class GabaritPhishingController extends AbstractController
 {
+    // Dossier d'upload des logos (relatif à public/)
+    private const LOGO_DIR = 'uploads/logos_gabarits';
+
     #[Route('', name: 'admin_gabarits_liste')]
     public function liste(EntityManagerInterface $em): Response
     {
-        $gabarits = $em->getRepository(GabaritPhishing::class)->findBy([], ['dateCreation' => 'DESC']);
+        $gabarits = $em->getRepository(GabaritPhishing::class)
+            ->findBy([], ['dateCreation' => 'DESC']);
 
         return $this->render('admin/gabarits/liste.html.twig', [
             'gabarits' => $gabarits,
         ]);
-    }
-
-    // ══════════════════════════════════════════
-    // Récupère les catégories distinctes des
-    // modules de formation publiés.
-    // Ces catégories servent à alimenter le
-    // select "Catégorie" du gabarit phishing.
-    // Ainsi gabarit.categorie == module.categorie
-    // → liaison automatique dans ScoringMoteurService
-    // ══════════════════════════════════════════
-    private function getCategoriesModules(EntityManagerInterface $em): array
-    {
-        $modules = $em->getRepository(ModuleFormation::class)->findBy(
-            ['estPublie' => true],
-            ['categorie' => 'ASC']
-        );
-
-        $categories = [];
-        foreach ($modules as $module) {
-            $cat = $module->getCategorie();
-            if ($cat && !in_array($cat, array_column($categories, 'valeur'))) {
-                $categories[] = [
-                    'valeur' => $cat,
-                    'label'  => ucwords(str_replace('_', ' ', $cat)),
-                ];
-            }
-        }
-
-        return $categories;
     }
 
     #[Route('/nouveau', name: 'admin_gabarit_nouveau')]
@@ -104,6 +79,12 @@ class GabaritPhishingController extends AbstractController
                     $gabarit->setIndicesPieges(array_values($indices));
                 }
 
+                // ── Upload logo ────────────────────────────────────
+                $logoPath = $this->traiterUploadLogo($request, $slugger->slug($titre)->lower());
+                if ($logoPath) {
+                    $gabarit->setLogoPath($logoPath);
+                }
+
                 $admin = $this->getUser();
                 if ($admin instanceof Administrateur) {
                     $gabarit->setAdministrateur($admin);
@@ -112,7 +93,7 @@ class GabaritPhishingController extends AbstractController
                 $em->persist($gabarit);
                 $em->flush();
 
-                $this->addFlash('success', ' Gabarit créé avec succès !');
+                $this->addFlash('success', 'Gabarit créé avec succès !');
                 return $this->redirectToRoute('admin_gabarits_liste');
             }
 
@@ -122,7 +103,6 @@ class GabaritPhishingController extends AbstractController
         }
 
         return $this->render('admin/gabarits/nouveau.html.twig', [
-            // Catégories des modules publiés → select dynamique
             'categoriesModules' => $this->getCategoriesModules($em),
         ]);
     }
@@ -148,6 +128,7 @@ class GabaritPhishingController extends AbstractController
             $compteEmailDsn  = $request->request->get('compte_email_dsn');
             $indicesPieges   = $request->request->get('indices_pieges');
             $estActif        = $request->request->get('est_actif') ? true : false;
+            $supprimerLogo   = $request->request->get('supprimer_logo') === '1';
 
             if (empty($titre) || empty($categorie)) {
                 $errors[] = 'Le titre et la catégorie sont obligatoires.';
@@ -174,9 +155,25 @@ class GabaritPhishingController extends AbstractController
                     $gabarit->setIndicesPieges(array_values($indices));
                 }
 
+                // ── Supprimer le logo existant ─────────────────────
+                if ($supprimerLogo && $gabarit->getLogoPath()) {
+                    $this->supprimerFichierLogo($gabarit->getLogoPath());
+                    $gabarit->setLogoPath(null);
+                }
+
+                // ── Nouveau logo uploadé ───────────────────────────
+                $logoPath = $this->traiterUploadLogo($request, $slugger->slug($titre)->lower());
+                if ($logoPath) {
+                    // Supprimer l'ancien fichier avant de remplacer
+                    if ($gabarit->getLogoPath() && $gabarit->getLogoPath() !== $logoPath) {
+                        $this->supprimerFichierLogo($gabarit->getLogoPath());
+                    }
+                    $gabarit->setLogoPath($logoPath);
+                }
+
                 $em->flush();
 
-                $this->addFlash('success', ' Gabarit modifié avec succès !');
+                $this->addFlash('success', 'Gabarit modifié avec succès !');
                 return $this->redirectToRoute('admin_gabarits_liste');
             }
 
@@ -187,7 +184,6 @@ class GabaritPhishingController extends AbstractController
 
         return $this->render('admin/gabarits/modifier.html.twig', [
             'gabarit'           => $gabarit,
-            // Catégories des modules publiés → select dynamique
             'categoriesModules' => $this->getCategoriesModules($em),
         ]);
     }
@@ -197,8 +193,16 @@ class GabaritPhishingController extends AbstractController
     {
         $campagnes = $em->getRepository(CampagnePhishing::class)->findBy(['gabarit' => $gabarit]);
         if (count($campagnes) > 0) {
-            $this->addFlash('danger', 'Impossible de supprimer ce gabarit car il est utilisé par ' . count($campagnes) . ' campagne(s). Supprimez d\'abord les campagnes concernées.');
+            $this->addFlash('danger',
+                'Impossible de supprimer ce gabarit car il est utilisé par ' .
+                count($campagnes) . ' campagne(s).'
+            );
             return $this->redirectToRoute('admin_gabarits_liste');
+        }
+
+        // Supprimer le fichier logo du disque
+        if ($gabarit->getLogoPath()) {
+            $this->supprimerFichierLogo($gabarit->getLogoPath());
         }
 
         $em->remove($gabarit);
@@ -212,7 +216,6 @@ class GabaritPhishingController extends AbstractController
     {
         $gabarit->setEstActif(!$gabarit->isEstActif());
         $em->flush();
-
         $status = $gabarit->isEstActif() ? 'activé' : 'désactivé';
         $this->addFlash('success', "Gabarit {$status} !");
         return $this->redirectToRoute('admin_gabarits_liste');
@@ -224,5 +227,77 @@ class GabaritPhishingController extends AbstractController
         return $this->render('admin/gabarits/apercu.html.twig', [
             'gabarit' => $gabarit,
         ]);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // HELPERS PRIVÉS
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * Traite l'upload du logo depuis le formulaire.
+     * Retourne le chemin relatif (ex: "uploads/logos_gabarits/boa-123456.jpeg")
+     * ou null si aucun fichier uploadé.
+     */
+    private function traiterUploadLogo(Request $request, string $slug): ?string
+    {
+        $fichier = $request->files->get('logo');
+        if (!$fichier) return null;
+
+        // Vérifier le type MIME
+        $mimeType = $fichier->getMimeType();
+        $allowed  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        if (!in_array($mimeType, $allowed)) {
+            $this->addFlash('warning', 'Format de logo non supporté (JPEG, PNG, GIF, WEBP, SVG uniquement).');
+            return null;
+        }
+
+        // Vérifier la taille (max 2Mo)
+        if ($fichier->getSize() > 2 * 1024 * 1024) {
+            $this->addFlash('warning', 'Le logo ne doit pas dépasser 2Mo.');
+            return null;
+        }
+
+        $ext      = $fichier->guessExtension() ?? 'jpg';
+        $nomFinal = $slug . '-' . uniqid() . '.' . $ext;
+
+        $uploadDir = $this->getParameter('kernel.project_dir')
+            . '/public/' . self::LOGO_DIR;
+
+        // Créer le dossier s'il n'existe pas
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $fichier->move($uploadDir, $nomFinal);
+
+        return self::LOGO_DIR . '/' . $nomFinal;
+    }
+
+    /**
+     * Supprime le fichier logo du disque.
+     */
+    private function supprimerFichierLogo(string $logoPath): void
+    {
+        $fullPath = $this->getParameter('kernel.project_dir') . '/public/' . $logoPath;
+        if (file_exists($fullPath)) {
+            @unlink($fullPath);
+        }
+    }
+
+    private function getCategoriesModules(EntityManagerInterface $em): array
+    {
+        $modules    = $em->getRepository(ModuleFormation::class)
+            ->findBy(['estPublie' => true], ['categorie' => 'ASC']);
+        $categories = [];
+        foreach ($modules as $module) {
+            $cat = $module->getCategorie();
+            if ($cat && !in_array($cat, array_column($categories, 'valeur'))) {
+                $categories[] = [
+                    'valeur' => $cat,
+                    'label'  => ucwords(str_replace('_', ' ', $cat)),
+                ];
+            }
+        }
+        return $categories;
     }
 }
