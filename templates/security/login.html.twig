@@ -13,8 +13,6 @@
         :root {
             --font-display: 'Syne', sans-serif;
             --font-body: 'DM Sans', sans-serif;
-
-            /* Couleurs sombres par défaut */
             --bg-primary: #060810;
             --bg-secondary: #0C0F1D;
             --bg-card: rgba(12, 15, 29, 0.6);
@@ -31,8 +29,6 @@
             --input-border: rgba(255, 255, 255, 0.07);
             --input-text: #F9FAFB;
             --focus-ring: rgba(0, 229, 160, 0.15);
-
-            /* Mode clair */
             --light-bg-primary: #f8fafc;
             --light-bg-card: rgba(255, 255, 255, 0.8);
             --light-text-primary: #1e293b;
@@ -44,9 +40,7 @@
             --light-input-text: #0f172a;
         }
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: var(--font-body);
@@ -74,21 +68,14 @@
 
         .main-nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 50;
+            top: 0; left: 0; width: 100%; z-index: 50;
             border-bottom: 1px solid var(--border-color);
             background-color: var(--nav-bg);
             backdrop-filter: blur(24px);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, background-color 0.3s ease;
         }
 
-        .nav-hidden {
-            transform: translateY(-100%);
-            opacity: 0;
-            pointer-events: none;
-        }
+        .nav-hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
 
         html.light .main-nav {
             background-color: var(--light-nav-bg);
@@ -96,187 +83,89 @@
         }
 
         .nav-container {
-            max-width: 1280px;
-            margin-left: auto;
-            margin-right: auto;
-            padding-left: 1.5rem;
-            padding-right: 1.5rem;
-            height: 4.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            max-width: 1280px; margin: 0 auto; padding: 0 1.5rem;
+            height: 4.5rem; display: flex; align-items: center; justify-content: space-between;
         }
 
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-        }
+        .nav-brand { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; }
 
         .nav-logo {
-            width: 1.75rem;
-            height: 1.75rem;
-            border-radius: 0.5rem;
-            background-color: rgba(12, 15, 29, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--accent);
-            transition: all 0.2s;
+            width: 1.75rem; height: 1.75rem; border-radius: 0.5rem;
+            background-color: rgba(12, 15, 29, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex; align-items: center; justify-content: center; color: var(--accent); transition: all 0.2s;
         }
 
-        .nav-brand-text {
-            display: flex;
-            flex-direction: column;
-            line-height: 1;
-        }
+        .nav-brand-text { display: flex; flex-direction: column; line-height: 1; }
 
         .nav-brand-main {
-            font-family: var(--font-display);
-            font-weight: 600;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-            font-size: 1rem;
-            text-transform: uppercase;
+            font-family: var(--font-display); font-weight: 600; color: #ffffff;
+            letter-spacing: -0.02em; font-size: 1rem; text-transform: uppercase;
         }
 
         .nav-brand-sub {
-            font-family: var(--font-display);
-            font-weight: 500;
-            color: #64748b;
-            letter-spacing: -0.02em;
-            font-size: 0.7rem;
-            text-transform: uppercase;
+            font-family: var(--font-display); font-weight: 500; color: #64748b;
+            letter-spacing: -0.02em; font-size: 0.7rem; text-transform: uppercase;
         }
 
-        html.light .nav-brand-main {
-            color: #0f172a;
-        }
+        html.light .nav-brand-main { color: #0f172a; }
 
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
+        .nav-actions { display: flex; align-items: center; gap: 0.75rem; }
 
         .btn-theme-toggle {
-            width: 2.25rem;
-            height: 2.25rem;
-            border-radius: 9999px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: transparent;
-            color: #94a3b8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
+            width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1); background: transparent;
+            color: #94a3b8; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: all 0.2s;
         }
 
-        .btn-theme-toggle:hover {
-            color: var(--accent);
-            border-color: rgba(0, 229, 160, 0.5);
-        }
+        .btn-theme-toggle:hover { color: var(--accent); border-color: rgba(0, 229, 160, 0.5); }
 
-        .separator {
-            width: 1px;
-            height: 1.5rem;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
+        .separator { width: 1px; height: 1.5rem; background-color: rgba(255, 255, 255, 0.1); }
 
         .badge-register {
-            background: rgba(0, 229, 160, 0.1);
-            color: var(--accent);
-            border: 1px solid rgba(0, 229, 160, 0.2);
-            padding: 0.45rem 0.9rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s;
-            display: inline-block;
+            background: rgba(0, 229, 160, 0.1); color: var(--accent);
+            border: 1px solid rgba(0, 229, 160, 0.2); padding: 0.45rem 0.9rem;
+            border-radius: 9999px; font-size: 0.8rem; font-weight: 600;
+            text-decoration: none; transition: all 0.3s; display: inline-block;
         }
 
-        .badge-register:hover {
-            background: var(--accent);
-            color: #060810;
-        }
+        .badge-register:hover { background: var(--accent); color: #060810; }
 
         .page-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-top: 6rem;
-            padding-bottom: 2.5rem;
-            padding-left: 1rem;
-            padding-right: 1rem;
-            position: relative;
-            overflow: hidden;
-            transition: color 0.3s;
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding-top: 6rem; padding-bottom: 2.5rem; padding-left: 1rem; padding-right: 1rem;
+            position: relative; overflow: hidden; transition: color 0.3s;
         }
 
         .glow-emerald {
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 700px;
-            height: 500px;
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 700px; height: 500px;
             background: radial-gradient(circle at center, rgba(0, 229, 160, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-            opacity: 0.4;
+            pointer-events: none; opacity: 0.4;
         }
 
         .glow-red {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 500px;
-            height: 500px;
+            position: absolute; bottom: 0; right: 0; width: 500px; height: 500px;
             background: radial-gradient(circle at center, rgba(255, 59, 92, 0.1) 0%, transparent 70%);
-            pointer-events: none;
-            opacity: 0.3;
+            pointer-events: none; opacity: 0.3;
         }
 
         .content-grid {
-            max-width: 66rem;
-            width: 100%;
-            position: relative;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
+            max-width: 66rem; width: 100%; position: relative; z-index: 10;
+            display: flex; flex-direction: column; gap: 1.25rem;
         }
 
-        @media (min-width: 1024px) {
-            .content-grid {
-                flex-direction: row;
-                gap: 1.5rem;
-            }
-        }
+        @media (min-width: 1024px) { .content-grid { flex-direction: row; gap: 1.5rem; } }
 
         .hero-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 1.75rem;
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border-radius: 1.25rem;
-            border: 1px solid var(--border-color);
+            flex: 1; display: flex; flex-direction: column; justify-content: space-between;
+            padding: 1.75rem; background: var(--bg-card); backdrop-filter: blur(12px);
+            border-radius: 1.25rem; border: 1px solid var(--border-color);
             box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
         }
 
-        @media (min-width: 1024px) {
-            .hero-card {
-                padding: 2.5rem;
-            }
-        }
+        @media (min-width: 1024px) { .hero-card { padding: 2.5rem; } }
 
         html.light .hero-card {
             background-color: rgba(255, 255, 255, 0.8);
@@ -285,374 +174,162 @@
         }
 
         .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.45rem 0.9rem;
-            border-radius: 9999px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: #060810;
-            margin-bottom: 1.75rem;
-            transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.45rem 0.9rem; border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.1); background: #060810;
+            margin-bottom: 1.75rem; transition: all 0.2s;
         }
 
-        .hero-badge-dot {
-            width: 0.45rem;
-            height: 0.45rem;
-            border-radius: 50%;
-            background-color: var(--accent);
-        }
+        .hero-badge-dot { width: 0.45rem; height: 0.45rem; border-radius: 50%; background-color: var(--accent); }
 
         .hero-badge-text {
-            font-size: 0.6rem;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
+            font-size: 0.6rem; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 0.1em;
         }
 
         .hero-title {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 2rem;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-            line-height: 1.2;
-            margin: 0 0 1.25rem 0;
+            font-family: var(--font-display); font-weight: 600; font-size: 2rem;
+            color: #ffffff; letter-spacing: -0.02em; line-height: 1.2; margin: 0 0 1.25rem 0;
         }
 
-        .hero-title .accent {
-            color: var(--accent);
-        }
+        .hero-title .accent { color: var(--accent); }
 
-        html.light .hero-title {
-            color: #0f172a;
-        }
+        html.light .hero-title { color: #0f172a; }
 
-        .hero-description {
-            color: #94a3b8;
-            font-size: 1rem;
-            max-width: 28rem;
-            margin: 0;
-        }
+        .hero-description { color: #94a3b8; font-size: 1rem; max-width: 28rem; margin: 0; }
 
-        html.light .hero-description {
-            color: #64748b;
-        }
+        html.light .hero-description { color: #64748b; }
 
         .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.75rem;
-            margin-top: 2.5rem;
-            padding-top: 1.75rem;
-            border-top: 1px solid var(--border-color);
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+            margin-top: 2.5rem; padding-top: 1.75rem; border-top: 1px solid var(--border-color);
         }
 
-        html.light .hero-stats {
-            border-top-color: rgba(0,0,0,0.05);
-        }
+        html.light .hero-stats { border-top-color: rgba(0,0,0,0.05); }
 
         .stat-value {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 1.35rem;
-            color: #ffffff;
+            font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; color: #ffffff;
         }
 
-        html.light .stat-value {
-            color: #0f172a;
-        }
+        html.light .stat-value { color: #0f172a; }
 
         .stat-label {
-            font-size: 0.6rem;
-            color: #64748b;
-            text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 0.05em;
+            font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;
         }
 
         .form-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 1.75rem;
-            background: #0C0F1D;
-            border-radius: 1.25rem;
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            padding: 1.75rem; background: #0C0F1D; border-radius: 1.25rem;
             border: 1px solid var(--border-color);
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
 
-        @media (min-width: 1024px) {
-            .form-card {
-                padding: 2.5rem;
-            }
-        }
+        @media (min-width: 1024px) { .form-card { padding: 2.5rem; } }
 
         html.light .form-card {
-            background-color: #ffffff;
-            border-color: rgba(0,0,0,0.08);
+            background-color: #ffffff; border-color: rgba(0,0,0,0.08);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.06);
         }
 
-        .form-inner {
-            width: 100%;
-            max-width: 22rem;
-            margin: 0 auto;
-        }
+        .form-inner { width: 100%; max-width: 22rem; margin: 0 auto; }
 
-        .form-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+        .form-header { text-align: center; margin-bottom: 2rem; }
 
         .form-title {
-            font-family: var(--font-display);
-            font-weight: 600;
-            font-size: 1.7rem;
-            color: #ffffff;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.4rem;
+            font-family: var(--font-display); font-weight: 600; font-size: 1.7rem;
+            color: #ffffff; letter-spacing: -0.02em; margin-bottom: 0.4rem;
         }
 
-        html.light .form-title {
-            color: #0f172a;
-        }
+        html.light .form-title { color: #0f172a; }
 
-        .form-subtitle {
-            color: #94a3b8;
-            font-size: 0.8rem;
-        }
+        .form-subtitle { color: #94a3b8; font-size: 0.8rem; }
 
-        html.light .form-subtitle {
-            color: #64748b;
-        }
+        html.light .form-subtitle { color: #64748b; }
 
-        .form-group {
-            margin-bottom: 1rem;
-        }
+        .form-group { margin-bottom: 1rem; }
 
         .form-label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.4rem;
+            display: block; font-size: 0.7rem; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;
         }
 
-        html.light .form-label {
-            color: #64748b;
-        }
+        html.light .form-label { color: #64748b; }
 
         .form-input {
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
-            color: var(--input-text);
-            border-radius: 0.9rem;
-            padding: 0.65rem 0.9rem;
-            width: 100%;
-            font-size: 0.9rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            outline: none;
+            background: var(--input-bg); border: 1px solid var(--input-border);
+            color: var(--input-text); border-radius: 0.9rem; padding: 0.65rem 0.9rem;
+            width: 100%; font-size: 0.9rem; transition: border-color 0.2s, box-shadow 0.2s; outline: none;
         }
 
-        .form-input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px var(--focus-ring);
-        }
+        .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--focus-ring); }
 
         html.light .form-input {
-            background: var(--light-input-bg);
-            border-color: var(--light-input-border);
-            color: var(--light-input-text);
-        }
-
-        /* NOUVEAU STYLE : Input avec icône intégrée */
-        .input-with-icon {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .input-with-icon .form-input {
-            padding-right: 2.75rem; /* Espace pour l'icône */
-        }
-
-        .input-with-icon .input-icon {
-            position: absolute;
-            right: 0.9rem;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            color: #64748b;
-            cursor: pointer;
-            padding: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.5rem;
-            transition: all 0.2s ease;
-            z-index: 2;
-        }
-
-        .input-with-icon .input-icon:hover {
-            color: var(--accent);
-            background: rgba(0, 229, 160, 0.1);
-        }
-
-        .input-with-icon .input-icon:active {
-            transform: translateY(-50%) scale(0.9);
+            background: var(--light-input-bg); border-color: var(--light-input-border); color: var(--light-input-text);
         }
 
         .form-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.4rem;
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;
         }
 
-        .forgot-link {
-            font-size: 0.7rem;
-            color: var(--accent);
-            text-decoration: none;
-        }
+        .forgot-link { font-size: 0.7rem; color: var(--accent); text-decoration: none; }
 
-        .forgot-link:hover {
-            text-decoration: underline;
-        }
+        .forgot-link:hover { text-decoration: underline; }
 
         .remember-me {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 0.4rem;
+            display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; color: #94a3b8; margin-top: 0.4rem;
         }
 
         .remember-me input {
-            width: 0.9rem;
-            height: 0.9rem;
-            border-radius: 0.25rem;
-            border: 1px solid rgba(255,255,255,0.2);
-            background: #060810;
-            accent-color: var(--accent);
+            width: 0.9rem; height: 0.9rem; border-radius: 0.25rem;
+            border: 1px solid rgba(255,255,255,0.2); background: #060810; accent-color: var(--accent);
         }
 
         .btn-primary {
-            background: var(--accent);
-            color: #060810;
-            border-radius: 9999px;
-            padding: 0.8rem 1.5rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            transition: all 0.2s;
-            width: 100%;
-            border: none;
-            cursor: pointer;
-            font-size: 0.9rem;
-            box-shadow: 0 8px 20px rgba(0, 229, 160, 0.2);
-            margin-top: 0.75rem;
+            background: var(--accent); color: #060810; border-radius: 9999px;
+            padding: 0.8rem 1.5rem; font-weight: 600; display: inline-flex;
+            align-items: center; justify-content: center; gap: 0.5rem;
+            transition: all 0.2s; width: 100%; border: none; cursor: pointer;
+            font-size: 0.9rem; box-shadow: 0 8px 20px rgba(0, 229, 160, 0.2); margin-top: 0.75rem;
         }
 
-        .btn-primary:hover {
-            background: white;
-            transform: scale(1.02);
-        }
+        .btn-primary:hover { background: white; transform: scale(1.02); }
 
         .divider {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin: 1.25rem 0;
+            display: flex; align-items: center; gap: 0.75rem; margin: 1.25rem 0;
         }
 
-        .divider-line {
-            flex: 1;
-            height: 1px;
-            background-color: rgba(255, 255, 255, 0.05);
-        }
+        .divider-line { flex: 1; height: 1px; background-color: rgba(255, 255, 255, 0.05); }
 
-        html.light .divider-line {
-            background-color: rgba(0,0,0,0.05);
-        }
+        html.light .divider-line { background-color: rgba(0,0,0,0.05); }
 
-        .divider-text {
-            font-size: 0.6rem;
-            color: #64748b;
-            text-transform: uppercase;
-            font-weight: 700;
-        }
+        .divider-text { font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 700; }
 
         .register-link {
-            display: block;
-            text-align: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #94a3b8;
-            text-decoration: none;
-            transition: color 0.2s;
+            display: block; text-align: center; font-size: 0.8rem; font-weight: 600;
+            color: #94a3b8; text-decoration: none; transition: color 0.2s;
         }
 
-        .register-link:hover {
-            color: var(--accent);
-        }
+        .register-link:hover { color: var(--accent); }
 
         .alert {
-            background: rgba(0, 229, 160, 0.1);
-            border: 1px solid rgba(0, 229, 160, 0.2);
-            border-radius: 0.9rem;
-            padding: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #e2e8f0;
-            margin-bottom: 0.75rem;
-            font-size: 0.85rem;
+            background: rgba(0, 229, 160, 0.1); border: 1px solid rgba(0, 229, 160, 0.2);
+            border-radius: 0.9rem; padding: 0.75rem; display: flex; align-items: center;
+            gap: 0.5rem; color: #e2e8f0; margin-bottom: 0.75rem; font-size: 0.85rem;
         }
 
-        .alert-error {
-            background: rgba(255, 59, 92, 0.1);
-            border-color: rgba(255, 59, 92, 0.2);
-        }
-
-        .alert i, .alert iconify-icon {
-            font-size: 1.1rem;
-        }
-
-        .alert-success i { color: var(--accent); }
-        .alert-warning i { color: #F59E0B; }
+        .alert-error { background: rgba(255, 59, 92, 0.1); border-color: rgba(255, 59, 92, 0.2); }
+        .alert i, .alert iconify-icon { font-size: 1.1rem; }
         .alert-error i { color: #FF3B5C; }
 
-        html.light .alert {
-            color: inherit;
-        }
+        html.light .alert { color: inherit; }
+        html.light .alert-error { color: #FF3B5C; }
 
-        html.light .alert-error {
-            color: #FF3B5C;
-        }
-
-        .anim-fade-up {
-            animation: fadeUp 0.7s cubic-bezier(0.22, 0.68, 0, 1.2) both;
-        }
+        .anim-fade-up { animation: fadeUp 0.7s cubic-bezier(0.22, 0.68, 0, 1.2) both; }
 
         @keyframes fadeUp {
-            from {
-                opacity: 0;
-                transform: translateY(24px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 {% endblock %}
@@ -744,10 +421,10 @@
                 </div>
                 {% endfor %}
                 {% if app.request.get('error') == 'suspendue' %}
-    <div class="alert alert-error">
-        Votre entreprise a été suspendue. Contactez votre administrateur.
-    </div>
-{% endif %}
+                <div class="alert alert-error">
+                    Votre entreprise a été suspendue. Contactez votre administrateur.
+                </div>
+                {% endif %}
                 {% if error %}
                     <div class="alert alert-error">
                         <iconify-icon icon="solar:close-circle-linear" width="20" style="color:#FF3B5C;"></iconify-icon>
@@ -771,13 +448,7 @@
                             <label for="password" class="form-label" style="margin-bottom:0;">Mot de passe</label>
                             <a href="{{ path('app_reset_password_request') }}" class="forgot-link">Oublié ?</a>
                         </div>
-                        <!-- Input avec l'icône œil intégrée DANS le champ -->
-                        <div class="input-with-icon">
-                            <input type="password" id="password" name="_password" required placeholder="••••••••" class="form-input">
-                            <button type="button" onclick="togglePasswordVisibility()" class="input-icon" aria-label="Afficher le mot de passe">
-                                <iconify-icon id="password-eye-icon" icon="solar:eye-linear" width="18"></iconify-icon>
-                            </button>
-                        </div>
+                        <input type="password" id="password" name="_password" required placeholder="••••••••" class="form-input">
                     </div>
 
                     <div class="remember-me">
@@ -842,21 +513,5 @@
         applyTheme(newTheme);
         localStorage.setItem('sat-theme', newTheme);
     });
-
-    // Fonction pour afficher/masquer le mot de passe
-    function togglePasswordVisibility() {
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('password-eye-icon');
-        
-        if (passwordInput.type === 'password') {
-            // Afficher le mot de passe
-            passwordInput.type = 'text';
-            eyeIcon.setAttribute('icon', 'solar:eye-closed-linear');
-        } else {
-            // Masquer le mot de passe
-            passwordInput.type = 'password';
-            eyeIcon.setAttribute('icon', 'solar:eye-linear');
-        }
-    }
 </script>
 {% endblock %}

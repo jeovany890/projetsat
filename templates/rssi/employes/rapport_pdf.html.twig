@@ -2,639 +2,815 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Rapport de Sécurité — {{ employe.prenom }} {{ employe.nom }}</title>
+<title>Rapport Individuel de Posture Cybersécurité — {{ employe.prenom }} {{ employe.nom }}</title>
 <style>
-/* ========== BASE ========== */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ═══════════════════════════════════════════════════════════════════
+   SAT PLATFORM — RAPPORT INDIVIDUEL DE POSTURE CYBERSÉCURITÉ
+   Conforme : ISO/IEC 27001:2022 · NIST CSF 2.0 · ANSSI · RGPD
+   Moteur PDF : Dompdf — pas de flexbox/grid, tables uniquement
+   Police     : DejaVu Sans
+   Palette    : Bleu marine #1A3560 · Accent #2563EB · Gris #4B5563
+═══════════════════════════════════════════════════════════════════ */
+
+* { margin:0; padding:0; box-sizing:border-box; }
 body {
-  font-family: 'DejaVu Sans', Arial, sans-serif;
-  font-size: 10px;
-  color: #1e293b;
-  background: white;
-  line-height: 1.45;
+    font-family: 'DejaVu Sans', Arial, sans-serif;
+    font-size: 9.5px;
+    color: #1F2937;
+    background: #FFFFFF;
+    line-height: 1.55;
 }
 
-/* ========== GESTION DES SAUTS DE PAGE ========== */
-.page {
-  page-break-after: always;    /* chaque élément .page saute après lui */
-}
-.page:last-child {
-  page-break-after: auto;      /* pas de saut après la dernière page */
-}
-.pbi {
-  page-break-inside: avoid;    /* évite de couper un bloc important */
-}
-@page {
-  margin: 1.8cm;
-}
+/* ═══ GESTION DES PAGES ═══════════════════════════════════════════ */
+@page { margin: 1.6cm 1.8cm; }
+.pg   { page-break-after: always; }
+.pg:last-child { page-break-after: auto; }
+.pbi  { page-break-inside: avoid; }
 
-/* ========== STYLES COMMUNS ========== */
-h2 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0f172a;
-  margin-bottom: 8px;
-  letter-spacing: -0.2px;
+/* ═══ COUVERTURE ═════════════════════════════════════════════════ */
+.cov {
+    background: #0F1F3D;
+    width: 100%;
+    page-break-after: always;
+    position: relative;
 }
-.separator {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 12px 0;
+.cov-accent-bar {
+    display: table;
+    width: 100%;
 }
-.text-muted {
-  color: #64748b;
-  font-style: italic;
+.cov-accent-bar-inner {
+    display: table-cell;
+    height: 5px;
+    background: #2563EB;
 }
+.cov-body { padding: 2.4cm 2.2cm 2cm 2.2cm; }
 
-/* ========== PAGE DE COUVERTURE ========== */
-.cover {
-  background: #0f172a;
-  color: white;
-  padding: 2.5cm 2cm;
-  position: relative;
-  min-height: 27cm;
-}
-.cover-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 6px;
-  height: 100%;
-  background: #1e3a8a;
-}
-.cover-logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 2cm;
-}
-.cover-logo-icon {
-  width: 40px;
-  height: 40px;
-  background: #1e3a8a;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-.cover-logo-text {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-.cover-logo-sub {
-  font-size: 7px;
-  color: #94a3b8;
-  letter-spacing: 1px;
-  margin-top: 2px;
-}
-.cover-title {
-  font-size: 28px;
-  font-weight: 800;
-  line-height: 1.2;
-  margin: 1.2cm 0 0.3cm 0;
-}
-.cover-subtitle {
-  font-size: 12px;
-  color: #94a3b8;
-  margin-bottom: 1.2cm;
-}
-.cover-employee {
-  font-size: 22px;
-  font-weight: 800;
-  margin-bottom: 0.2cm;
-}
-.cover-dept {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-bottom: 1cm;
-}
-.cover-meta {
-  font-size: 8px;
-  color: #5b6e8c;
-  border-top: 1px solid #334155;
-  padding-top: 10px;
-  margin-top: 1.5cm;
-  display: flex;
-  justify-content: space-between;
-}
-.cover-confidential {
-  position: absolute;
-  bottom: 1.2cm;
-  right: 2cm;
-  font-size: 7px;
-  background: rgba(255,255,255,0.05);
-  padding: 3px 8px;
-  border-radius: 4px;
-  letter-spacing: 1px;
-}
+/* En-tête couverture */
+.cov-header { display: table; width: 100%; margin-bottom: 1.8cm; }
+.cov-header-l { display: table-cell; vertical-align: middle; }
+.cov-header-r { display: table-cell; vertical-align: middle; text-align: right; }
+.cov-brand    { font-size: 12px; font-weight: bold; color: #FFFFFF; letter-spacing: 2px; text-transform: uppercase; }
+.cov-brand-sub{ font-size: 7px; color: rgba(255,255,255,0.35); letter-spacing: 3px; text-transform: uppercase; margin-top: 3px; }
+.cov-stamp    { border: 1px solid rgba(255,255,255,0.18); padding: 4px 10px; display: inline-block; }
+.cov-stamp-txt{ font-size: 7px; color: rgba(255,255,255,0.4); letter-spacing: 1.5px; text-transform: uppercase; }
 
-/* ========== EN-TÊTE ET PIED DE PAGE (pages intérieures) ========== */
-.header-page {
-  border-bottom: 1px solid #e2e8f0;
-  padding-bottom: 6px;
-  margin-bottom: 14px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 7px;
-  color: #64748b;
-}
-.header-page strong {
-  color: #0f172a;
-}
-.footer-page {
-  border-top: 1px solid #e2e8f0;
-  padding-top: 6px;
-  margin-top: 18px;
-  font-size: 7px;
-  color: #94a3b8;
-  display: flex;
-  justify-content: space-between;
-}
+/* Titre central */
+.cov-divider  { height: 1px; background: rgba(255,255,255,0.08); margin: 1cm 0; }
+.cov-type     { font-size: 8.5px; color: #60A5FA; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 10px; }
+.cov-title    { font-size: 26px; font-weight: bold; color: #FFFFFF; line-height: 1.2; margin-bottom: 6px; }
+.cov-subtitle { font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 1.4cm; }
 
-/* ========== BLOCS DE CONTENU ========== */
-.card {
-  background: #ffffff;
-  border: 1px solid #eef2f6;
-  border-radius: 8px;
-  padding: 14px 18px;
-  margin-bottom: 18px;
-}
-.section-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #1e3a8a;
-  border-left: 3px solid #1e3a8a;
-  padding-left: 10px;
-  margin-bottom: 14px;
-}
+/* Bloc sujet */
+.cov-subject  { display: table; width: 100%; margin-bottom: 1.2cm; }
+.cov-subject-inner { display: table-cell; background: rgba(255,255,255,0.05); border-left: 3px solid #2563EB; padding: 14px 18px; vertical-align: top; }
+.cov-subject-lbl  { font-size: 7px; color: rgba(255,255,255,0.35); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+.cov-subject-name { font-size: 18px; font-weight: bold; color: #FFFFFF; margin-bottom: 3px; }
+.cov-subject-dept { font-size: 9px; color: rgba(255,255,255,0.45); }
 
-/* Grille informations employé */
-.info-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 12px;
-  margin-top: 8px;
-}
-.info-label {
-  font-size: 7.5px;
-  font-weight: 600;
-  color: #5b6e8c;
-  text-transform: uppercase;
-}
-.info-value {
-  font-size: 9px;
-  font-weight: 500;
-  color: #1e293b;
-}
-.badge {
-  display: inline-block;
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 7px;
-  font-weight: 700;
-}
-.badge-active { background: #e6f7e6; color: #166534; }
-.badge-inactive { background: #fee2e2; color: #991b1b; }
+/* Métadonnées pied de couverture */
+.cov-meta { display: table; width: 100%; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 1cm; }
+.cov-meta-cell { display: table-cell; font-size: 7.5px; color: rgba(255,255,255,0.3); vertical-align: top; width: 33%; }
+.cov-meta-lbl  { font-size: 6.5px; color: rgba(255,255,255,0.2); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.cov-meta-val  { color: rgba(255,255,255,0.5); font-weight: bold; }
 
-/* Score avec jauge */
-.score-container {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
+/* ═══ EN-TÊTE / PIED DE PAGE INTÉRIEURS ═════════════════════════ */
+.ph {
+    display: table;
+    width: 100%;
+    border-bottom: 1px solid #E5E7EB;
+    padding-bottom: 7px;
+    margin-bottom: 16px;
 }
+.ph-l { display: table-cell; font-size: 7.5px; color: #6B7280; vertical-align: middle; }
+.ph-r { display: table-cell; font-size: 7.5px; color: #6B7280; vertical-align: middle; text-align: right; }
+.ph-l strong { color: #1A3560; }
+.ph-brand { font-size: 7px; font-weight: bold; color: #2563EB; text-transform: uppercase; letter-spacing: 1.5px; }
+
+.pf {
+    display: table;
+    width: 100%;
+    border-top: 1px solid #E5E7EB;
+    padding-top: 7px;
+    margin-top: 16px;
+}
+.pf-l { display: table-cell; font-size: 7px; color: #9CA3AF; vertical-align: middle; }
+.pf-r { display: table-cell; font-size: 7px; color: #9CA3AF; vertical-align: middle; text-align: right; }
+
+/* ═══ TYPOGRAPHIE SECTIONS ══════════════════════════════════════ */
+.sec-head {
+    display: table;
+    width: 100%;
+    margin-bottom: 12px;
+    border-bottom: 1.5px solid #EFF2F8;
+    padding-bottom: 7px;
+}
+.sec-head-l { display: table-cell; vertical-align: middle; }
+.sec-head-r { display: table-cell; vertical-align: middle; text-align: right; }
+.sec-num    { font-size: 8px; font-weight: bold; color: #2563EB; letter-spacing: 2px; text-transform: uppercase; }
+.sec-title  { font-size: 12px; font-weight: bold; color: #1A3560; margin-top: 1px; }
+
+/* ═══ BOÎTE GÉNÉRIQUE ══════════════════════════════════════════ */
+.box {
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 13px 15px;
+    margin-bottom: 14px;
+    background: #FAFBFC;
+}
+.box-white { background: #FFFFFF; }
+
+/* ═══ GRILLE 2 COLONNES (table) ════════════════════════════════ */
+.row2 { display: table; width: 100%; border-spacing: 10px; margin-bottom: 14px; }
+.col  { display: table-cell; vertical-align: top; }
+.col-60 { width: 60%; }
+.col-40 { width: 40%; }
+.col-50 { width: 50%; }
+
+/* ═══ SCORE DE VIGILANCE ════════════════════════════════════════ */
+.score-wrap { display: table; width: 100%; }
+.score-circle-cell { display: table-cell; vertical-align: middle; width: 90px; text-align: center; }
 .score-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 6px solid;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 7px solid #E5E7EB;
+    display: inline-block;
+    text-align: center;
+    padding-top: 14px;
 }
-.score-circle.low    { border-color: #16a34a; color: #16a34a; background: #f0fdf4; }
-.score-circle.medium { border-color: #d97706; color: #d97706; background: #fffbeb; }
-.score-circle.high   { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
-.score-number { font-size: 22px; font-weight: 900; line-height: 1; }
-.score-unit   { font-size: 8px; font-weight: 500; }
-.score-detail { flex: 1; }
-.score-bar-label {
-  font-size: 7.5px;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 3px;
-}
-.score-bar-bg {
-  height: 6px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-.score-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-}
-.risk-pill {
-  display: inline-block;
-  margin-top: 8px;
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 8px;
-  font-weight: 700;
-}
-.risk-pill.low    { background: #dcfce7; color: #166534; }
-.risk-pill.medium { background: #fef3c7; color: #92400e; }
-.risk-pill.high   { background: #fee2e2; color: #991b1b; }
+.score-circle.r-low    { border-color: #16A34A; }
+.score-circle.r-med    { border-color: #D97706; }
+.score-circle.r-high   { border-color: #DC2626; }
+.score-num-low    { font-size: 24px; font-weight: bold; color: #16A34A; line-height: 1; }
+.score-num-med    { font-size: 24px; font-weight: bold; color: #D97706; line-height: 1; }
+.score-num-high   { font-size: 24px; font-weight: bold; color: #DC2626; line-height: 1; }
+.score-denom      { font-size: 7.5px; color: #6B7280; }
 
-/* Cartes d'indicateurs */
-.stats-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 12px;
-}
-.stat-box {
-  flex: 1;
-  text-align: center;
-  background: #f8fafc;
-  border: 1px solid #eef2f6;
-  border-radius: 8px;
-  padding: 10px 6px;
-}
-.stat-number {
-  font-size: 22px;
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1;
-}
-.stat-label {
-  font-size: 7px;
-  color: #64748b;
-  margin-top: 4px;
-  text-transform: uppercase;
-}
+.score-detail-cell { display: table-cell; vertical-align: middle; padding-left: 14px; }
+.score-bar-lbl   { display: table; width: 100%; font-size: 7.5px; margin-bottom: 3px; }
+.score-bar-lbl-l { display: table-cell; color: #374151; font-weight: bold; }
+.score-bar-lbl-r { display: table-cell; text-align: right; color: #6B7280; }
+.bar-bg  { height: 7px; background: #E5E7EB; border-radius: 4px; margin-bottom: 8px; }
+.bar-low { height: 7px; background: #16A34A; border-radius: 4px; }
+.bar-med { height: 7px; background: #D97706; border-radius: 4px; }
+.bar-high{ height: 7px; background: #DC2626; border-radius: 4px; }
 
-/* Listes d'analyse / recommandations */
-.analysis-list, .reco-list {
-  border-left: 3px solid #1e3a8a;
-  background: #ffffff;
-  padding: 8px 0 8px 12px;
+.risk-badge {
+    display: inline-block;
+    padding: 3px 12px;
+    border-radius: 20px;
+    font-size: 8px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin-top: 6px;
 }
-.analysis-item, .reco-item {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 9px;
-  line-height: 1.4;
-}
-.analysis-dot {
-  width: 5px;
-  height: 5px;
-  background: #1e3a8a;
-  border-radius: 50%;
-  margin-top: 5px;
-  flex-shrink: 0;
-}
-.reco-num {
-  width: 18px;
-  height: 18px;
-  background: #1e3a8a;
-  color: white;
-  border-radius: 18px;
-  font-size: 8px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  margin-top: 1px;
-}
+.rb-low  { background: #DCFCE7; color: #14532D; }
+.rb-med  { background: #FEF3C7; color: #78350F; }
+.rb-high { background: #FEE2E2; color: #7F1D1D; }
 
-/* Tableau des formations */
-.formation-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 8.5px;
+/* ═══ KPI CARDS (table 4 colonnes) ════════════════════════════ */
+.kpi-row { display: table; width: 100%; border-spacing: 8px; margin-bottom: 14px; }
+.kpi-cell{ display: table-cell; vertical-align: top; text-align: center; }
+.kpi-box {
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 10px 8px;
+    background: #FFFFFF;
+    border-top: 3px solid #2563EB;
 }
-.formation-table th {
-  text-align: left;
-  padding: 8px 4px;
-  background: #f1f5f9;
-  font-weight: 700;
-  color: #1e293b;
-  border-bottom: 1px solid #e2e8f0;
-}
-.formation-table td {
-  padding: 8px 4px;
-  border-bottom: 1px solid #f1f5f9;
-  vertical-align: middle;
-}
-.progress {
-  width: 80px;
-  height: 5px;
-  background: #e2e8f0;
-  border-radius: 3px;
-  overflow: hidden;
-}
-.progress-fill {
-  height: 100%;
-  background: #1e3a8a;
-}
+.kpi-val  { font-size: 22px; font-weight: bold; color: #1A3560; line-height: 1; }
+.kpi-lbl  { font-size: 7px; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.kpi-sub  { font-size: 8px; font-weight: bold; margin-top: 2px; }
+.kpi-red  { color: #DC2626; }
+.kpi-grn  { color: #16A34A; }
+.kpi-amb  { color: #D97706; }
 
-/* Bloc risque */
-.risk-block {
-  background: #f9fafb;
-  border: 1px solid #eef2f6;
-  border-radius: 8px;
-  padding: 14px 18px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* ═══ TABLEAUX ══════════════════════════════════════════════════ */
+.tbl { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+.tbl th {
+    background: #1A3560;
+    color: #FFFFFF;
+    padding: 7px 8px;
+    text-align: left;
+    font-size: 7.5px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
 }
-.risk-icon {
-  font-size: 32px;
-  flex-shrink: 0;
-}
-.risk-title {
-  font-size: 12px;
-  font-weight: 800;
-}
-.risk-desc {
-  font-size: 8.5px;
-  color: #475569;
-  margin-top: 2px;
-}
+.tbl th.right { text-align: right; }
+.tbl td { padding: 7px 8px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+.tbl tr:nth-child(even) td { background: #F9FAFB; }
+.tbl td.right { text-align: right; }
+.tbl td.center{ text-align: center; }
 
-/* Conclusion */
+/* ═══ BADGES ════════════════════════════════════════════════════ */
+.b { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 7px; font-weight: bold; }
+.b-ok   { background: #DCFCE7; color: #14532D; }
+.b-warn { background: #FEF3C7; color: #78350F; }
+.b-err  { background: #FEE2E2; color: #7F1D1D; }
+.b-blue { background: #DBEAFE; color: #1E40AF; }
+.b-grey { background: #F3F4F6; color: #374151; }
+
+/* ═══ BARRES DE PROGRESSION ════════════════════════════════════ */
+.prog-wrap { display: table; width: 100%; }
+.prog-bar-cell { display: table-cell; vertical-align: middle; width: 70px; }
+.prog-pct-cell { display: table-cell; vertical-align: middle; padding-left: 5px; font-size: 7.5px; color: #374151; width: 32px; }
+.prog-bg   { height: 5px; background: #E5E7EB; border-radius: 3px; }
+.prog-fill { height: 5px; background: #2563EB; border-radius: 3px; }
+.prog-fill-ok { background: #16A34A; }
+
+/* ═══ ANALYSE & RECOMMANDATIONS ════════════════════════════════ */
+.finding {
+    display: table;
+    width: 100%;
+    margin-bottom: 10px;
+    border-left: 3px solid #E5E7EB;
+    padding-left: 10px;
+}
+.finding-icon { display: table-cell; width: 16px; vertical-align: top; padding-top: 1px; }
+.finding-body { display: table-cell; vertical-align: top; font-size: 8.5px; line-height: 1.5; color: #374151; }
+.finding-title{ font-weight: bold; color: #1A3560; }
+.finding.sev-high  { border-color: #DC2626; }
+.finding.sev-med   { border-color: #D97706; }
+.finding.sev-low   { border-color: #16A34A; }
+.finding.sev-info  { border-color: #2563EB; }
+
+.reco {
+    display: table;
+    width: 100%;
+    margin-bottom: 9px;
+}
+.reco-num-cell { display: table-cell; width: 22px; vertical-align: top; }
+.reco-num-box  {
+    width: 18px; height: 18px;
+    background: #1A3560;
+    color: #FFFFFF;
+    border-radius: 50%;
+    font-size: 7.5px;
+    font-weight: bold;
+    text-align: center;
+    padding-top: 3px;
+    display: inline-block;
+}
+.reco-body     { display: table-cell; vertical-align: top; font-size: 8.5px; line-height: 1.5; }
+.reco-prio     { font-size: 6.5px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
+.reco-prio-h   { color: #DC2626; }
+.reco-prio-m   { color: #D97706; }
+.reco-prio-l   { color: #16A34A; }
+.reco-text     { color: #374151; margin-top: 1px; }
+
+/* ═══ CADRE LÉGAL / ÉTHIQUE ════════════════════════════════════ */
+.legal {
+    background: #F8FAFF;
+    border: 1px solid #DBEAFE;
+    border-left: 4px solid #2563EB;
+    border-radius: 0 6px 6px 0;
+    padding: 12px 15px;
+    margin-bottom: 14px;
+}
+.legal-title { font-size: 8.5px; font-weight: bold; color: #1A3560; margin-bottom: 6px; }
+.legal-body  { font-size: 8px; color: #4B5563; line-height: 1.6; }
+.legal-refs  { margin-top: 6px; font-size: 7.5px; color: #6B7280; }
+.legal-refs strong { color: #374151; }
+
+/* ═══ CONCLUSION ════════════════════════════════════════════════ */
 .conclusion {
-  background: #fcfcfd;
-  border-left: 3px solid #1e3a8a;
-  padding: 12px 16px;
-  font-size: 9px;
-  line-height: 1.6;
+    background: #F8FAFF;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
 }
-.conclusion-footer {
-  margin-top: 10px;
-  font-size: 7px;
-  color: #7c8ba0;
-  display: flex;
-  justify-content: space-between;
-}
+.conclusion-body  { font-size: 9px; color: #374151; line-height: 1.65; margin-bottom: 10px; }
+.conclusion-sign  { display: table; width: 100%; border-top: 1px solid #E5E7EB; padding-top: 10px; }
+.sign-l { display: table-cell; font-size: 8px; color: #6B7280; vertical-align: bottom; }
+.sign-r { display: table-cell; font-size: 8px; color: #6B7280; vertical-align: bottom; text-align: right; }
+.sign-line { border-bottom: 1px solid #D1D5DB; width: 140px; height: 22px; display: inline-block; margin-top: 4px; }
 
-/* Mention éthique */
-.ethics {
-  background: #f9fafb;
-  border: 1px solid #eef2f6;
-  border-radius: 6px;
-  padding: 10px 14px;
-  display: flex;
-  gap: 10px;
-}
-.ethics-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.ethics-text {
-  font-size: 7.5px;
-  color: #475569;
-}
-.ethics-title {
-  font-size: 8px;
-  font-weight: 700;
-  margin-bottom: 2px;
-}
+/* ═══ UTILITAIRES ═══════════════════════════════════════════════ */
+.mt4  { margin-top: 4px; }
+.mt8  { margin-top: 8px; }
+.mt12 { margin-top: 12px; }
+.mb4  { margin-bottom: 4px; }
+.mb8  { margin-bottom: 8px; }
+.txt-right { text-align: right; }
+.txt-center{ text-align: center; }
+.txt-muted { color: #9CA3AF; }
+.txt-bold  { font-weight: bold; }
+.txt-blue  { color: #2563EB; }
+.txt-dark  { color: #1A3560; }
+.sep { height: 1px; background: #E5E7EB; margin: 12px 0; }
 
-.empty {
-  text-align: center;
-  color: #94a3b8;
-  padding: 12px;
-  font-size: 8px;
-}
 </style>
 </head>
 <body>
 
-{# ---------------- PAGE 1 : COUVERTURE ---------------- #}
-<div class="page cover">
-  <div class="cover-bar"></div>
-  <div class="cover-logo">
-    
-    <div>
-      <div class="cover-logo-text">SAT Platform</div>
-      <div class="cover-logo-sub">Security Awareness Training</div>
+{# ══════════════════════════════════════════════════════════════════
+   PAGE 0 — COUVERTURE
+══════════════════════════════════════════════════════════════════ #}
+<div class="cov">
+    <div class="cov-accent-bar"><div class="cov-accent-bar-inner"></div></div>
+    <div class="cov-body">
+
+        <div class="cov-header">
+            <div class="cov-header-l">
+                <div class="cov-brand">SAT Platform</div>
+                <div class="cov-brand-sub">Security Awareness Training</div>
+            </div>
+            <div class="cov-header-r">
+                <div class="cov-stamp"><div class="cov-stamp-txt">CONFIDENTIEL — USAGE INTERNE</div></div>
+            </div>
+        </div>
+
+        <div class="cov-divider"></div>
+
+        <div class="cov-type">Rapport individuel de posture cybersécurité</div>
+        <div class="cov-title">Évaluation de la Vigilance<br>Face aux Cybermenaces</div>
+        <div class="cov-subtitle">Analyse comportementale · Phishing · Formations · Plan d'action</div>
+
+        <div class="cov-subject">
+            <div class="cov-subject-inner">
+                <div class="cov-subject-lbl">Sujet du rapport</div>
+                <div class="cov-subject-name">{{ employe.prenom }} {{ employe.nom }}</div>
+                <div class="cov-subject-dept">
+                    {{ employe.departement ? employe.departement.nom : 'Département non assigné' }}
+                    {% if employe.poste is defined and employe.poste %} · {{ employe.poste }}{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="cov-meta">
+            <div class="cov-meta-cell">
+                <div class="cov-meta-lbl">Référence</div>
+                <div class="cov-meta-val">SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }}</div>
+            </div>
+            <div class="cov-meta-cell">
+                <div class="cov-meta-lbl">Date d'émission</div>
+                <div class="cov-meta-val">{{ "now"|date("d/m/Y") }}</div>
+            </div>
+            <div class="cov-meta-cell">
+                <div class="cov-meta-lbl">Version</div>
+                <div class="cov-meta-val">1.0 — Diffusion restreinte</div>
+            </div>
+        </div>
+
     </div>
-  </div>
-  <div class="cover-title">Rapport individuel</div>
-  <div class="cover-subtitle">Évaluation de la vigilance cybersécurité</div>
-  <div class="cover-employee">{{ employe.prenom }} {{ employe.nom }}</div>
-  <div class="cover-dept">{{ employe.departement ? employe.departement.nom : 'Département non assigné' }}</div>
-  <div class="cover-meta">
-    <span>Réf. : RPT-{{ employe.id }}-{{ "now"|date("Ymd") }}</span>
-    <span>Émis le : {{ "now"|date("d/m/Y") }}</span>
-  </div>
-  <div class="cover-confidential">CONFIDENTIEL · Usage interne</div>
 </div>
 
-{# ---------------- PAGE 2 : INFORMATIONS & SCORE ---------------- #}
-<div class="page">
-  <div class="header-page">
-    <span><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport de vigilance</span>
-    <span>Page 1 / 3</span>
-  </div>
-
-  {# Section 1 : Informations générales #}
-  <div class="card pbi">
-    <div class="section-title">1. Informations générales</div>
-    <div style="display: flex; gap: 16px; align-items: flex-start;">
-      <div style="width: 48px; height: 48px; background: #e2e8f0; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px;">
-        {{ employe.prenom|slice(0,1)|upper }}{{ employe.nom|slice(0,1)|upper }}
-      </div>
-      <div class="info-grid" style="flex:1;">
-        <span class="info-label">Email</span><span class="info-value">{{ employe.email }}</span>
-        <span class="info-label">Département</span><span class="info-value">{{ employe.departement ? employe.departement.nom : 'Non assigné' }}</span>
-        <span class="info-label">Poste</span><span class="info-value">{{ employe.poste ?? 'Non renseigné' }}</span>
-        <span class="info-label">Statut</span><span class="info-value">{% if employe.estActif %}<span class="badge badge-active">Actif</span>{% else %}<span class="badge badge-inactive">Inactif</span>{% endif %}</span>
-      </div>
+{# ══════════════════════════════════════════════════════════════════
+   PAGE 1 — INFORMATIONS GÉNÉRALES & SCORE DE VIGILANCE
+══════════════════════════════════════════════════════════════════ #}
+<div class="pg">
+    <div class="ph">
+        <div class="ph-l"><div class="ph-brand">SAT Platform</div><div style="margin-top:2px;"><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport individuel de posture cybersécurité</div></div>
+        <div class="ph-r">Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }} · Page 1 / 4</div>
     </div>
-  </div>
 
-  {# Section 2 : Score global #}
-  <div class="card pbi">
-    <div class="section-title">2. Score global de vigilance</div>
-    {% set riskClass = niveauRisque == 'faible' ? 'low' : (niveauRisque == 'moyen' ? 'medium' : 'high') %}
-    <div class="score-container">
-      <div class="score-circle {{ riskClass }}">
-        <span class="score-number">{{ scoreVigilance|round }}</span>
-        <span class="score-unit">/100</span>
-      </div>
-      <div class="score-detail">
-        <div class="score-bar-label">
-          <span>Score de vigilance</span>
-          <span>{{ scoreVigilance|round }}%</span>
+    {# SECTION 1 — INFORMATIONS GÉNÉRALES #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 01</div>
+                <div class="sec-title">Informations générales</div>
+            </div>
         </div>
-        <div class="score-bar-bg">
-          <div class="score-bar-fill {{ riskClass }}" style="width: {{ scoreVigilance }}%;"></div>
+        <table class="tbl">
+            <tbody>
+                <tr>
+                    <td style="width:22%;font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Nom complet</td>
+                    <td style="width:28%;font-weight:bold;color:#1A3560;">{{ employe.prenom }} {{ employe.nom }}</td>
+                    <td style="width:22%;font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Département</td>
+                    <td style="width:28%;">{{ employe.departement ? employe.departement.nom : '—' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Adresse email</td>
+                    <td>{{ employe.email }}</td>
+                    <td style="font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Poste occupé</td>
+                    <td>{{ employe.poste is defined and employe.poste ? employe.poste : 'Non renseigné' }}</td>
+                </tr>
+                <tr>
+                    <td style="font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Statut</td>
+                    <td>{% if employe.estActif %}<span class="b b-ok">Actif</span>{% else %}<span class="b b-err">Inactif</span>{% endif %}</td>
+                    <td style="font-size:7.5px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">Date du rapport</td>
+                    <td>{{ dateRapport }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    {# SECTION 2 — SCORE GLOBAL DE VIGILANCE #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 02</div>
+                <div class="sec-title">Score global de vigilance — Indice de maturité cybersécurité</div>
+            </div>
         </div>
-        <div class="risk-pill {{ riskClass }}">Niveau : {{ niveauRisque|capitalize }}</div>
-      </div>
-    </div>
-  </div>
 
-  {# Section 3 : Indicateurs clés #}
-  <div class="card pbi">
-    <div class="section-title">3. Indicateurs comportementaux</div>
-    <div class="stats-row">
-      <div class="stat-box"><div class="stat-number">{{ nbEnvoyes }}</div><div class="stat-label">Campagnes reçues</div></div>
-      <div class="stat-box"><div class="stat-number">{{ nbClics }}</div><div class="stat-label">Clics suspects</div></div>
-      <div class="stat-box"><div class="stat-number">{{ nbSignalements }}</div><div class="stat-label">Signalements</div></div>
-      <div class="stat-box"><div class="stat-number">{{ formationsTerminees }}</div><div class="stat-label">Modules validés</div></div>
-    </div>
-  </div>
+        {% set rc = scoreVigilance >= 60 ? 'low' : (scoreVigilance >= 35 ? 'med' : 'high') %}
+        {% set bClass = scoreVigilance >= 60 ? 'rb-low' : (scoreVigilance >= 35 ? 'rb-med' : 'rb-high') %}
+        {% set barClass = scoreVigilance >= 60 ? 'bar-low' : (scoreVigilance >= 35 ? 'bar-med' : 'bar-high') %}
 
-  {# Section 4 : Analyse #}
-  <div class="card pbi">
-    <div class="section-title">4. Analyse comportementale</div>
-    <div class="analysis-list">
-      <div class="analysis-item"><span class="analysis-dot"></span><span>Reçu <strong>{{ nbEnvoyes }}</strong> simulations de phishing.</span></div>
-      <div class="analysis-item"><span class="analysis-dot"></span><span>Clic sur <strong>{{ nbClics }}</strong> lien(s) suspect(s) → <strong>{{ clickRate }}%</strong> de clics.</span></div>
-      <div class="analysis-item"><span class="analysis-dot"></span><span>Signalement de <strong>{{ nbSignalements }}</strong> emails → taux <strong>{{ reportRate }}%</strong>.</span></div>
-      <div class="analysis-item"><span class="analysis-dot"></span><span>Formations suivies : <strong>{{ formationsTerminees }}</strong> module(s) terminé(s).</span></div>
-      {% if clickRate > 20 %}
-      <div class="analysis-item"><span class="analysis-dot"></span><span><strong>Attention :</strong> taux de clic élevé. Une sensibilisation renforcée est conseillée.</span></div>
-      {% endif %}
-      {% if reportRate < 20 %}
-      <div class="analysis-item"><span class="analysis-dot"></span><span><strong>Marge de progression :</strong> le réflexe de signalement peut être amélioré.</span></div>
-      {% endif %}
-    </div>
-  </div>
+        <div class="score-wrap">
+            <div class="score-circle-cell">
+                <div class="score-circle r-{{ rc }}">
+                    <div class="score-num-{{ rc }}">{{ scoreVigilance|round }}</div>
+                    <div class="score-denom">/100</div>
+                </div>
+                <div style="text-align:center;margin-top:6px;">
+                    <span class="risk-badge {{ bClass }}">{{ niveauRisque|upper }}</span>
+                </div>
+            </div>
+            <div class="score-detail-cell">
+                <div class="score-bar-lbl">
+                    <div class="score-bar-lbl-l">Indice de vigilance comportementale</div>
+                    <div class="score-bar-lbl-r">{{ scoreVigilance|round }} / 100</div>
+                </div>
+                <div class="bar-bg"><div class="{{ barClass }}" style="width:{{ scoreVigilance }}%;height:7px;border-radius:4px;"></div></div>
 
-  <div class="footer-page">
-    <span>SAT Platform — Rapport confidentiel</span>
-    <span>Généré le {{ dateRapport|split(' à ')|first }}</span>
-  </div>
+                <div class="score-bar-lbl mt4">
+                    <div class="score-bar-lbl-l">Taux de signalement phishing</div>
+                    <div class="score-bar-lbl-r">{{ reportRate }}%</div>
+                </div>
+                <div class="bar-bg">
+                    <div class="{{ reportRate >= 50 ? 'bar-low' : (reportRate >= 20 ? 'bar-med' : 'bar-high') }}" style="width:{{ reportRate }}%;height:7px;border-radius:4px;"></div>
+                </div>
+
+                <div class="score-bar-lbl mt4">
+                    <div class="score-bar-lbl-l">Modules de formation validés</div>
+                    <div class="score-bar-lbl-r">{{ formationsTerminees }} module(s)</div>
+                </div>
+                <div class="bar-bg">
+                    <div class="bar-low" style="width:{{ [formationsTerminees * 20, 100]|min }}%;height:7px;border-radius:4px;"></div>
+                </div>
+
+                <div style="margin-top:9px;font-size:8px;color:#4B5563;line-height:1.55;">
+                    {% if scoreVigilance >= 60 %}
+                        Niveau satisfaisant. L'employé démontre de bonnes pratiques de vigilance. Maintenir la dynamique par des simulations périodiques.
+                    {% elseif scoreVigilance >= 35 %}
+                        Niveau intermédiaire. Des comportements à risque subsistent. Un programme de sensibilisation ciblé est recommandé à court terme.
+                    {% else %}
+                        Niveau critique. L'employé présente des vulnérabilités comportementales significatives nécessitant une intervention corrective immédiate.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pf">
+        <div class="pf-l">SAT Platform — Document confidentiel à diffusion restreinte · Conforme ISO/IEC 27001:2022 &amp; RGPD</div>
+        <div class="pf-r">Page 1 / 4</div>
+    </div>
 </div>
 
-{# ---------------- PAGE 3 : RECOMMANDATIONS, FORMATIONS, RISQUE, CONCLUSION ---------------- #}
-<div class="page">
-  <div class="header-page">
-    <span><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport de vigilance</span>
-    <span>Page 2 / 3</span>
-  </div>
-
-  {# Section 5 : Recommandations #}
-  <div class="card pbi">
-    <div class="section-title">5. Recommandations personnalisées</div>
-    <div class="reco-list">
-      {% set rec_num = 1 %}
-      {% if clickRate > 20 %}
-      <div class="reco-item"><span class="reco-num">{{ rec_num }}</span><span>Suivre une formation complémentaire sur la détection des faux emails.</span></div>
-      {% set rec_num = rec_num + 1 %}
-      {% endif %}
-      <div class="reco-item"><span class="reco-num">{{ rec_num }}</span><span>Participer aux prochaines campagnes de phishing pour entretenir sa vigilance.</span></div>
-      {% set rec_num = rec_num + 1 %}
-      <div class="reco-item"><span class="reco-num">{{ rec_num }}</span><span>Signaler systématiquement tout email suspect via le bouton dédié.</span></div>
-      {% if formationsTerminees < 2 %}
-      {% set rec_num = rec_num + 1 %}
-      <div class="reco-item"><span class="reco-num">{{ rec_num }}</span><span>Terminer les modules de formation recommandés sur la plateforme.</span></div>
-      {% endif %}
+{# ══════════════════════════════════════════════════════════════════
+   PAGE 2 — INDICATEURS COMPORTEMENTAUX & ANALYSE PHISHING
+══════════════════════════════════════════════════════════════════ #}
+<div class="pg">
+    <div class="ph">
+        <div class="ph-l"><div class="ph-brand">SAT Platform</div><div style="margin-top:2px;"><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport individuel de posture cybersécurité</div></div>
+        <div class="ph-r">Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }} · Page 2 / 4</div>
     </div>
-  </div>
 
-  {# Section 6 : Historique des formations #}
-  <div class="card pbi">
-    <div class="section-title">6. Historique des formations</div>
-    {% if progressions|length > 0 %}
-    <table class="formation-table">
-      <thead>
-        <tr><th>Module</th><th>Statut</th><th>Progression</th><th>Date fin</th></tr>
-      </thead>
-      <tbody>
-        {% for prog in progressions %}
-        <tr>
-          <td><strong>{{ prog.module ? prog.module.titre : 'Module' }}</strong></td>
-          <td>
-            {% if prog.statut == 'TERMINE' %} Terminé
-            {% elseif prog.statut == 'EN_COURS' %} En cours
-            {% else %} Non commencé{% endif %}
-          </td>
-          <td>
-            <div class="progress"><div class="progress-fill" style="width: {{ prog.pourcentageProgression }}%;"></div></div>
-            <span style="font-size:7px;">{{ prog.pourcentageProgression }}%</span>
-          </td>
-          <td>{{ prog.dateTermine ? prog.dateTermine|date('d/m/Y') : '—' }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <div class="empty">Aucune formation enregistrée.</div>
-    {% endif %}
-  </div>
-
-  {# Section 7 : Niveau de risque #}
-  <div class="card pbi">
-    <div class="section-title">7. Niveau de risque cyber</div>
-    <div class="risk-block">
-      <div class="risk-icon">{% if niveauRisque == 'faible' %}🟢{% elseif niveauRisque == 'moyen' %}🟠{% else %}🔴{% endif %}</div>
-      <div>
-        <div class="risk-title">{{ niveauRisque|capitalize }}</div>
-        <div class="risk-desc">
-          {% if niveauRisque == 'faible' %}
-            Score ≥ 60/100. Comportements sécuritaires satisfaisants.
-          {% elseif niveauRisque == 'moyen' %}
-            Score entre 35 et 59/100. Des améliorations sont attendues.
-          {% else %}
-            Score < 35/100. Risque élevé, action corrective nécessaire.
-          {% endif %}
+    {# SECTION 3 — KPI COMPORTEMENTAUX #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 03</div>
+                <div class="sec-title">Indicateurs clés de performance comportementale</div>
+            </div>
         </div>
-      </div>
+        <div class="kpi-row">
+            <div class="kpi-cell">
+                <div class="kpi-box">
+                    <div class="kpi-val">{{ nbEnvoyes }}</div>
+                    <div class="kpi-lbl">Simulations reçues</div>
+                </div>
+            </div>
+            <div class="kpi-cell">
+                <div class="kpi-box" style="border-top-color:{% if clickRate > 20 %}#DC2626{% elseif clickRate > 10 %}#D97706{% else %}#16A34A{% endif %};">
+                    <div class="kpi-val {% if clickRate > 20 %}kpi-red{% elseif clickRate > 10 %}kpi-amb{% else %}kpi-grn{% endif %}">{{ clickRate }}%</div>
+                    <div class="kpi-lbl">Taux de clic</div>
+                    <div class="kpi-sub {% if clickRate > 20 %}kpi-red{% elseif clickRate > 10 %}kpi-amb{% else %}kpi-grn{% endif %}">{{ nbClics }} clic(s)</div>
+                </div>
+            </div>
+            <div class="kpi-cell">
+                <div class="kpi-box" style="border-top-color:{% if submissionRate > 10 %}#DC2626{% elseif submissionRate > 5 %}#D97706{% else %}#16A34A{% endif %};">
+                    <div class="kpi-val {% if submissionRate > 10 %}kpi-red{% elseif submissionRate > 5 %}kpi-amb{% else %}kpi-grn{% endif %}">{{ submissionRate }}%</div>
+                    <div class="kpi-lbl">Taux de soumission</div>
+                    <div class="kpi-sub {% if submissionRate > 10 %}kpi-red{% else %}kpi-grn{% endif %}">{{ nbSoumissions }} cas</div>
+                </div>
+            </div>
+            <div class="kpi-cell">
+                <div class="kpi-box" style="border-top-color:{% if reportRate >= 50 %}#16A34A{% elseif reportRate >= 20 %}#D97706{% else %}#DC2626{% endif %};">
+                    <div class="kpi-val {% if reportRate >= 50 %}kpi-grn{% elseif reportRate >= 20 %}kpi-amb{% else %}kpi-red{% endif %}">{{ reportRate }}%</div>
+                    <div class="kpi-lbl">Taux de signalement</div>
+                    <div class="kpi-sub {% if reportRate >= 20 %}kpi-grn{% else %}kpi-red{% endif %}">{{ nbSignalements }} signalement(s)</div>
+                </div>
+            </div>
+        </div>
+        <div style="font-size:7.5px;color:#6B7280;border-top:1px solid #F3F4F6;padding-top:8px;">
+            Seuils de référence ANSSI / NIST SP 800-177 : Taux de clic &lt;10% = satisfaisant · 10-20% = vigilance requise · &gt;20% = critique.
+            Taux de signalement &gt;50% = excellent · 20-50% = acceptable · &lt;20% = insuffisant.
+        </div>
     </div>
-  </div>
 
-  <div class="footer-page">
-    <span>SAT Platform — Rapport confidentiel</span>
-    <span>Généré le {{ dateRapport|split(' à ')|first }}</span>
-  </div>
+    {# SECTION 4 — ANALYSE COMPORTEMENTALE DÉTAILLÉE #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 04</div>
+                <div class="sec-title">Analyse comportementale — Observations et constats</div>
+            </div>
+        </div>
+
+        {% if clickRate > 20 %}
+        <div class="finding sev-high pbi">
+            <div class="finding-icon"><span style="color:#DC2626;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">CONSTAT CRITIQUE — Taux de clic élevé ({{ clickRate }}%)</div>
+                L'employé a cliqué sur {{ nbClics }} lien(s) frauduleux sur {{ nbEnvoyes }} simulation(s) reçues, soit un taux de {{ clickRate }}%.
+                Ce taux dépasse significativement le seuil critique de 20% défini par le NIST SP 800-177.
+                Ce comportement expose l'organisation à un risque réel d'intrusion par hameçonnage (phishing, spear-phishing).
+            </div>
+        </div>
+        {% elseif clickRate > 10 %}
+        <div class="finding sev-med pbi">
+            <div class="finding-icon"><span style="color:#D97706;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">VIGILANCE — Taux de clic modéré ({{ clickRate }}%)</div>
+                Un taux de clic de {{ clickRate }}% est observé sur les simulations de phishing reçues.
+                Ce niveau se situe dans la zone d'alerte (10–20%) et requiert un suivi renforcé ainsi qu'une formation complémentaire.
+            </div>
+        </div>
+        {% else %}
+        <div class="finding sev-low pbi">
+            <div class="finding-icon"><span style="color:#16A34A;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">SATISFAISANT — Taux de clic maîtrisé ({{ clickRate }}%)</div>
+                Le taux de clic de {{ clickRate }}% est inférieur au seuil satisfaisant de 10%. L'employé fait preuve d'une bonne résistance aux tentatives de phishing simulées.
+            </div>
+        </div>
+        {% endif %}
+
+        {% if submissionRate > 5 %}
+        <div class="finding sev-high pbi">
+            <div class="finding-icon"><span style="color:#DC2626;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">RISQUE ÉLEVÉ — Soumission de données sensibles ({{ submissionRate }}%)</div>
+                {{ nbSoumissions }} occurrence(s) de soumission de données ont été détectées lors des simulations.
+                Ce comportement représente le vecteur d'exposition le plus critique : un attaquant réel aurait pu obtenir des identifiants ou informations confidentielles.
+            </div>
+        </div>
+        {% endif %}
+
+        {% if reportRate < 20 %}
+        <div class="finding sev-med pbi">
+            <div class="finding-icon"><span style="color:#D97706;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">AMÉLIORATION REQUISE — Réflexe de signalement insuffisant ({{ reportRate }}%)</div>
+                Le taux de signalement de {{ reportRate }}% est inférieur au seuil recommandé de 20%.
+                Le signalement des emails suspects est un mécanisme de défense collectif essentiel : renforcer ce réflexe via la formation est prioritaire.
+            </div>
+        </div>
+        {% else %}
+        <div class="finding sev-low pbi">
+            <div class="finding-icon"><span style="color:#16A34A;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">POSITIF — Bon réflexe de signalement ({{ reportRate }}%)</div>
+                L'employé signale {{ reportRate }}% des emails suspects, contribuant activement à la détection précoce des incidents de sécurité.
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="finding sev-info pbi">
+            <div class="finding-icon"><span style="color:#2563EB;font-size:10px;">&#9679;</span></div>
+            <div class="finding-body">
+                <div class="finding-title">PARCOURS FORMATION — {{ formationsTerminees }} module(s) complété(s)</div>
+                {{ formationsTerminees }} module(s) de formation ont été complétés. {{ formationsEnCours }} module(s) sont en cours.
+                La complétion des formations disponibles est corrélée positivement avec la réduction du taux de clic et l'amélioration du score de vigilance.
+            </div>
+        </div>
+    </div>
+
+    <div class="pf">
+        <div class="pf-l">SAT Platform — Document confidentiel à diffusion restreinte · Conforme ISO/IEC 27001:2022 &amp; RGPD</div>
+        <div class="pf-r">Page 2 / 4</div>
+    </div>
 </div>
 
-{# ---------------- PAGE 4 : CONCLUSION & MENTIONS ---------------- #}
-<div class="page">
-  <div class="header-page">
-    <span><strong>{{ employe.prenom }} {{ employe.nom }}</strong>  Rapport de vigilance</span>
-    <span>Page 3 / 3</span>
-  </div>
-
-  <div class="card pbi">
-    <div class="section-title">8. Conclusion</div>
-    <div class="conclusion">
-      {{ niveauRisque == 'faible' ? "L'employé démontre de bonnes pratiques de sécurité. Il est recommandé de maintenir cette dynamique par des piqûres de rappel régulières." : (niveauRisque == 'moyen' ? "Une vigilance moyenne est observée. Des actions de sensibilisation ciblées (formation, simulations) sont conseillées pour réduire les risques." : "Le niveau de vigilance est critique. Un plan d'action personnalisé doit être mis en place immédiatement.") }}
-      <div class="conclusion-footer">
-        <span>SAT Platform – génération automatique</span>
-        <span>{{ dateRapport }}</span>
-      </div>
+{# ══════════════════════════════════════════════════════════════════
+   PAGE 3 — HISTORIQUE DES FORMATIONS & RECOMMANDATIONS
+══════════════════════════════════════════════════════════════════ #}
+<div class="pg">
+    <div class="ph">
+        <div class="ph-l"><div class="ph-brand">SAT Platform</div><div style="margin-top:2px;"><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport individuel de posture cybersécurité</div></div>
+        <div class="ph-r">Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }} · Page 3 / 4</div>
     </div>
-  </div>
 
-  <div class="card pbi">
-    <div class="section-title">9. Mention éthique et légale</div>
-    <div class="ethics">
-      <div class="ethics-icon">⚖️</div>
-      <div class="ethics-text">
-        <div class="ethics-title">Conformité et confidentialité</div>
-        Aucune donnée sensible (mot de passe, information personnelle confidentielle) n'a été collectée. Ce rapport est destiné à un usage interne exclusif. Il ne peut être communiqué à des tiers sans autorisation explicite du RSSI. Conforme aux recommandations ANSSI et ISO 27001.
-      </div>
+    {# SECTION 5 — HISTORIQUE DES FORMATIONS #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 05</div>
+                <div class="sec-title">Historique des formations — Suivi pédagogique</div>
+            </div>
+        </div>
+        {% if progressions|length > 0 %}
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th style="width:32%;">Module de formation</th>
+                    <th style="width:14%;" class="center">Statut</th>
+                    <th style="width:20%;">Progression</th>
+                    <th style="width:14%;" class="center">Attribution</th>
+                    <th style="width:10%;" class="center">Début</th>
+                    <th style="width:10%;" class="right">Fin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for prog in progressions %}
+                <tr>
+                    <td><span class="txt-bold txt-dark">{{ prog.module ? prog.module.titre : 'Module non disponible' }}</span></td>
+                    <td class="center">
+                        {% if prog.statut == 'TERMINE' %}<span class="b b-ok">Validé</span>
+                        {% elseif prog.statut == 'EN_COURS' %}<span class="b b-warn">En cours</span>
+                        {% else %}<span class="b b-grey">Non démarré</span>{% endif %}
+                    </td>
+                    <td>
+                        <div class="prog-wrap">
+                            <div class="prog-bar-cell">
+                                <div class="prog-bg">
+                                    <div class="{{ prog.statut == 'TERMINE' ? 'prog-fill-ok' : 'prog-fill' }}" style="width:{{ prog.pourcentageProgression }}%;height:5px;border-radius:3px;"></div>
+                                </div>
+                            </div>
+                            <div class="prog-pct-cell">{{ prog.pourcentageProgression }}%</div>
+                        </div>
+                    </td>
+                    <td class="center">
+                        {% if prog.typeAttribution == 'PHISHING' %}<span class="b b-err">Phishing</span>
+                        {% elseif prog.typeAttribution == 'CAMPAGNE' %}<span class="b b-blue">Campagne</span>
+                        {% else %}<span class="b b-grey">Libre</span>{% endif %}
+                    </td>
+                    <td class="center">{{ prog.dateDebut ? prog.dateDebut|date('d/m/Y') : '—' }}</td>
+                    <td class="right">{{ prog.dateTermine ? prog.dateTermine|date('d/m/Y') : '—' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="text-align:center;padding:16px;color:#9CA3AF;font-size:8.5px;">Aucune formation enregistrée pour cet employé.</div>
+        {% endif %}
     </div>
-  </div>
 
-  <div class="footer-page">
-    <span>Document confidentiel — Usage interne</span>
-    <span>Réf. RPT-{{ employe.id }}-{{ "now"|date("Ymd") }}</span>
-  </div>
+    {# SECTION 6 — PLAN D'ACTION & RECOMMANDATIONS #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 06</div>
+                <div class="sec-title">Plan d'action correctif — Recommandations personnalisées</div>
+            </div>
+        </div>
+
+        {% set rnum = 1 %}
+        {% if clickRate > 20 %}
+        <div class="reco pbi">
+            <div class="reco-num-cell"><div class="reco-num-box">{{ rnum }}</div></div>
+            <div class="reco-body">
+                <div class="reco-prio reco-prio-h">PRIORITÉ HAUTE · IMMÉDIAT</div>
+                <div class="reco-text"><strong>Formation obligatoire sur la détection du phishing.</strong> Inscrire l'employé sans délai à un module de sensibilisation avancé couvrant : identification des URL frauduleuses, analyse des en-têtes email, reconnaissance des techniques de social engineering.</div>
+            </div>
+        </div>
+        {% set rnum = rnum + 1 %}
+        {% endif %}
+
+        {% if submissionRate > 5 %}
+        <div class="reco pbi">
+            <div class="reco-num-cell"><div class="reco-num-box">{{ rnum }}</div></div>
+            <div class="reco-body">
+                <div class="reco-prio reco-prio-h">PRIORITÉ HAUTE · IMMÉDIAT</div>
+                <div class="reco-text"><strong>Sensibilisation à la protection des identifiants et données sensibles.</strong> Former l'employé aux bonnes pratiques : ne jamais saisir ses identifiants sur une page non vérifiée, activer l'authentification à deux facteurs (2FA), utiliser un gestionnaire de mots de passe certifié.</div>
+            </div>
+        </div>
+        {% set rnum = rnum + 1 %}
+        {% endif %}
+
+        {% if reportRate < 20 %}
+        <div class="reco pbi">
+            <div class="reco-num-cell"><div class="reco-num-box">{{ rnum }}</div></div>
+            <div class="reco-body">
+                <div class="reco-prio reco-prio-m">PRIORITÉ MOYENNE · COURT TERME</div>
+                <div class="reco-text"><strong>Renforcer le réflexe de signalement des emails suspects.</strong> Communiquer la procédure de signalement interne (bouton dédié, adresse sécurité), rappeler que le signalement est un acte de défense collectif et non une faute, et fixer un objectif de taux de signalement &gt; 30% à 3 mois.</div>
+            </div>
+        </div>
+        {% set rnum = rnum + 1 %}
+        {% endif %}
+
+        {% if formationsTerminees < 3 %}
+        <div class="reco pbi">
+            <div class="reco-num-cell"><div class="reco-num-box">{{ rnum }}</div></div>
+            <div class="reco-body">
+                <div class="reco-prio reco-prio-m">PRIORITÉ MOYENNE · COURT TERME</div>
+                <div class="reco-text"><strong>Compléter le parcours de formation cybersécurité.</strong> {{ formationsTerminees < 1 ? "Aucun module n'a encore été complété." : formationsTerminees ~ " module(s) validé(s) seulement." }} Définir avec le RSSI un calendrier de complétion des modules prioritaires dans un délai de 30 jours.</div>
+            </div>
+        </div>
+        {% set rnum = rnum + 1 %}
+        {% endif %}
+
+        <div class="reco pbi">
+            <div class="reco-num-cell"><div class="reco-num-box">{{ rnum }}</div></div>
+            <div class="reco-body">
+                <div class="reco-prio reco-prio-l">PRIORITÉ STANDARD · CONTINU</div>
+                <div class="reco-text"><strong>Maintenir la vigilance par des simulations régulières.</strong> Participer à minima à 2 campagnes de phishing simulées par trimestre. Revoir périodiquement les bonnes pratiques de sécurité numérique publiées par l'ANSSI (guides d'hygiène informatique).</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="pf">
+        <div class="pf-l">SAT Platform — Document confidentiel à diffusion restreinte · Conforme ISO/IEC 27001:2022 &amp; RGPD</div>
+        <div class="pf-r">Page 3 / 4</div>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════════════════════════════
+   PAGE 4 — CONCLUSION, CADRE LÉGAL & SIGNATURES
+══════════════════════════════════════════════════════════════════ #}
+<div class="pg">
+    <div class="ph">
+        <div class="ph-l"><div class="ph-brand">SAT Platform</div><div style="margin-top:2px;"><strong>{{ employe.prenom }} {{ employe.nom }}</strong> — Rapport individuel de posture cybersécurité</div></div>
+        <div class="ph-r">Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }} · Page 4 / 4</div>
+    </div>
+
+    {# SECTION 7 — SYNTHÈSE EXÉCUTIVE #}
+    <div class="box box-white pbi">
+        <div class="sec-head">
+            <div class="sec-head-l">
+                <div class="sec-num">SECTION 07</div>
+                <div class="sec-title">Synthèse exécutive et conclusion</div>
+            </div>
+        </div>
+        <div class="conclusion">
+            <div class="conclusion-body">
+                Le présent rapport évalue la posture de cybersécurité de <strong>{{ employe.prenom }} {{ employe.nom }}</strong>,
+                {{ employe.departement ? 'membre du département ' ~ employe.departement.nom : 'employé non affecté à un département' }},
+                sur la base des données collectées par la plateforme SAT Platform dans le cadre du programme de sensibilisation à la sécurité informatique.
+                <br><br>
+                {% if scoreVigilance >= 60 %}
+                Le score de vigilance de <strong>{{ scoreVigilance|round }}/100</strong> place cet employé dans la catégorie <strong>Risque faible</strong>.
+                Les comportements observés sont globalement satisfaisants et conformes aux bonnes pratiques de sécurité.
+                Il est recommandé de maintenir ce niveau par une participation régulière aux exercices de simulation et aux modules de formation disponibles sur la plateforme.
+                {% elseif scoreVigilance >= 35 %}
+                Le score de vigilance de <strong>{{ scoreVigilance|round }}/100</strong> place cet employé dans la catégorie <strong>Risque modéré</strong>.
+                Des comportements à risque ont été identifiés, notamment concernant la résistance aux tentatives de phishing et/ou le réflexe de signalement.
+                Un programme de sensibilisation ciblé et un suivi rapproché sont recommandés dans les 30 jours suivant l'émission de ce rapport.
+                {% else %}
+                Le score de vigilance de <strong>{{ scoreVigilance|round }}/100</strong> place cet employé dans la catégorie <strong>Risque élevé</strong>.
+                Des vulnérabilités comportementales critiques ont été identifiées constituant un risque opérationnel réel pour l'organisation.
+                Un plan d'action correctif immédiat doit être activé, incluant une formation obligatoire, un entretien avec le RSSI, et une réévaluation sous 45 jours.
+                {% endif %}
+                <br><br>
+                Ce rapport a été généré automatiquement par SAT Platform le <strong>{{ dateRapport }}</strong> et est destiné exclusivement au RSSI de l'organisation.
+                Toute diffusion à des tiers est soumise à autorisation préalable du Responsable Traitement des données.
+            </div>
+            <div class="conclusion-sign">
+                <div class="sign-l">
+                    Responsable de la Sécurité des Systèmes d'Information (RSSI)<br>
+                    <div class="sign-line"></div>
+                    <div style="font-size:7px;color:#9CA3AF;margin-top:2px;">Signature &amp; cachet</div>
+                </div>
+                <div class="sign-r">
+                    Date : ___________________________<br>
+                    <div style="font-size:7px;color:#9CA3AF;margin-top:4px;">Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# SECTION 8 — CADRE LÉGAL ET ÉTHIQUE #}
+    <div class="legal pbi">
+        <div class="legal-title">Cadre légal, éthique et conformité réglementaire</div>
+        <div class="legal-body">
+            Ce rapport a été produit dans le cadre d'un programme de sensibilisation à la cybersécurité mis en œuvre conformément aux obligations légales et réglementaires applicables.
+            Les simulations de phishing ont été réalisées avec l'accord préalable de la direction de l'entreprise et dans le respect du droit du travail en vigueur.
+            Aucune donnée confidentielle réelle (mots de passe, informations personnelles sensibles au sens de l'article 9 du RGPD) n'a été collectée ni stockée.
+            Les données comportementales traitées sont exclusivement utilisées à des fins de sensibilisation et d'amélioration de la posture de sécurité organisationnelle.
+        </div>
+        <div class="legal-refs">
+            <strong>Références normatives et réglementaires :</strong>
+            ISO/IEC 27001:2022 (A.6.3 — Sensibilisation, éducation et formation) ·
+            ISO/IEC 27002:2022 (6.3, 8.7) ·
+            NIST SP 800-50 Rev.1 (Building a Cybersecurity and Privacy Learning Program) ·
+            NIST SP 800-177 Rev.1 (Trustworthy Email) ·
+            Recommandations ANSSI — Guide d'hygiène informatique (42 mesures) ·
+            Règlement (UE) 2016/679 — RGPD, Art. 5, 13, 25 ·
+            Directive NIS2 (UE) 2022/2555
+        </div>
+    </div>
+
+    <div class="pf">
+        <div class="pf-l">SAT Platform — Document confidentiel à diffusion restreinte · © {{ "now"|date("Y") }} SAT Platform</div>
+        <div class="pf-r">Page 4 / 4 · Réf. SAT-IND-{{ employe.id }}-{{ "now"|date("Ymd") }}</div>
+    </div>
 </div>
 
 </body>

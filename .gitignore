@@ -17,4 +17,25 @@
 ###> symfony/asset-mapper ###
 /public/assets/
 /assets/vendor/
+
+cat > .env.local << 'EOF'
+APP_ENV=prod
+APP_SECRET=change_this_secret_32chars_minimum
+
+# Format correct pour AlwaysData MariaDB
+DATABASE_URL="mysql://satplatform:<TON_MOT_DE_PASSE_BDD>@mysql1.alwaysdata.com:3306/satplatform_sat?serverVersion=mariadb-10.4.0&charset=utf8mb4"
+
+APP_URL=https://satplatform.alwaysdata.net
+MAILER_DSN=gmail+smtp://satplatform.noreply1%40gmail.com:<MOT_DE_PASSE_APP>@default
+EOF
+cat > .env.local << 'EOF'
+APP_ENV=prod
+APP_DEBUG=0
+APP_SECRET=0f8d2a4b9c6e1f3a5d7b8e9c0d1f2a3b
+
+DATABASE_URL="mysql://satplatform:JoJo123%23@mysql-satplatform.alwaysdata.net:3306/satplatform_db?charset=utf8mb4"
+
+MAILER_DSN=null://null
+DEFAULT_URI=https://satplatform.alwaysdata.net
+EOF
 ###< symfony/asset-mapper ###

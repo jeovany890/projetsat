@@ -412,6 +412,15 @@
     color: var(--text-primary);
   }
 
+  /* Texte de connexion */
+  .login-text {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 12px 0;
+    font-weight: 500;
+  }
+
   /* Responsive */
   @media (max-width: 680px) {
     body { padding: 20px 16px; }
@@ -576,7 +585,7 @@
           <div class="tip-list">
             <div class="tip-item">
               <i class="bi bi-check2-circle"></i>
-              <span>Vérifiez toujours l’adresse complète de l’expéditeur.</span>
+              <span>Vérifiez toujours l'adresse complète de l'expéditeur.</span>
             </div>
             <div class="tip-item">
               <i class="bi bi-check2-circle"></i>
@@ -603,16 +612,16 @@
             </button>
           </form>
         {% endif %}
-        <a href="{{ path('employe_dashboard') }}" class="btn {% if modulePropose is not defined or not modulePropose %}btn-primary{% else %}btn-secondary{% endif %}">
-          <i class="bi bi-grid-3x3-gap-fill"></i> Retour au tableau de bord
-        </a>
+        <div class="login-text">
+          Connectez-vous à votre compte
+        </div>
       </div>
 
       <!-- MENTION CONFIDENTIALITÉ -->
       <div class="footer">
         Cette simulation a été organisée par votre responsable sécurité dans le cadre
         du programme de sensibilisation.<br>
-        <strong>Aucune donnée personnelle ou identifiant n’a été enregistré.</strong>
+        <strong>Aucune donnée personnelle ou identifiant n'a été enregistré.</strong>
       </div>
 
     </div>

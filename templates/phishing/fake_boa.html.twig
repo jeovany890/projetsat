@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>BAO Bank - Secure Portal</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/log.jpeg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-black: #050505;
@@ -12,239 +15,588 @@
             --input-dark: #1a1c24;
             --brand-green: #008a3c;
             --brand-red: #c4000d;
-            --text-gray: #a0a0a0;
+            --text-white: #ffffff;
+            --text-gray: #cccccc;
         }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
         body {
             margin: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: 'Figtree', 'Segoe UI', Arial, sans-serif;
             background-color: var(--bg-black);
-            color: white;
+            color: var(--text-white);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden;
+            width: 100%;
+            font-weight: 400;
         }
+        
         .top-nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 50px;
+            padding: 12px 30px;
+            width: 100%;
+            max-width: 100%;
+            font-family: 'Figtree', sans-serif;
+            border-bottom: 1px solid #222;
         }
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-weight: bold;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-        }
-        .logo-symbol {
-            color: var(--brand-green);
-            font-size: 1.5rem;
-        }
+        
         .nav-links {
             display: flex;
-            gap: 25px;
+            gap: 20px;
             align-items: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 500;
         }
-        .nav-links a { color: white; text-decoration: none; opacity: 0.8; }
-        .lang-switch { display: flex; gap: 2px; }
-        .lang-switch span {
-            padding: 2px 8px;
+        .nav-links a { 
+            color: var(--text-white); 
+            text-decoration: none; 
+            opacity: 0.9;
+            font-family: 'Figtree', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .nav-links a:hover {
+            opacity: 1;
+        }
+        .lang-switch { 
+            display: flex;
             border: 1px solid #444;
-            font-size: 0.75rem;
+            border-radius: 4px;
+            overflow: hidden;
+            font-family: 'Figtree', sans-serif;
         }
-        .lang-switch .active { background-color: white; color: black; }
+        .lang-switch span {
+            padding: 3px 10px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            color: var(--text-white);
+            font-weight: 500;
+        }
+        .lang-switch .active { 
+            background-color: white; 
+            color: black;
+            font-weight: 600; 
+        }
+        
         .main-wrapper {
             display: flex;
             flex: 1;
-            padding: 0 50px 50px 50px;
-            max-width: 1300px;
+            padding: 30px 30px 40px 30px;
+            max-width: 1400px;
             margin: 0 auto;
             width: 100%;
             box-sizing: border-box;
+            font-family: 'Figtree', sans-serif;
+            gap: 50px;
         }
-        .promo-side { flex: 1.2; padding-top: 20px; }
-        .promo-side h1 { font-size: 2.8rem; margin: 0; }
-        .promo-side h2 { font-size: 1.4rem; font-weight: normal; margin-bottom: 30px; }
         
-        /* --- SECTION MISE À JOUR POUR L'IMAGE --- */
+        .promo-side { 
+            flex: 1.2; 
+            padding-top: 15px; 
+        }
+        .promo-side h1 { 
+            font-size: 2.2rem; 
+            margin: 0;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 800;
+            color: var(--text-white);
+        }
+        .promo-side h2 { 
+            font-size: 1.1rem; 
+            font-weight: 400;
+            margin-bottom: 25px;
+            font-family: 'Figtree', sans-serif;
+            color: var(--text-gray);
+        }
+        
         .image-banner {
             position: relative;
-            /* Superposition : Dégradé noir à gauche vers transparent à droite, puis l'image Twig */
             background-image: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%), url("{{ asset('images/bao.jpg') }}");
             background-size: cover;
             background-position: center;
-            height: 450px;
+            height: 400px;
             border-radius: 8px;
             display: flex;
-            align-items: center;      /* Centre le contenu verticalement */
-            justify-content: flex-start; /* Aligne le contenu strictement à gauche */
-            padding-left: 40px;       /* Maintient l'espace à gauche */
+            align-items: center;
+            justify-content: flex-start;
+            padding-left: 35px;
             overflow: hidden;
             border: 1px solid #333;
+            width: 100%;
         }
 
         .features {
             z-index: 2;
-            max-width: 380px; /* Limite la largeur pour que le texte ne prenne que la partie gauche */
+            max-width: 350px;
         }
 
         .feature-item {
-        
-            /* Assombrit légèrement juste derrière le texte */
-            padding: 15px 20px;
-            margin-bottom: 15px;
-            backdrop-filter: blur(4px); /* Petit effet de flou élégant */
-            
+            padding: 12px 18px;
+            margin-bottom: 12px;
+            backdrop-filter: blur(4px);
         }
-        .feature-item h3 { margin: 0; font-size: 1.1rem; color: white; }
-        .feature-item p { margin: 5px 0 0; font-size: 0.9rem; color: #ccc; }
-        /* -------------------------------------- */
+        .feature-item h3 { 
+            margin: 0; 
+            font-size: 1rem;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 700;
+            color: var(--text-white);
+        }
+        .feature-item p { 
+            margin: 4px 0 0; 
+            font-size: 0.8rem;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 400;
+            color: var(--text-gray);
+        }
 
-        .form-side { flex: 0.8; padding-top: 20px; padding-left: 60px; }
-        .login-box { background-color: var(--form-bg); padding: 40px; border-radius: 4px; }
-        .login-title {
-            font-size: 1.4rem;
-            text-align: ;
-            border-bottom: 2px solid white;
-            width: fit-content;
-            margin: 0 0 40px auto;
-            padding-bottom: 4px;
+        .form-side { 
+            flex: 0.9; 
+            padding-top: 0; 
         }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { font-size: 0.85rem; margin-bottom: 8px; display: block; color: var(--text-gray); }
+        .login-box { 
+            background-color: var(--form-bg); 
+            padding: 25px 30px; 
+            border-radius: 8px;
+            font-family: 'Figtree', sans-serif;
+        }
+        
+        /* Logo dans le formulaire */
+        .form-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-white);
+        }
+        .form-logo svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--brand-green);
+        }
+        
+        .login-title {
+            font-size: 1.2rem;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            position: relative;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 700;
+            color: var(--text-white);
+        }
+        .login-title::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 2px;
+            background: white;
+        }
+        
+        .input-group { 
+            margin-bottom: 18px; 
+        }
+        .input-group label { 
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
+            color: #ddd;
+        }
         .field {
             display: flex;
             background-color: var(--input-dark);
-            border-radius: 4px;
+            border-radius: 5px;
             overflow: hidden;
             border: 1px solid #333;
         }
         .icon-box {
             background-color: var(--brand-green);
-            width: 45px;
-            height: 45px;
+            width: 42px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
             font-size: 1.1rem;
         }
-        input {
+        .icon-box svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+        
+        input[type="text"] {
             background: transparent;
             border: none;
-            color: white;
-            padding: 12px;
+            color: var(--text-white);
+            padding: 10px 12px;
+            font-size: 0.85rem;
             width: 100%;
             outline: none;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
         }
+        input[type="text"]::placeholder {
+            color: #999999;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+        }
+        
+        input[type="password"] {
+            background: transparent;
+            border: none;
+            color: var(--text-white);
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
+        }
+        input[type="password"]::placeholder {
+            color: #999999;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 400;
+            font-size: 0.8rem;
+        }
+        
+        #codeDisplay {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            padding: 10px 12px;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            caret-color: transparent;
+            user-select: none;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
+            pointer-events: none;
+        }
+        #codeDisplay::placeholder {
+            font-size: 0.8rem;
+        }
+        
         .keypad {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             gap: 8px;
-            margin: 20px 0;
+            margin: 20px 0 15px;
         }
         .key {
             background-color: #1e212b;
             border: none;
-            color: white;
-            padding: 15px;
-            border-radius: 4px;
+            color: var(--text-white);
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 12px 5px;
+            border-radius: 5px;
             cursor: pointer;
+            transition: 0.2s;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Figtree', sans-serif;
+        }
+        .key:hover { 
+            background-color: #2a2e3d; 
+        }
+        .key:active { 
+            background-color: var(--brand-green);
+        }
+        
+        .keypad-label {
+            text-align: center;
+            margin: 8px 0 12px;
+            font-size: 0.75rem;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 400;
+            color: var(--text-white);
+        }
+        
+        .effacer-wrapper {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .btn-effacer {
+            background-color: var(--brand-red);
+            color: var(--text-white);
+            border: none;
+            padding: 8px 28px;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-family: 'Figtree', sans-serif;
+            transition: background-color 0.2s;
+            display: inline-block;
+        }
+        .btn-effacer:hover {
+            background-color: #e00010;
+        }
+        
+        .mfa-link {
+            background-color: var(--input-dark);
+            border: 1px solid #333;
+            padding: 10px 12px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 15px 0;
+            color: #aaa;
+            cursor: pointer;
+            text-decoration: none;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
+            font-size: 0.75rem;
             transition: background-color 0.2s;
         }
-        .key:hover { background-color: #2a2e3d; }
-        .btn-clear {
-            background-color: var(--brand-red);
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
+        .mfa-link:hover {
+            background-color: #22252f;
         }
-        .btn-submit {
+        .mfa-link svg {
+            width: 12px;
+            height: 12px;
+            fill: #aaa;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        
+        .btn-connexion {
             background-color: var(--brand-green);
-            color: white;
+            color: var(--text-white);
             border: none;
-            padding: 10px 25px;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 11px;
             font-size: 0.9rem;
+            font-weight: 700;
+            width: 100%;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 8px 0 20px;
+            text-transform: uppercase;
+            font-family: 'Figtree', sans-serif;
+            transition: background-color 0.2s;
+        }
+        .btn-connexion:hover {
+            background-color: #00a346;
+        }
+        
+        .action-links {
+            display: flex;
+            gap: 12px;
+        }
+        .action-links button {
+            flex: 1;
+            padding: 10px;
+            background: #1a1c24;
+            border: none;
+            color: var(--text-white);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-family: 'Figtree', sans-serif;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+        .action-links button:hover {
+            background: #252836;
+        }
+        
+        .mfa-info-box {
+            background: #1e2a4a;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            margin-top: 25px;
+            font-family: 'Figtree', sans-serif;
+            color: var(--text-white);
+        }
+        .mfa-info-box strong {
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .mfa-info-box ul {
+            margin-top: 8px;
+            padding-left: 20px;
+            color: #ddd;
+            font-size: 0.73rem;
+        }
+        .mfa-info-box ul li {
+            margin-bottom: 3px;
+        }
+        .mfa-info-box p {
+            margin-top: 12px;
+            font-size: 0.72rem;
+            color: #ccc;
+        }
+        .mfa-info-box a {
+            color: #4da6ff;
+            text-decoration: none;
+        }
+        .mfa-info-box a:hover {
+            text-decoration: underline;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-weight: bold;
         }
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
+        .logo img {
+            height: 35px;
+            max-width: 180px;
+            object-fit: contain;
         }
-        .mfa-link {
-            background-color: #1a1c24;
-            padding: 15px;
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            text-decoration: none;
-            color: white;
-            border-radius: 4px;
-            margin-top: 20px;
-        }
-        /* Responsive */
+        
         @media (max-width: 1024px) {
             .main-wrapper {
                 flex-direction: column;
-                padding: 0 20px 30px;
+                padding: 20px 15px 25px;
+                gap: 25px;
             }
-            .form-side {
-                padding-left: 0;
-                padding-top: 40px;
+            .image-banner { 
+                padding-left: 20px;
+                height: 300px;
             }
-            .image-banner { padding-left: 20px; }
+            .promo-side h1 {
+                font-size: 1.8rem;
+            }
         }
-        @media (max-width: 600px) {
+        
+        @media (max-width: 768px) {
             .top-nav {
-                flex-direction: column;
-                gap: 10px;
-                padding: 15px 20px;
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+            .logo img {
+                height: 28px;
+                max-width: 110px;
             }
             .nav-links {
-                gap: 15px;
+                gap: 10px;
+                font-size: 0.7rem;
                 flex-wrap: wrap;
-                justify-content: center;
             }
-            .promo-side h1 { font-size: 1.8rem; }
-            .promo-side h2 { font-size: 1rem; }
-            .image-banner { height: auto; padding: 20px; justify-content: center; }
-            .features { max-width: 100%; }
-            .feature-item { border-radius: 4px; border-left: none; border-top: 4px solid var(--brand-green); }
-            .login-box { padding: 25px; }
-            .keypad { gap: 5px; }
-            .key { padding: 10px; font-size: 1rem; }
+            .main-wrapper {
+                padding: 12px 10px 18px;
+                gap: 18px;
+            }
+            .login-box { 
+                padding: 20px 18px; 
+            }
+            .promo-side h1 { 
+                font-size: 1.4rem; 
+            }
+            .promo-side h2 { 
+                font-size: 0.9rem; 
+            }
+            .image-banner { 
+                height: auto; 
+                min-height: 220px;
+                padding: 18px;
+                justify-content: center;
+                background-image: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 100%), url("{{ asset('images/bao.jpg') }}");
+            }
+            .features { 
+                max-width: 100%; 
+            }
+            .feature-item { 
+                border-radius: 4px;
+                padding: 8px 12px;
+                margin-bottom: 8px;
+            }
+            .keypad { 
+                gap: 5px; 
+            }
+            .key { 
+                padding: 10px 4px;
+                font-size: 0.9rem;
+            }
+            .action-links {
+                flex-direction: column;
+                gap: 8px;
+            }
+            .mfa-info-box {
+                font-size: 0.7rem;
+                padding: 12px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .top-nav {
+                padding: 8px;
+            }
+            .logo img {
+                height: 24px;
+                max-width: 90px;
+            }
+            .nav-links {
+                gap: 6px;
+                font-size: 0.65rem;
+            }
+            .promo-side h1 {
+                font-size: 1.2rem;
+            }
+            .image-banner {
+                min-height: 180px;
+                padding: 12px;
+            }
+            .feature-item h3 {
+                font-size: 0.85rem;
+            }
+            .feature-item p {
+                font-size: 0.7rem;
+            }
+            .login-box {
+                padding: 18px 12px;
+            }
+            .keypad {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 4px;
+            }
+            .key {
+                padding: 10px 3px;
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
 <body>
     <nav class="top-nav">
-        <div class="logo-area">
-            <i class="fa-solid fa-shield-halved logo-symbol"></i>
-         Bank africa online
+        <div class="logo">
+            <img src="/images/boa.png" alt="Bank of Africa">
         </div>
         <div class="nav-links">
-            <a href="#">Claims</a>
-            <a href="#">Contact us</a>
-            <a href="#">User guide</a>
+            <a href="#">Réclamations</a>
+            <a href="#">Nous contacter</a>
+            <a href="#">Guide d'utilisateur</a>
             <div class="lang-switch">
-                <span class="active">EN</span>
-                <span>FR</span>
+                <span>EN</span>
+                <span class="active">FR</span>
             </div>
         </div>
     </nav>
 
     <main class="main-wrapper">
         <section class="promo-side">
-            <h1>Bienvenue sur Baoweb </h1>
+            <h1>Bienvenue sur Baoweb</h1>
             <h2>Nouvelle interface pour les clients détaillants</h2>
             <div class="image-banner">
                 <div class="features">
@@ -266,41 +618,131 @@
 
         <section class="form-side">
             <div class="login-box">
-                <div class="login-title">LOG IN</div>
+                <!-- Logo dans le formulaire -->
+               
+                
+                <div class="login-title">ME CONNECTER</div>
+
                 <form method="post" action="{{ path('phishing_fake_submit') }}">
                     <input type="hidden" name="token" value="{{ token }}">
+
                     <div class="input-group">
-                        <label>Entrer votre nom d'utilisateur:</label>
+                        <label>Saisissez votre identifiant client :</label>
                         <div class="field">
-                            <div class="icon-box"><i class="fa-solid fa-user"></i></div>
-                            <input type="text" name="username" placeholder="USERNAME" required>
+                            <div class="icon-box">
+                                <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor">
+                                    <path d="M858.5 763.6a374 374 0 00-80.6-119.5 375.63 375.63 0 00-119.5-80.6c-.4-.2-.8-.3-1.2-.5C719.5 518 760 444.7 760 362c0-137-111-248-248-248S264 225 264 362c0 82.7 40.5 156 102.8 201.1-.4.2-.8.3-1.2.5-44.8 18.9-85 46-119.5 80.6a375.63 375.63 0 00-80.6 119.5A371.7 371.7 0 00136 901.8a8 8 0 008 8.2h60c4.4 0 7.9-3.5 8-7.8 2-77.2 33-149.5 87.8-204.3 56.7-56.7 132-87.9 212.2-87.9s155.5 31.2 212.2 87.9C779 752.7 810 825 812 902.2c.1 4.4 3.6 7.8 8 7.8h60a8 8 0 008-8.2c-1-47.8-10.9-94.3-29.5-138.2zM512 534c-45.9 0-89.1-17.9-121.6-50.4S340 407.9 340 362c0-45.9 17.9-89.1 50.4-121.6S466.1 190 512 190s89.1 17.9 121.6 50.4S684 316.1 684 362c0 45.9-17.9 89.1-50.4 121.6S557.9 534 512 534z"/>
+                                </svg>
+                            </div>
+                            <input type="text" name="username" placeholder="IDENTIFIANT" required>
                         </div>
                     </div>
+
                     <div class="input-group">
-                        <label>Entrer votre mot de passe:</label>
+                        <label>Composez votre code personnel :</label>
                         <div class="field">
-                            <div class="icon-box"><i class="fa-solid fa-lock"></i></div>
-                            <input type="password" name="password" required>
+                            <div class="icon-box">
+                                <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor">
+                                    <path d="M832 464h-68V240c0-70.7-57.3-128-128-128H388c-70.7 0-128 57.3-128 128v224h-68c-17.7 0-32 14.3-32 32v384c0 17.7 14.3 32 32 32h640c17.7 0 32-14.3 32-32V496c0-17.7-14.3-32-32-32zM332 240c0-30.9 25.1-56 56-56h248c30.9 0 56 25.1 56 56v224H332V240zm460 600H232V536h560v304zM484 701v53c0 4.4 3.6 8 8 8h40c4.4 0 8-3.6 8-8v-53a48.01 48.01 0 10-56 0z"/>
+                                </svg>
+                            </div>
+                            <input type="password" name="password" id="codeDisplay" readonly placeholder="••••••" required>
                         </div>
                     </div>
-                    <div class="keypad">
-                        <button type="button" class="key">8</button><button type="button" class="key">9</button>
-                        <button type="button" class="key">5</button><button type="button" class="key">0</button>
-                        <button type="button" class="key">1</button><button type="button" class="key">7</button>
-                        <button type="button" class="key">6</button><button type="button" class="key">2</button>
-                        <button type="button" class="key">4</button><button type="button" class="key">3</button>
+
+                    <div class="keypad" id="keypad"></div>
+
+                    <p class="keypad-label">Cliquer pour composer les chiffres de votre code secret</p>
+
+                    <div class="effacer-wrapper">
+                        <button type="button" class="btn-effacer" onclick="clearCode()">EFFACER</button>
                     </div>
-                    <div class="action-buttons">
-                        <button type="button" class="btn-clear">CLEAR</button>
-                        <button type="submit" class="btn-submit">VALIDATE</button>
-                    </div>
+
+                    <a href="#" class="mfa-link" onclick="event.preventDefault();">
+                        <span>Saisir un code Google Authenticator ou Microsoft Authenticator</span>
+                        <svg viewBox="64 64 896 896" width="1em" height="1em" fill="currentColor">
+                            <path d="M765.7 486.8L314.9 134.7A7.97 7.97 0 00302 141v77.3c0 4.9 2.3 9.6 6.1 12.6l360 281.1-360 281.1c-3.9 3-6.1 7.7-6.1 12.6V883c0 6.7 7.7 10.4 12.9 6.3l450.8-352.1a31.96 31.96 0 000-50.4z"/>
+                        </svg>
+                    </a>
+
+                    <button type="submit" class="btn-connexion">CONNEXION</button>
                 </form>
-                <a href="#" class="mfa-link">
-                    <span>Entrer le code d'authentification (Google/Microsoft)</span>
-                    <i class="fa-solid fa-chevron-right"></i>
-                </a>
+
+                <div class="action-links">
+                    <button onclick="location.href='/password/reset'">Réinitialiser le mot de passe</button>
+                    <button onclick="location.href='/unlock'">Débloquer mon compte</button>
+                </div>
+
+                <div class="mfa-info-box">
+                    <strong>Si vous avez activé l'Authentification multi-facteurs sur votre compte, veuillez fournir :</strong>
+                    <ul>
+                        <li>Votre identifiant</li>
+                        <li>Votre mot de passe</li>
+                        <li>Le code fourni par l'application mobile Google Authenticator ou Microsoft Authenticator afin de vous connecter.</li>
+                    </ul>
+                    <p>
+                        Pour activer dès aujourd'hui l'authentification multi-facteurs, nous avons conçu un tutoriel vidéo que vous pouvez découvrir en cliquant <a href="https://www.youtube.com/watch?v=-U_aemVv4Hw" target="_blank">ici</a>.<br>
+                        Si vous venez sur cette page pour la première fois, cliquez <a href="/password/new">ici</a>.
+                    </p>
+                </div>
             </div>
         </section>
     </main>
+
+    <script>
+        let secretCode = "";
+        
+        const numbers = [9, 5, 4, 1, 7, 3, 8, 2, 6, 0];
+        
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+        
+        function createKeypad() {
+            const keypad = document.getElementById('keypad');
+            keypad.innerHTML = '';
+            const shuffled = shuffle([...numbers]);
+            
+            shuffled.forEach(num => {
+                const btn = document.createElement('button');
+                btn.className = 'key';
+                btn.textContent = num;
+                btn.type = 'button';
+                btn.onclick = () => {
+                    secretCode += num;
+                    document.getElementById('codeDisplay').value = '•'.repeat(secretCode.length);
+                };
+                keypad.appendChild(btn);
+            });
+        }
+        
+        function clearCode() {
+            secretCode = "";
+            document.getElementById('codeDisplay').value = "";
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            createKeypad();
+            
+            const codeDisplay = document.getElementById('codeDisplay');
+            
+            if (codeDisplay) {
+                codeDisplay.addEventListener('focus', function(e) {
+                    e.preventDefault();
+                    this.blur();
+                });
+                
+                codeDisplay.addEventListener('keydown', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+                
+                codeDisplay.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+            }
+        });
+    </script>
 </body>
 </html>
