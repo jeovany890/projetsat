@@ -66,17 +66,20 @@
                             <div class="entreprise-info">
                                 <h4>RSSI désigné</h4>
                                 <div class="info-list">
-                                    <div><strong>Nom :</strong> RSSI (à lier)</div>
+                                    <div><strong>Nom :</strong> RSSI </div>
                                     <div><strong>Email :</strong> {{ entreprise.email }}</div>
                                 </div>
                             </div>
                         </div>
 <div class="entreprise-actions">
-    <form method="post" action="{{ path('admin_entreprise_valider', {id: entreprise.id}) }}" class="action-form">
-        <button type="submit" class="btn btn-primary" onclick="return confirm('Valider cette entreprise et envoyer l\'email d\'activation au RSSI ?')">
-            <i class="bi bi-check-lg"></i> Valider et activer
-        </button>
-    </form>
+  <form method="post" action="{{ path('admin_entreprise_valider', {id: entreprise.id}) }}" 
+      class="action-form" id="form-valider-{{ entreprise.id }}">
+    <button type="submit" class="btn btn-primary"
+            data-confirm="Valider cette entreprise et envoyer l'email d'activation au RSSI ?"
+            data-form="form-valider-{{ entreprise.id }}">
+        <i class="bi bi-check-lg"></i> Valider et activer
+    </button>
+</form>
     <a href="{{ path('admin_entreprise_rejeter', {id: entreprise.id}) }}" class="btn btn-ghost btn-danger action-form" style="text-align:center;">
         <i class="bi bi-x-lg"></i> Rejeter
     </a>
