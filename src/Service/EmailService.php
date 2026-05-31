@@ -6,11 +6,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 class EmailService
 {
-    /**
-     * Envoi SMTP de base.
-     *
-     * @param array $embeds  [ ['path' => '/...', 'cid' => 'logo@sat', 'name' => 'logo.jpg'] ]
-     */
     private function envoyer(
         string $username,
         string $password,
@@ -18,8 +13,7 @@ class EmailService
         string $fromNom,
         string $destinataire,
         string $sujet,
-        string $html,
-        array  $embeds = []
+        string $html
     ): void {
         $mail = new PHPMailer(true);
         $mail->isSMTP();
@@ -37,21 +31,6 @@ class EmailService
         $mail->Body    = $html;
         $mail->AltBody = strip_tags($html);
 
-        // ── Images embarquées (CID) ────────────────────────────────
-        // Affichées par Gmail/Outlook SANS demande d'autorisation
-        // car elles sont dans le corps MIME du message lui-même.
-        foreach ($embeds as $embed) {
-            if (!empty($embed['path']) && file_exists($embed['path'])) {
-                $mail->addEmbeddedImage(
-                    $embed['path'],          // chemin absolu du fichier
-                    $embed['cid'],           // Content-ID → utilisé comme src="cid:xxx"
-                    $embed['name'] ?? 'image.jpg',
-                    PHPMailer::ENCODING_BASE64,
-                    $embed['mime'] ?? 'image/jpeg'
-                );
-            }
-        }
-
         try {
             $mail->send();
         } catch (\Exception $e) {
@@ -59,14 +38,12 @@ class EmailService
         }
     }
 
-    // ── Email légitime (notifications, formations, etc.) ──────────
     public function envoyerEmailLeitime(
         string  $destinataire,
         string  $sujet,
         string  $contenuHtml,
-        ?string $nomExpediteur  = 'SAT Platform',
-        ?string $emailExpediteur = null,
-        array   $embeds = []
+        ?string $nomExpediteur   = 'SAT Platform',
+        ?string $emailExpediteur = null
     ): void {
         $this->envoyer(
             username:     'satplatform.noreply1@gmail.com',
@@ -76,22 +53,22 @@ class EmailService
             destinataire: $destinataire,
             sujet:        $sujet,
             html:         $contenuHtml,
-            embeds:       $embeds
         );
     }
 
-    // ── Email phishing simulé ─────────────────────────────────────
     public function envoyerEmailPhishing(
         string  $destinataire,
         string  $sujet,
         string  $contenuHtml,
         string  $nomExpediteur,
         string  $emailExpediteur,
-        ?string $compteEmailDsn = null,
-        array   $embeds = []
+        ?string $compteEmailDsn = null
     ): void {
         [$username, $password] = match($compteEmailDsn) {
-            default => ['satplatform.noreply1@gmail.com', $_ENV['GMAIL_PASSWORD_PHISHING']],
+            default => [
+                'satplatform.noreply1@gmail.com',
+                $_ENV['GMAIL_PASSWORD_PHISHING']
+            ],
         };
 
         $this->envoyer(
@@ -102,7 +79,6 @@ class EmailService
             destinataire: $destinataire,
             sujet:        $sujet,
             html:         $contenuHtml,
-            embeds:       $embeds
         );
     }
 }

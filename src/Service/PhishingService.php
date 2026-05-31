@@ -38,24 +38,16 @@ class PhishingService
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        // ── Résoudre les images à embarquer en CID ─────────────────
-        // On construit la liste des images à passer à PHPMailer.
-        // Chaque image aura un Content-ID unique.
-        // Dans le HTML du gabarit on utilise src="cid:logo_entreprise"
-        // Gmail affiche les images CID sans aucune restriction.
-        $embeds  = [];
-        $logoSrc = '';
-
-        $logoPath = $this->resoudreLogoChemin($employe, $gabarit);
-        if ($logoPath) {
-            $embeds[]  = [
-                'path' => $logoPath,
-                'cid'  => 'logo_entreprise',
-                'name' => basename($logoPath),
-                'mime' => $this->detectMime($logoPath),
-            ];
-            $logoSrc = 'cid:logo_entreprise';
-        }
+        // ── Logo en base64 inline ──────────────────────────────────
+        // On lit le fichier logo sur le disque, on l'encode en base64
+        // et on l'injecte directement dans l'attribut src de l'image.
+        //
+        // Avantages vs CID ou URL externe :
+        //   - Gmail affiche l'image IMMÉDIATEMENT, même avant ouverture
+        //   - Pas de pièce jointe visible (icône "logo.jpeg" supprimée)
+        //   - Fonctionne hors ligne, sans serveur, sans ngrok
+        //   - Compatible Gmail, Outlook, Yahoo, Apple Mail
+        $logoDataUri = $this->genererLogoDataUri($employe, $gabarit);
 
         $contenu = $this->personnaliserContenu(
             $gabarit->getContenuHtml(),
@@ -64,9 +56,10 @@ class PhishingService
             $urlFakePage,
             $urlClic,
             $token,
-            $logoSrc
+            $logoDataUri
         );
 
+        // Pas d'embeds CID — tout est dans le HTML
         $this->emailService->envoyerEmailPhishing(
             destinataire:    $resultat->getEmailDestinataire(),
             sujet:           $gabarit->getSujetEmail(),
@@ -74,7 +67,6 @@ class PhishingService
             nomExpediteur:   $gabarit->getNomExpediteur(),
             emailExpediteur: $gabarit->getEmailExpediteur(),
             compteEmailDsn:  $gabarit->getCompteEmailDsn(),
-            embeds:          $embeds,    // ← images embarquées CID
         );
 
         $resultat->marquerCommeEnvoye();
@@ -112,18 +104,106 @@ class PhishingService
     }
 
     // ══════════════════════════════════════════════════════════════
+    // GÉNÉRATION DU DATA URI BASE64
+    //
+    // Retourne une chaîne du type :
+    //   data:image/jpeg;base64,/9j/4AAQSkZJRgAB...
+    //
+    // Cette chaîne est mise directement dans src="..." de l'image.
+    // Gmail/Outlook/Yahoo affichent l'image sans aucune restriction
+    // car elle est physiquement dans le HTML de l'email.
+    //
+    // L'image est redimensionnée à max 200x80px pour réduire le poids.
+    // ══════════════════════════════════════════════════════════════
+    private function genererLogoDataUri(
+        \App\Entity\Employe         $employe,
+        \App\Entity\GabaritPhishing $gabarit
+    ): string {
+        $logoPath = $this->resoudreLogoChemin($employe, $gabarit);
+
+        if (!$logoPath || !file_exists($logoPath)) {
+            // Retourner un pixel transparent si pas de logo
+            return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+        }
+
+        // Redimensionner l'image si les fonctions GD sont disponibles
+        $imageData = $this->redimensionnerImage($logoPath);
+
+        $mime   = $this->detectMime($logoPath);
+        $base64 = base64_encode($imageData);
+
+        return "data:{$mime};base64,{$base64}";
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // REDIMENSIONNEMENT AVEC GD (disponible sur AlwaysData)
+    // Réduit l'image à max 200x80px pour garder l'email léger.
+    // Si GD n'est pas disponible, retourne le fichier brut.
+    // ══════════════════════════════════════════════════════════════
+    private function redimensionnerImage(string $path): string
+    {
+        if (!extension_loaded('gd')) {
+            return file_get_contents($path);
+        }
+
+        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        $src = match($ext) {
+            'png'  => @imagecreatefrompng($path),
+            'gif'  => @imagecreatefromgif($path),
+            'webp' => @imagecreatefromwebp($path),
+            default => @imagecreatefromjpeg($path),
+        };
+
+        if (!$src) {
+            return file_get_contents($path);
+        }
+
+        $origW = imagesx($src);
+        $origH = imagesy($src);
+
+        // Calculer les nouvelles dimensions (max 200x80)
+        $maxW = 200;
+        $maxH = 80;
+        $ratio = min($maxW / $origW, $maxH / $origH);
+
+        // Si l'image est déjà petite, pas besoin de redimensionner
+        if ($ratio >= 1) {
+            imagedestroy($src);
+            return file_get_contents($path);
+        }
+
+        $newW = (int)($origW * $ratio);
+        $newH = (int)($origH * $ratio);
+
+        $dst = imagecreatetruecolor($newW, $newH);
+
+        // Fond blanc pour les PNG avec transparence
+        $blanc = imagecolorallocate($dst, 255, 255, 255);
+        imagefill($dst, 0, 0, $blanc);
+
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
+
+        ob_start();
+        imagejpeg($dst, null, 85);
+        $data = ob_get_clean();
+
+        imagedestroy($src);
+        imagedestroy($dst);
+
+        return $data;
+    }
+
+    // ══════════════════════════════════════════════════════════════
     // RÉSOLUTION DU CHEMIN LOCAL DU LOGO
     //
-    // Retourne le chemin ABSOLU sur le disque (pas une URL).
-    // PHPMailer lira le fichier et l'embarquera en base64 dans l'email.
-    //
     // Priorité :
-    //   1. logoPath sur l'entité Entreprise  (ex: "uploads/logos/xxx.jpg")
-    //   2. Fichier dans public/images/ dont le nom correspond au slug/nom
-    //   3. Logo par défaut : public/images/logo.jpeg
+    //   1. logoPath sur l'entité Entreprise
+    //   2. logoPath sur le gabarit
+    //   3. public/images/logo.jpeg (logo par défaut)
     // ══════════════════════════════════════════════════════════════
     private function resoudreLogoChemin(
-        \App\Entity\Employe       $employe,
+        \App\Entity\Employe         $employe,
         \App\Entity\GabaritPhishing $gabarit
     ): ?string {
         $publicDir = dirname(__DIR__, 2) . '/public';
@@ -137,13 +217,13 @@ class PhishingService
             }
         }
 
-        // 2. Logo du gabarit (champ logoPath si présent)
+        // 2. Logo du gabarit
         if (method_exists($gabarit, 'getLogoPath') && $gabarit->getLogoPath()) {
             $path = $publicDir . '/' . ltrim($gabarit->getLogoPath(), '/');
             if (file_exists($path)) return $path;
         }
 
-        // 3. Logo par défaut (logo.jpeg)
+        // 3. Logo par défaut
         $default = $publicDir . '/images/logo.jpeg';
         if (file_exists($default)) return $default;
 
@@ -164,11 +244,7 @@ class PhishingService
 
     // ══════════════════════════════════════════════════════════════
     // PERSONNALISATION DU HTML
-    //
-    // Dans le gabarit HTML utilise :
-    //   src="{{LOGO_ENTREPRISE}}"
-    // Ce placeholder sera remplacé par "cid:logo_entreprise"
-    // Gmail affiche cette image directement sans blocage.
+    // {{LOGO_ENTREPRISE}} → data:image/jpeg;base64,...
     // ══════════════════════════════════════════════════════════════
     private function personnaliserContenu(
         string $contenu,
@@ -177,75 +253,53 @@ class PhishingService
         string $urlFakePage,
         string $urlClic,
         string $token,
-        string $logoSrc
+        string $logoDataUri
     ): string {
         $now        = new \DateTime();
         $entreprise = $employe->getEntreprise()?->getNom() ?? 'SAT Platform';
 
         return str_replace(
             [
-                // Logo CID (affiché sans blocage Gmail)
                 '{{LOGO_ENTREPRISE}}', '{LOGO_ENTREPRISE}',
                 '{{LOGO_URL}}',        '{LOGO_URL}',
-
-                // Liens tracking
                 '{{LIEN_SIGNALEMENT}}', '{LIEN_SIGNALEMENT}',
                 '{{LIEN_PIEGE}}',       '{LIEN_PIEGE}',
                 '{{LIEN_CLIC}}',        '{LIEN_CLIC}',
-
-                // Employé
-                '{{PRENOM_EMPLOYE}}', '{PRENOM_EMPLOYE}', '{PRENOM}', '{{PRENOM}}',
-                '{{NOM_EMPLOYE}}',    '{NOM_EMPLOYE}',    '{NOM}',    '{{NOM}}',
+                '{{PRENOM_EMPLOYE}}', '{PRENOM_EMPLOYE}', '{{PRENOM}}', '{PRENOM}',
+                '{{NOM_EMPLOYE}}',    '{NOM_EMPLOYE}',    '{{NOM}}',    '{NOM}',
                 '{{NOM_COMPLET}}',    '{NOM_COMPLET}',
-                '{{EMAIL_EMPLOYE}}',  '{EMAIL_EMPLOYE}',  '{EMAIL}',  '{{EMAIL}}',
-                '{{POSTE_EMPLOYE}}',  '{POSTE_EMPLOYE}',  '{POSTE}',  '{{POSTE}}',
+                '{{EMAIL_EMPLOYE}}',  '{EMAIL_EMPLOYE}',  '{{EMAIL}}',  '{EMAIL}',
+                '{{POSTE_EMPLOYE}}',  '{POSTE_EMPLOYE}',  '{{POSTE}}',  '{POSTE}',
                 '{{ENTREPRISE}}',     '{ENTREPRISE}',
-
-                // Token
-                '{{TOKEN}}', '{TOKEN}',
-
-                // Date/heure
+                '{{TOKEN}}',          '{TOKEN}',
                 '{{DATE_ACTUELLE}}',  '{DATE_ACTUELLE}',
                 '{{HEURE_ACTUELLE}}', '{HEURE_ACTUELLE}',
                 '{{DATE_LIMITE}}',    '{DATE_LIMITE}',
-
-                // Legacy Twig
                 '{{ "now"|date("YmdHi") }}',
                 '{{ "now"|date("dm") }}',
                 '{{ "now"|date_modify("+24 hours")|date("d/m/Y à H:i") }}',
             ],
             [
-                // Logo → CID (embarqué dans le MIME, affiché sans restriction)
-                $logoSrc, $logoSrc,
-                $logoSrc, $logoSrc,
-
-                // Liens
+                $logoDataUri, $logoDataUri,
+                $logoDataUri, $logoDataUri,
                 $urlSignalement, $urlSignalement,
                 $urlFakePage,    $urlFakePage,
                 $urlClic,        $urlClic,
-
-                // Employé
                 $employe->getPrenom(), $employe->getPrenom(), $employe->getPrenom(), $employe->getPrenom(),
                 $employe->getNom(),    $employe->getNom(),    $employe->getNom(),    $employe->getNom(),
                 $employe->getPrenom() . ' ' . $employe->getNom(),
                 $employe->getPrenom() . ' ' . $employe->getNom(),
-                $employe->getEmail(),  $employe->getEmail(),  $employe->getEmail(),  $employe->getEmail(),
+                $employe->getEmail(), $employe->getEmail(), $employe->getEmail(), $employe->getEmail(),
                 $employe->getPoste() ?? 'Employé',
                 $employe->getPoste() ?? 'Employé',
                 $employe->getPoste() ?? 'Employé',
                 $employe->getPoste() ?? 'Employé',
                 $entreprise, $entreprise,
-
-                // Token
                 $token, $token,
-
-                // Date/heure
                 $now->format('d/m/Y'), $now->format('d/m/Y'),
                 $now->format('H:i'),   $now->format('H:i'),
                 (clone $now)->modify('+24 hours')->format('d/m/Y à H:i'),
                 (clone $now)->modify('+24 hours')->format('d/m/Y à H:i'),
-
-                // Legacy
                 $now->format('YmdHi'),
                 $now->format('dm'),
                 (clone $now)->modify('+24 hours')->format('d/m/Y à H:i'),
