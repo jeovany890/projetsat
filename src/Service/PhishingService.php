@@ -38,16 +38,12 @@ class PhishingService
             UrlGeneratorInterface::ABSOLUTE_URL
         );
 
-        // ── Logo en base64 inline ──────────────────────────────────
-        // On lit le fichier logo sur le disque, on l'encode en base64
-        // et on l'injecte directement dans l'attribut src de l'image.
-        //
-        // Avantages vs CID ou URL externe :
-        //   - Gmail affiche l'image IMMÉDIATEMENT, même avant ouverture
-        //   - Pas de pièce jointe visible (icône "logo.jpeg" supprimée)
-        //   - Fonctionne hors ligne, sans serveur, sans ngrok
-        //   - Compatible Gmail, Outlook, Yahoo, Apple Mail
-        $logoDataUri = $this->genererLogoDataUri($employe, $gabarit);
+        // ── URL absolue HTTPS du logo ──────────────────────────────
+        // Le projet est sur AlwaysData (HTTPS public).
+        // Gmail charge les images depuis des URLs HTTPS sans restriction
+        // dès que le destinataire a activé "Afficher les images" une fois.
+        // APP_URL doit valoir "https://satplatform.alwaysdata.net"
+        $logoUrl = $this->resoudreLogoUrl($employe, $gabarit);
 
         $contenu = $this->personnaliserContenu(
             $gabarit->getContenuHtml(),
@@ -56,10 +52,9 @@ class PhishingService
             $urlFakePage,
             $urlClic,
             $token,
-            $logoDataUri
+            $logoUrl
         );
 
-        // Pas d'embeds CID — tout est dans le HTML
         $this->emailService->envoyerEmailPhishing(
             destinataire:    $resultat->getEmailDestinataire(),
             sujet:           $gabarit->getSujetEmail(),
@@ -104,147 +99,46 @@ class PhishingService
     }
 
     // ══════════════════════════════════════════════════════════════
-    // GÉNÉRATION DU DATA URI BASE64
+    // RÉSOLUTION DE L'URL DU LOGO
     //
-    // Retourne une chaîne du type :
-    //   data:image/jpeg;base64,/9j/4AAQSkZJRgAB...
+    // Retourne une URL HTTPS absolue vers le logo.
+    // AlwaysData sert les fichiers en HTTPS → Gmail les charge.
     //
-    // Cette chaîne est mise directement dans src="..." de l'image.
-    // Gmail/Outlook/Yahoo affichent l'image sans aucune restriction
-    // car elle est physiquement dans le HTML de l'email.
-    //
-    // L'image est redimensionnée à max 200x80px pour réduire le poids.
+    // Priorité :
+    //   1. logoPath sur l'entreprise → construit via APP_URL
+    //   2. logoPath sur le gabarit   → construit via APP_URL
+    //   3. Logo par défaut           → APP_URL/images/logo.jpeg
     // ══════════════════════════════════════════════════════════════
-    private function genererLogoDataUri(
+    private function resoudreLogoUrl(
         \App\Entity\Employe         $employe,
         \App\Entity\GabaritPhishing $gabarit
     ): string {
-        $logoPath = $this->resoudreLogoChemin($employe, $gabarit);
+        // APP_URL = "https://satplatform.alwaysdata.net" dans .env.local
+        $baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://satplatform.alwaysdata.net', '/');
 
-        if (!$logoPath || !file_exists($logoPath)) {
-            // Retourner un pixel transparent si pas de logo
-            return 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
-        }
-
-        // Redimensionner l'image si les fonctions GD sont disponibles
-        $imageData = $this->redimensionnerImage($logoPath);
-
-        $mime   = $this->detectMime($logoPath);
-        $base64 = base64_encode($imageData);
-
-        return "data:{$mime};base64,{$base64}";
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // REDIMENSIONNEMENT AVEC GD (disponible sur AlwaysData)
-    // Réduit l'image à max 200x80px pour garder l'email léger.
-    // Si GD n'est pas disponible, retourne le fichier brut.
-    // ══════════════════════════════════════════════════════════════
-    private function redimensionnerImage(string $path): string
-    {
-        if (!extension_loaded('gd')) {
-            return file_get_contents($path);
-        }
-
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-
-        $src = match($ext) {
-            'png'  => @imagecreatefrompng($path),
-            'gif'  => @imagecreatefromgif($path),
-            'webp' => @imagecreatefromwebp($path),
-            default => @imagecreatefromjpeg($path),
-        };
-
-        if (!$src) {
-            return file_get_contents($path);
-        }
-
-        $origW = imagesx($src);
-        $origH = imagesy($src);
-
-        // Calculer les nouvelles dimensions (max 200x80)
-        $maxW = 200;
-        $maxH = 80;
-        $ratio = min($maxW / $origW, $maxH / $origH);
-
-        // Si l'image est déjà petite, pas besoin de redimensionner
-        if ($ratio >= 1) {
-            imagedestroy($src);
-            return file_get_contents($path);
-        }
-
-        $newW = (int)($origW * $ratio);
-        $newH = (int)($origH * $ratio);
-
-        $dst = imagecreatetruecolor($newW, $newH);
-
-        // Fond blanc pour les PNG avec transparence
-        $blanc = imagecolorallocate($dst, 255, 255, 255);
-        imagefill($dst, 0, 0, $blanc);
-
-        imagecopyresampled($dst, $src, 0, 0, 0, 0, $newW, $newH, $origW, $origH);
-
-        ob_start();
-        imagejpeg($dst, null, 85);
-        $data = ob_get_clean();
-
-        imagedestroy($src);
-        imagedestroy($dst);
-
-        return $data;
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // RÉSOLUTION DU CHEMIN LOCAL DU LOGO
-    //
-    // Priorité :
-    //   1. logoPath sur l'entité Entreprise
-    //   2. logoPath sur le gabarit
-    //   3. public/images/logo.jpeg (logo par défaut)
-    // ══════════════════════════════════════════════════════════════
-    private function resoudreLogoChemin(
-        \App\Entity\Employe         $employe,
-        \App\Entity\GabaritPhishing $gabarit
-    ): ?string {
-        $publicDir = dirname(__DIR__, 2) . '/public';
-
-        // 1. Logo uploadé sur l'entreprise
+        // 1. Logo de l'entreprise
         $entreprise = $employe->getEntreprise();
         if ($entreprise) {
             if (method_exists($entreprise, 'getLogoPath') && $entreprise->getLogoPath()) {
-                $path = $publicDir . '/' . ltrim($entreprise->getLogoPath(), '/');
-                if (file_exists($path)) return $path;
+                return $baseUrl . '/' . ltrim($entreprise->getLogoPath(), '/');
+            }
+            if (method_exists($entreprise, 'getLogoUrl') && $entreprise->getLogoUrl()) {
+                return $entreprise->getLogoUrl();
             }
         }
 
         // 2. Logo du gabarit
         if (method_exists($gabarit, 'getLogoPath') && $gabarit->getLogoPath()) {
-            $path = $publicDir . '/' . ltrim($gabarit->getLogoPath(), '/');
-            if (file_exists($path)) return $path;
+            return $baseUrl . '/' . ltrim($gabarit->getLogoPath(), '/');
         }
 
-        // 3. Logo par défaut
-        $default = $publicDir . '/images/logo.jpeg';
-        if (file_exists($default)) return $default;
-
-        return null;
-    }
-
-    private function detectMime(string $path): string
-    {
-        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        return match($ext) {
-            'png'  => 'image/png',
-            'gif'  => 'image/gif',
-            'webp' => 'image/webp',
-            'svg'  => 'image/svg+xml',
-            default => 'image/jpeg',
-        };
+        // 3. Logo par défaut hébergé sur AlwaysData
+        return $baseUrl . '/images/logo.jpeg';
     }
 
     // ══════════════════════════════════════════════════════════════
     // PERSONNALISATION DU HTML
-    // {{LOGO_ENTREPRISE}} → data:image/jpeg;base64,...
+    // {{LOGO_ENTREPRISE}} → URL HTTPS du logo
     // ══════════════════════════════════════════════════════════════
     private function personnaliserContenu(
         string $contenu,
@@ -253,7 +147,7 @@ class PhishingService
         string $urlFakePage,
         string $urlClic,
         string $token,
-        string $logoDataUri
+        string $logoUrl
     ): string {
         $now        = new \DateTime();
         $entreprise = $employe->getEntreprise()?->getNom() ?? 'SAT Platform';
@@ -280,8 +174,8 @@ class PhishingService
                 '{{ "now"|date_modify("+24 hours")|date("d/m/Y à H:i") }}',
             ],
             [
-                $logoDataUri, $logoDataUri,
-                $logoDataUri, $logoDataUri,
+                $logoUrl, $logoUrl,
+                $logoUrl, $logoUrl,
                 $urlSignalement, $urlSignalement,
                 $urlFakePage,    $urlFakePage,
                 $urlClic,        $urlClic,
