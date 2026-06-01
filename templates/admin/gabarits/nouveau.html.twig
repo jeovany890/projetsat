@@ -13,24 +13,27 @@
     <div class="card">
         <div class="card-header">
             <h2>
-                <i class="bi bi-envelope-paper" style="color: #E53E3E;"></i>
+                <i class="bi bi-envelope-paper" style="color:#E53E3E;"></i>
                 Nouveau gabarit
             </h2>
-           
         </div>
         <div class="card-body">
-            <form method="post" id="formGabarit">
 
-                {# ── INFOS GÉNÉRALES ── #}
+            {# enctype="multipart/form-data" obligatoire pour l'upload du logo #}
+            <form method="post" enctype="multipart/form-data" id="formGabarit">
+
+                {# ── INFORMATIONS GÉNÉRALES ── #}
                 <div class="form-section">
                     <h3 class="section-title">Informations générales</h3>
                     <div class="form-group">
                         <label class="form-label">Titre du gabarit *</label>
-                        <input type="text" class="form-control" name="titre" required placeholder="Ex: Smishing BOA - Compte bloqué">
+                        <input type="text" class="form-control" name="titre" required
+                               placeholder="Ex: Smishing BOA - Compte bloqué">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="2" placeholder="Description interne..."></textarea>
+                        <textarea class="form-control" name="description" rows="2"
+                                  placeholder="Description interne..."></textarea>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -43,11 +46,11 @@
                                     <option value="" disabled>Aucun module publié — créez d'abord un module</option>
                                 {% endfor %}
                             </select>
-                            <p class="form-hint" style="margin-top:4px;font-size:11px;color:#64748B;">
+                            <small class="form-hint">
                                 <i class="bi bi-info-circle"></i>
-                                Catégories issues des modules de formation publiés. En cas d'échec phishing,
-                                le module de la même catégorie sera proposé automatiquement à l'employé.
-                            </p>
+                                Catégories issues des modules publiés. En cas d'échec phishing,
+                                le module de la même catégorie est proposé automatiquement.
+                            </small>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Difficulté</label>
@@ -60,36 +63,81 @@
                     </div>
                 </div>
 
-                {# ── SECTION EMAIL ── #}
+                {# ── LOGO DU GABARIT ── #}
+                <div class="form-section">
+                    <h3 class="section-title">Logo du gabarit</h3>
+                    <div class="logo-upload-zone" id="logoUploadZone">
+                        <div class="logo-preview-wrap" id="logoPreviewWrap" style="display:none;">
+                            <img id="logoPreview" src="" alt="Aperçu logo"
+                                 style="max-height:64px;max-width:200px;border-radius:6px;object-fit:contain;">
+                            <button type="button" class="logo-remove-btn" id="logoRemoveBtn"
+                                    onclick="supprimerLogoSelection()">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        <div id="logoPlaceholder">
+                            <i class="bi bi-image" style="font-size:2rem;color:#CBD5E1;display:block;margin-bottom:8px;"></i>
+                            <p style="margin:0 0 10px;font-size:13px;color:#64748B;">
+                                Logo affiché dans l'email phishing<br>
+                                <span style="font-size:11px;color:#94A3B8;">JPEG, PNG, WebP — max 2Mo</span>
+                            </p>
+                            <label class="btn btn-outline-upload" for="logoInput">
+                                <i class="bi bi-upload"></i> Choisir un logo
+                            </label>
+                        </div>
+                        <input type="file" id="logoInput" name="logo"
+                               accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                               style="display:none;" onchange="previewLogo(this)">
+                    </div>
+                    <small class="form-hint" style="margin-top:8px;display:block;">
+                        Utilisez <code>{% verbatim %}{{LOGO_ENTREPRISE}}{% endverbatim %}</code> dans le contenu HTML
+                        pour insérer ce logo dans l'email.
+                        Si aucun logo n'est uploadé, le logo par défaut de la plateforme sera utilisé.
+                    </small>
+                </div>
+
+                {# ── CONTENU EMAIL ── #}
                 <div class="form-section">
                     <h3 class="section-title">Contenu Email</h3>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Nom de l'expéditeur affiché *</label>
-                            <input type="text" class="form-control" name="nom_expediteur" placeholder="Ex: BOA Service Client">
+                            <input type="text" class="form-control" name="nom_expediteur"
+                                   placeholder="Ex: BOA Service Client">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email affiché *</label>
-                            <input type="text" class="form-control" name="email_expediteur" placeholder="Ex: support@boa-beniin.com">
+                            <input type="text" class="form-control" name="email_expediteur"
+                                   placeholder="Ex: support@boa-benin.com">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Sujet de l'email *</label>
-                        <input type="text" class="form-control" name="sujet_email" placeholder="Ex:Votre compte sera suspendu dans 24h">
+                        <input type="text" class="form-control" name="sujet_email"
+                               placeholder="Ex: Votre compte sera suspendu dans 24h">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Compte d'envoi Gmail</label>
                         <select class="form-control" name="compte_email_dsn">
                             <option value="MAILER_PHISHING_PHISHING">Phishing</option>
                         </select>
-                        <small class="form-hint">Compte Gmail utilisé pour l'envoi — doit correspondre au gabarit</small>
+                        <small class="form-hint">Compte Gmail utilisé pour l'envoi</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Contenu HTML *</label>
-                        <textarea class="form-control" name="contenu_html" rows="12" style="font-family: monospace;" placeholder="<div>...</div>"></textarea>
-                        <small class="form-hint">
-                            Variables : <code>{{ '{{' }}LIEN_PIEGE{{ '}}' }}</code> <code>{{ '{{' }}PRENOM_EMPLOYE{{ '}}' }}</code> <code>{{ '{{' }}NOM_EMPLOYE{{ '}}' }}</code> <code>{{ '{{' }}EMAIL_EMPLOYE{{ '}}' }}</code>
-                        </small>
+                        <div class="variables-hint">
+                            <span class="var-badge">{% verbatim %}{{LOGO_ENTREPRISE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{LIEN_PIEGE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{LIEN_SIGNALEMENT}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{PRENOM_EMPLOYE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{NOM_EMPLOYE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{EMAIL_EMPLOYE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{DATE_ACTUELLE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{HEURE_ACTUELLE}}{% endverbatim %}</span>
+                            <span class="var-badge">{% verbatim %}{{DATE_LIMITE}}{% endverbatim %}</span>
+                        </div>
+                        <textarea class="form-control code-area" name="contenu_html" rows="14"
+                                  placeholder="<div>...</div>"></textarea>
                     </div>
                 </div>
 
@@ -97,8 +145,9 @@
                 <div class="form-section">
                     <h3 class="section-title">Indices de phishing (pour la correction)</h3>
                     <div class="form-group">
-                        <label class="form-label">Liste des pièges / indices</label>
-                        <textarea class="form-control" name="indices_pieges" rows="5" placeholder="Un indice par ligne :&#10;Faute dans le nom de domaine&#10;Urgence artificielle&#10;Lien raccourci suspect&#10;Numéro expéditeur inconnu"></textarea>
+                        <label class="form-label">Liste des indices — un par ligne</label>
+                        <textarea class="form-control" name="indices_pieges" rows="5"
+                                  placeholder="Faute dans le nom de domaine&#10;Urgence artificielle&#10;Lien raccourci suspect&#10;Numéro expéditeur inconnu"></textarea>
                         <small class="form-hint">Affichés aux employés après le test pour les former</small>
                     </div>
                 </div>
@@ -114,7 +163,6 @@
                     </label>
                 </div>
 
-                {# Actions #}
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-check-lg"></i> Créer le gabarit
@@ -132,234 +180,149 @@
 {% block stylesheets %}
 {{ parent() }}
 <style>
-    .form-container {
-        max-width: 900px;
-        margin: 0 auto;
-    }
-    .card {
-        background: white;
-        border-radius: 1rem;
-        border: 1px solid #E2E8F0;
-        overflow: hidden;
-    }
-    html.dark .card {
-        background: #1E293B;
-        border-color: #334155;
-    }
-    .card-header {
-        padding: 1.5rem 1.75rem;
-        border-bottom: 1px solid #E2E8F0;
-        background: #F8FAFC;
-    }
-    html.dark .card-header {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    .card-header h2 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 0.25rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .card-subtitle {
-        font-size: 0.75rem;
-        color: #64748B;
-        margin: 0;
-    }
-    html.dark .card-header h2 {
-        color: #F1F5F9;
-    }
-    .card-body {
-        padding: 1.75rem;
-    }
-    .form-section {
-        margin-bottom: 2rem;
-        padding-bottom: 1.5rem;
-        border-bottom: 1px solid #E2E8F0;
-    }
-    html.dark .form-section {
-        border-color: #334155;
-    }
-    .section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0F172A;
-        margin: 0 0 1rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    .section-title:before {
-        content: '';
-        width: 4px;
-        height: 18px;
-        background: #E53E3E;
-        border-radius: 4px;
-        display: inline-block;
-    }
-    html.dark .section-title {
-        color: #F1F5F9;
-    }
-    .form-group {
-        margin-bottom: 1rem;
-    }
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 1rem;
-    }
-    .form-row.two-cols {
-        grid-template-columns: 1fr 1fr;
-    }
-    @media (max-width: 768px) {
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-    }
-    .form-label {
-        display: block;
-        font-size: 0.7rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        color: #475569;
-        margin-bottom: 0.4rem;
-    }
-    .form-control {
-        width: 100%;
-        padding: 0.5rem 0.75rem;
-        border: 1px solid #CBD5E1;
-        border-radius: 0.5rem;
-        font-size: 0.875rem;
-        background: white;
-        color: #0F172A;
-        transition: all 0.15s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: #E53E3E;
-        box-shadow: 0 0 0 3px rgba(229,62,62,0.2);
-    }
-    textarea.form-control {
-        font-family: monospace;
-        resize: vertical;
-    }
-    html.dark .form-control {
-        background: #0F172A;
-        border-color: #334155;
-        color: #F1F5F9;
-    }
-    .form-hint {
-        display: block;
-        margin-top: 0.25rem;
-        font-size: 0.7rem;
-        color: #94A3B8;
-    }
-    .checkbox-label {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.75rem;
-        cursor: pointer;
-        padding: 0.75rem;
-        background: #F8FAFC;
-        border-radius: 0.75rem;
-        border: 1px solid #E2E8F0;
-    }
-    .checkbox-label input {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        accent-color: #E53E3E;
-    }
-    .checkbox-label strong {
-        font-size: 0.875rem;
-        color: #0F172A;
-    }
-    .checkbox-label small {
-        font-size: 0.7rem;
-        color: #64748B;
-    }
-    html.dark .checkbox-label {
-        background: #0F172A;
-        border-color: #334155;
-    }
-    html.dark .checkbox-label strong {
-        color: #F1F5F9;
-    }
-    .form-actions {
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-        margin-top: 1rem;
-    }
-    .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.375rem 1rem;
-        border-radius: 8px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.2s;
-        cursor: pointer;
-        border: none;
-    }
-    .btn-primary {
-        background: #E53E3E;
-        color: white;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-        background: #C53030;
-        transform: translateY(-1px);
-    }
-    .btn-ghost {
-        background: transparent;
-        border: 1px solid #E2E8F0;
-        color: #475569;
-    }
-    .btn-ghost:hover {
-        background: #F8FAFC;
-        border-color: #CBD5E1;
-        color: #1E293B;
-    }
-    html.dark .btn-ghost {
-        border-color: #334155;
-        color: #94A3B8;
-    }
-    html.dark .btn-ghost:hover {
-        background: #1E293B;
-        border-color: #475569;
-        color: #F1F5F9;
-    }
-    @media (max-width: 480px) {
-        .card-body {
-            padding: 1rem;
-        }
-        .form-actions {
-            flex-direction: column;
-        }
-        .form-actions .btn {
-            width: 100%;
-            justify-content: center;
-        }
-    }
-    .alert-warning {
-        background: #FEF3C7;
-        border: 1px solid #FDE68A;
-        border-radius: 0.75rem;
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
-        font-size: 0.8125rem;
-        color: #92400E;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
+.form-container { max-width: 900px; margin: 0 auto; }
+.card { background: white; border-radius: 1rem; border: 1px solid #E2E8F0; overflow: hidden; }
+html.dark .card { background: #1E293B; border-color: #334155; }
+.card-header { padding: 1.5rem 1.75rem; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
+html.dark .card-header { background: #0F172A; border-color: #334155; }
+.card-header h2 { font-size: 1.25rem; font-weight: 700; color: #0F172A; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+html.dark .card-header h2 { color: #F1F5F9; }
+.card-body { padding: 1.75rem; }
+.form-section { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #E2E8F0; }
+html.dark .form-section { border-color: #334155; }
+.section-title { font-size: 1rem; font-weight: 700; color: #0F172A; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.section-title:before { content: ''; width: 4px; height: 18px; background: #E53E3E; border-radius: 4px; display: inline-block; }
+html.dark .section-title { color: #F1F5F9; }
+.form-group { margin-bottom: 1rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+@media (max-width: 640px) { .form-row { grid-template-columns: 1fr; gap: 0; } }
+.form-label { display: block; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #475569; margin-bottom: 0.4rem; }
+.form-control { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #CBD5E1; border-radius: 0.5rem; font-size: 0.875rem; background: white; color: #0F172A; transition: all 0.15s; box-sizing: border-box; }
+.form-control:focus { outline: none; border-color: #E53E3E; box-shadow: 0 0 0 3px rgba(229,62,62,0.2); }
+html.dark .form-control { background: #0F172A; border-color: #334155; color: #F1F5F9; }
+.code-area { font-family: monospace; resize: vertical; }
+.form-hint { display: block; margin-top: 0.25rem; font-size: 0.7rem; color: #94A3B8; }
+
+/* ── Zone upload logo ── */
+.logo-upload-zone {
+    border: 2px dashed #E2E8F0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    text-align: center;
+    background: #F8FAFC;
+    transition: border-color 0.2s;
+    position: relative;
+}
+.logo-upload-zone:hover { border-color: #E53E3E; }
+html.dark .logo-upload-zone { background: #0F172A; border-color: #334155; }
+.logo-preview-wrap {
+    position: relative;
+    display: inline-block;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+html.dark .logo-preview-wrap { background: #1E293B; border-color: #334155; }
+.logo-remove-btn {
+    position: absolute;
+    top: -8px; right: -8px;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: #EF4444;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+}
+.btn-outline-upload {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 18px;
+    border: 1px solid #E53E3E;
+    border-radius: 8px;
+    color: #E53E3E;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: white;
+}
+.btn-outline-upload:hover { background: #FEF2F2; }
+html.dark .btn-outline-upload { background: #1E293B; }
+
+/* ── Badges variables ── */
+.variables-hint {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-bottom: 8px;
+}
+.var-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #FEF2F2;
+    color: #E53E3E;
+    border: 1px solid #FECACA;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: monospace;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.var-badge:hover { background: #FEE2E2; }
+
+/* ── Checkbox ── */
+.checkbox-label { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; padding: 0.75rem; background: #F8FAFC; border-radius: 0.75rem; border: 1px solid #E2E8F0; }
+.checkbox-label input { width: 18px; height: 18px; margin-top: 2px; accent-color: #E53E3E; }
+.checkbox-label strong { font-size: 0.875rem; color: #0F172A; }
+.checkbox-label small { font-size: 0.7rem; color: #64748B; }
+html.dark .checkbox-label { background: #0F172A; border-color: #334155; }
+html.dark .checkbox-label strong { color: #F1F5F9; }
+
+/* ── Actions ── */
+.form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+.btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 1rem; border-radius: 8px; font-size: 0.75rem; font-weight: 600; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
+.btn-primary { background: #E53E3E; color: white; }
+.btn-primary:hover { background: #C53030; transform: translateY(-1px); }
+.btn-ghost { background: transparent; border: 1px solid #E2E8F0; color: #475569; }
+.btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #1E293B; }
+html.dark .btn-ghost { border-color: #334155; color: #94A3B8; }
 </style>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+function previewLogo(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('logoPreview').src = e.target.result;
+            document.getElementById('logoPreviewWrap').style.display = 'inline-block';
+            document.getElementById('logoPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function supprimerLogoSelection() {
+    document.getElementById('logoInput').value = '';
+    document.getElementById('logoPreviewWrap').style.display = 'none';
+    document.getElementById('logoPlaceholder').style.display = 'block';
+}
+
+// Clic sur un badge variable → insère dans le textarea contenu_html
+document.querySelectorAll('.var-badge').forEach(function(badge) {
+    badge.addEventListener('click', function() {
+        var textarea = document.querySelector('textarea[name="contenu_html"]');
+        var pos  = textarea.selectionStart;
+        var val  = textarea.value;
+        var txt  = badge.textContent;
+        textarea.value = val.substring(0, pos) + txt + val.substring(textarea.selectionEnd);
+        textarea.selectionStart = textarea.selectionEnd = pos + txt.length;
+        textarea.focus();
+    });
+});
+</script>
 {% endblock %}

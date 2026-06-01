@@ -5,14 +5,16 @@ namespace App\Service;
 use App\Entity\CampagnePhishing;
 use App\Entity\ResultatPhishing;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 class PhishingService
 {
     public function __construct(
-        private EmailService $emailService,
-        private EntityManagerInterface $em,
-        private UrlGeneratorInterface $urlGenerator
+        private EmailService            $emailService,
+        private EntityManagerInterface  $em,
+        private UrlGeneratorInterface   $urlGenerator,
+        private LoggerInterface         $logger
     ) {}
 
     public function envoyerPourResultat(ResultatPhishing $resultat): bool
@@ -39,6 +41,14 @@ class PhishingService
         );
 
         $logoUrl = $this->resoudreLogoUrl($employe, $gabarit);
+
+        // Log pour diagnostic — visible dans var/log/prod.log
+        $this->logger->info('PhishingService logo résolu', [
+            'gabarit'       => $gabarit->getTitre(),
+            'logoPath_bd'   => $gabarit->getLogoPath(),
+            'logoUrl_final' => $logoUrl,
+            'APP_URL_env'   => $_ENV['APP_URL'] ?? 'NON DÉFINI',
+        ]);
 
         $contenu = $this->personnaliserContenu(
             $gabarit->getContenuHtml(),
@@ -81,6 +91,7 @@ class PhishingService
                 $this->em->flush();
                 $envoyes++;
             } catch (\Throwable $e) {
+                $this->logger->error('Erreur envoi phishing', ['message' => $e->getMessage()]);
                 $resultat->marquerCommeEchoue($e->getMessage());
                 $this->em->flush();
                 $echoues++;
@@ -91,36 +102,33 @@ class PhishingService
         return ['envoyes' => $envoyes, 'echoues' => $echoues, 'erreurs' => $erreurs];
     }
 
-    // ══════════════════════════════════════════════════════════════
-    // RÉSOLUTION DU LOGO
-    //
-    // Priorité :
-    //   1. Logo uploadé sur le gabarit  → spécifique au gabarit
-    //      (BOA, MTN, Orange, SBEE...)
-    //   2. Logo de l'entreprise ciblée  → si le gabarit n'en a pas
-    //   3. Logo par défaut              → public/images/logo.jpeg
-    // ══════════════════════════════════════════════════════════════
     private function resoudreLogoUrl(
         \App\Entity\Employe         $employe,
         \App\Entity\GabaritPhishing $gabarit
     ): string {
         $baseUrl = rtrim($_ENV['APP_URL'] ?? 'https://satplatform.alwaysdata.net', '/');
 
-        // 1. Logo du gabarit (prioritaire — spécifique au scénario)
+        // 1. Logo uploadé sur le gabarit
         if ($gabarit->getLogoPath()) {
-            return $baseUrl . '/' . ltrim($gabarit->getLogoPath(), '/');
+            $url = $baseUrl . '/' . ltrim($gabarit->getLogoPath(), '/');
+            $this->logger->debug('Logo depuis gabarit', ['url' => $url]);
+            return $url;
         }
 
         // 2. Logo de l'entreprise ciblée
         $entreprise = $employe->getEntreprise();
         if ($entreprise) {
             if (method_exists($entreprise, 'getLogoPath') && $entreprise->getLogoPath()) {
-                return $baseUrl . '/' . ltrim($entreprise->getLogoPath(), '/');
+                $url = $baseUrl . '/' . ltrim($entreprise->getLogoPath(), '/');
+                $this->logger->debug('Logo depuis entreprise', ['url' => $url]);
+                return $url;
             }
         }
 
         // 3. Logo par défaut
-        return $baseUrl . '/images/logo.jpeg';
+        $url = $baseUrl . '/images/logo.jpeg';
+        $this->logger->debug('Logo par défaut', ['url' => $url]);
+        return $url;
     }
 
     private function personnaliserContenu(

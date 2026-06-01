@@ -9,22 +9,138 @@
     /* Structure principale */
     .formation-wrapper {
         display: grid;
-        grid-template-columns: 1fr 300px;
+        grid-template-columns: 1fr 320px;
         gap: 2rem;
         max-width: 1400px;
         margin: 0 auto;
     }
+
+    /* ===== SIDEBAR MOBILE : Bottom Sheet ===== */
+    .sidebar-mobile-toggle {
+        display: none;
+    }
+    .sidebar-overlay {
+        display: none;
+    }
+
     @media (max-width: 900px) {
         .formation-wrapper {
             grid-template-columns: 1fr;
-            gap: 1.5rem;
+            gap: 0;
+            padding-bottom: 70px;
         }
+
         .sidebar-right {
-            order: -1;
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            max-height: 70vh;
+            overflow-y: auto;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.2);
+            background: #fff;
+            animation: slideUp 0.3s ease;
+        }
+        .sidebar-right.open {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+        .sidebar-overlay.open {
+            display: block;
+        }
+
+        .sidebar-mobile-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 998;
+            background: #064e3b;
+            color: #fff;
+            padding: 0.75rem 1.2rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+            gap: 0.75rem;
+        }
+        .sidebar-mobile-toggle .toggle-progress {
+            background: rgba(255,255,255,0.2);
+            padding: 0.3rem 0.7rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .sidebar-mobile-toggle .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+        .sidebar-mobile-toggle .toggle-icon.rotated {
+            transform: rotate(180deg);
+        }
+
+        .formation-content {
+            padding: 1rem;
+            border-radius: 0.75rem;
+        }
+        .chapter-title {
+            font-size: 1.3rem;
+        }
+        .chapter-meta {
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .chapter-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .chapter-actions .btn {
+            justify-content: center;
+            text-align: center;
         }
     }
 
-    /* Contenu principal (colonne gauche) */
+    @media (max-width: 480px) {
+        .formation-content {
+            padding: 0.75rem;
+        }
+        .chapter-title {
+            font-size: 1.1rem;
+        }
+        .video-container {
+            margin: 1rem 0;
+        }
+        .chapter-text {
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+    }
+
+    /* ===== Contenu principal (colonne gauche) ===== */
     .formation-content {
         background: white;
         border-radius: 1rem;
@@ -75,9 +191,7 @@
         color: #0f172a;
         margin: 1.2rem 0 0.6rem;
     }
-    .chapter-text p {
-        margin-bottom: 1rem;
-    }
+    .chapter-text p { margin-bottom: 1rem; }
     .chapter-text ul, .chapter-text ol {
         padding-left: 1.5rem;
         margin-bottom: 1rem;
@@ -105,21 +219,14 @@
         border: none;
         transition: all 0.15s;
     }
-    .btn-primary {
-        background: #10b981;
-        color: white;
-    }
-    .btn-primary:hover {
-        background: #059669;
-    }
+    .btn-primary { background: #10b981; color: white; }
+    .btn-primary:hover { background: #059669; }
     .btn-secondary {
         background: #f1f5f9;
         color: #334155;
         border: 1px solid #cbd5e1;
     }
-    .btn-secondary:hover {
-        background: #e2e8f0;
-    }
+    .btn-secondary:hover { background: #e2e8f0; }
     .badge-success {
         background: #dcfce7;
         color: #166534;
@@ -129,7 +236,7 @@
         font-weight: 600;
     }
 
-    /* Sidebar droite */
+    /* ===== Sidebar droite (desktop) ===== */
     .sidebar-right {
         background: #f8fafc;
         border-radius: 1rem;
@@ -187,9 +294,7 @@
         transition: all 0.15s;
         font-size: 0.875rem;
     }
-    .chapter-item:hover {
-        background: #f1f5f9;
-    }
+    .chapter-item:hover { background: #f1f5f9; }
     .chapter-item.active {
         background: #eff6ff;
         border-left-color: #10b981;
@@ -207,14 +312,13 @@
         font-size: 0.75rem;
         font-weight: 600;
         color: #334155;
+        flex-shrink: 0;
     }
     .chapter-number.done {
         background: #10b981;
         color: white;
     }
-    .chapter-info {
-        flex: 1;
-    }
+    .chapter-info { flex: 1; }
     .chapter-badge {
         font-size: 0.7rem;
         padding: 0.15rem 0.5rem;
@@ -261,12 +365,8 @@
     html.dark .sidebar-header {
         color: #f1f5f9;
     }
-    html.dark .chapter-text {
-        color: #cbd5e1;
-    }
-    html.dark .chapter-item {
-        color: #94a3b8;
-    }
+    html.dark .chapter-text { color: #cbd5e1; }
+    html.dark .chapter-item { color: #94a3b8; }
     html.dark .chapter-item.active {
         background: #0f172a;
         color: #34d399;
@@ -276,11 +376,16 @@
         border-color: #475569;
         color: #e2e8f0;
     }
-    html.dark .btn-secondary:hover {
-        background: #475569;
+    html.dark .btn-secondary:hover { background: #475569; }
+    html.dark .progress-bar-bg { background: #334155; }
+    html.dark .sidebar-mobile-toggle {
+        background: #0f172a;
+        border-top: 1px solid #334155;
     }
-    html.dark .progress-bar-bg {
-        background: #334155;
+    @media (max-width: 900px) {
+        html.dark .sidebar-right {
+            background: #1e293b;
+        }
     }
 </style>
 {% endblock %}
@@ -438,4 +543,27 @@
         </div>
     </aside>
 </div>
+
+{# Barre sticky mobile + Overlay #}
+<button class="sidebar-mobile-toggle" onclick="toggleSidebar()">
+    <span>📋 Contenu du cours</span>
+    <span class="toggle-progress">{{ progression.pourcentageProgression }}%</span>
+    <span class="toggle-icon" id="toggleIcon">▲</span>
+</button>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar-right');
+    const overlay = document.getElementById('sidebarOverlay');
+    const icon = document.getElementById('toggleIcon');
+    
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+    icon.classList.toggle('rotated');
+    
+    document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : '';
+}
+</script>
 {% endblock %}

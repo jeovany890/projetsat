@@ -6,18 +6,27 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>{{ module.simulationTitre }}</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 
 /* ══════════════════════════════════════════════
-   GMAIL
+   VARIABLES GLOBALES
+══════════════════════════════════════════════ */
+:root {
+    --mobile-break: 768px;
+    --tablet-break: 1024px;
+}
+
+/* ══════════════════════════════════════════════
+   GMAIL - Responsive
 ══════════════════════════════════════════════ */
 {% if type == 'GMAIL' %}
 html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google Sans',Roboto,Arial,sans-serif;color:#202124;font-size:14px;}
 
+/* --- Desktop (>1024px) : Interface Gmail complète --- */
 .gm-top{position:fixed;top:0;left:0;right:0;height:64px;background:#f6f8fc;display:flex;align-items:center;padding:0 8px;gap:4px;z-index:300;border-bottom:1px solid transparent;}
 .gm-hamburger{width:48px;height:48px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:#444746;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .gm-hamburger:hover{background:#e8eaed;}
@@ -30,7 +39,7 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gm-right{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
 .gm-icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#444746;font-size:18px;}
 .gm-icon-btn:hover{background:#e8eaed;}
-.gm-avatar{width:32px;height:32px;border-radius:50%;background:#1a73e8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;cursor:pointer;}
+.gm-avatar{width:32px;height:32px;border-radius:50%;background:#1a73e8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;cursor:pointer;flex-shrink:0;}
 
 .sim-bar{position:fixed;top:64px;left:0;right:0;z-index:200;background:#fff8e1;border-bottom:2px solid #ffd54f;padding:5px 16px;display:flex;align-items:center;gap:10px;font-size:12px;color:#5d4037;flex-wrap:wrap;}
 .sim-bar strong{color:#e65100;}
@@ -103,23 +112,93 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gp-actions{flex-shrink:0;padding:10px 18px;border-top:1px solid #e8eaed;background:white;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
 .btn-phish,.btn-legit{flex:1;min-width:120px;height:42px;font-size:14px;font-weight:600;cursor:pointer;border-radius:21px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
 .btn-phish{background:#d93025;color:white;border:none;}
+.btn-phish:hover{background:#c5221f;}
 .btn-legit{background:white;color:#1a73e8;border:2px solid #1a73e8;}
+.btn-legit:hover{background:#e8f0fe;}
 .ans-ok,.ans-bad{flex:1;padding:10px;font-size:13px;border:2px solid;border-radius:21px;display:flex;align-items:center;gap:6px;justify-content:center;}
 .ans-ok{background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7;}
 .ans-bad{background:#fde8e8;color:#b71c1c;border-color:#ffcdd2;}
 .btn-next-gm{flex:0 0 auto;padding:8px 18px;background:white;border:1px solid #dadce0;font-size:14px;color:#444746;border-radius:21px;cursor:pointer;font-family:inherit;}
+.btn-next-gm:hover{background:#f1f3f4;}
 
 .gm-results{display:none;flex:1;overflow-y:auto;background:#f6f8fc;padding:24px 16px;}
 .gm-results.open{display:flex;flex-direction:column;align-items:center;}
 
-{% elseif type == 'SMS' %}
+/* --- Mobile/Tablette (<1024px) : Interface Gmail simplifiée style téléphone --- */
+@media (max-width: 1024px) {
+    .gm-sb{width:72px;}
+    .gm-sb .gm-compose-label,.gm-sb .gm-nav-label,.gm-sb .gm-nav-count{max-width:0;opacity:0;}
+    .gm-sb .gm-compose-btn{margin-left:8px;padding:14px;width:auto;}
+    .gm-sb .gm-nav{padding:0;justify-content:center;margin-right:8px;}
+    .gm-search{max-width:400px;}
+}
+
+@media (max-width: 768px) {
+    .gm-top{height:56px;padding:0 4px;gap:2px;}
+    .gm-hamburger{width:40px;height:40px;font-size:16px;}
+    .gm-logo-svg{width:80px;height:30px;}
+    .gm-search{max-width:none;height:38px;margin:0 4px;padding:0 8px 0 12px;}
+    .gm-search input{font-size:14px;}
+    .gm-icon-btn{width:36px;height:36px;font-size:16px;}
+    .gm-avatar{width:28px;height:28px;font-size:11px;}
+    
+    .sim-bar{top:56px;font-size:10px;padding:4px 10px;gap:6px;}
+    .gm-shell{padding-top:85px;}
+    
+    .gm-sb{display:none;}
+    .gm-tabs{height:42px;}
+    .gm-tab{font-size:11px;padding:0 10px;}
+    .gm-toolbar{height:40px;}
+    .gm-row{height:44px;padding:0 10px;}
+    .gm-row-av{width:30px;height:30px;font-size:11px;margin:0 8px 0 2px;}
+    .gm-sender{width:100px;font-size:12px;}
+    .gm-subj{font-size:12px;max-width:140px;}
+    .gm-preview{font-size:12px;}
+    .gm-time{font-size:10px;}
+    
+    .gp-scroll{padding:12px 14px;}
+    .gp-subject{font-size:16px;margin-bottom:12px;}
+    .gp-from-av{width:32px;height:32px;font-size:13px;}
+    .gp-from-name{font-size:13px;}
+    .gp-body{font-size:13px;}
+    .gp-mail-box{padding:12px 14px;}
+    
+    .gp-actions{padding:8px 10px;gap:6px;}
+    .btn-phish,.btn-legit{min-width:100px;height:38px;font-size:12px;border-radius:19px;}
+    .btn-next-gm{font-size:12px;padding:6px 12px;}
+}
+
+@media (max-width: 480px) {
+    .gm-sender{width:70px;font-size:11px;}
+    .gm-subj{max-width:90px;font-size:11px;}
+    .gm-preview{display:none;}
+    .gm-sep-dot{display:none;}
+    .gm-row-content{gap:0;}
+    .gm-row-right{margin-left:4px;}
+    .btn-phish,.btn-legit{min-width:80px;height:34px;font-size:11px;border-radius:17px;gap:4px;}
+    .btn-phish i,.btn-legit i{font-size:12px;}
+}
+{% endif %}
+
+/* ══════════════════════════════════════════════
+   SMS - Déjà responsive (max-width:430px)
+   S'adapte à tous les écrans en restant centré
+══════════════════════════════════════════════ */
+{% if type == 'SMS' %}
 html,body{height:100%;background:#1c1c1e;font-family:-apple-system,'SF Pro Text',Arial,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:0;overflow-x:hidden;}
-.phone-wrap{width:100%;max-width:430px;min-height:100vh;background:#1c1c1e;display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.phone-wrap{width:100%;max-width:430px;min-height:100vh;background:#1c1c1e;display:flex;flex-direction:column;position:relative;overflow:hidden;margin:0 auto;}
+
+/* Sur grand écran, on garde le format téléphone (max 430px centré) */
+@media (min-width: 769px) {
+    .phone-wrap{border-left:1px solid #333;border-right:1px solid #333;box-shadow:0 0 40px rgba(0,0,0,0.5);}
+    html{background:#0a0a0a;}
+}
+
 .ios-status{height:50px;padding:14px 24px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#1c1c1e;}
 .ios-time{font-size:15px;font-weight:700;color:white;}
 .dynamic-island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:20px;z-index:100;}
 
-.sim-bar-sms{background:rgba(255,159,10,.12);border-bottom:1px solid rgba(255,159,10,.3);padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:#ffd60a;flex-shrink:0;}
+.sim-bar-sms{background:rgba(255,159,10,.12);border-bottom:1px solid rgba(255,159,10,.3);padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:#ffd60a;flex-shrink:0;flex-wrap:wrap;}
 .sim-prog-sms{flex:1;max-width:80px;height:3px;background:rgba(255,166,0,.2);border-radius:2px;overflow:hidden;}
 .sim-prog-sms-fill{height:100%;background:#ff9f0a;transition:width .3s;}
 #simTxt{font-size:11px;font-weight:700;color:#ffd60a;}
@@ -155,19 +234,39 @@ html,body{height:100%;background:#1c1c1e;font-family:-apple-system,'SF Pro Text'
 .sp-action-bar{flex-shrink:0;padding:10px 12px 24px;background:#1c1c1e;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap;}
 .sp-btn-phish,.sp-btn-legit{flex:1;min-width:120px;height:44px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:6px;}
 .sp-btn-phish{background:#ff3b30;color:white;border:none;}
+.sp-btn-phish:hover{background:#e0352b;}
 .sp-btn-legit{background:#2c2c2e;color:#30d158;border:none;}
+.sp-btn-legit:hover{background:#3a3a3c;}
 .sp-ans-ok,.sp-ans-bad{flex:1;padding:10px;border-radius:22px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;}
 .sp-ans-ok{background:rgba(48,209,88,.12);color:#30d158;border:1px solid rgba(48,209,88,.3);}
 .sp-ans-bad{background:rgba(255,59,48,.12);color:#ff3b30;border:1px solid rgba(255,59,48,.3);}
 .sp-btn-next{padding:10px 16px;background:#2c2c2e;color:rgba(255,255,255,.55);border:none;border-radius:22px;font-size:13px;cursor:pointer;font-family:inherit;}
+.sp-btn-next:hover{background:#3a3a3c;}
 
-{% elseif type == 'WHATSAPP' %}
+@media (max-width: 430px) {
+    .sms-title{font-size:24px;}
+    .sms-av{width:40px;height:40px;}
+    .sms-av i{font-size:16px;}
+    .sms-av-txt{font-size:14px;}
+    .sms-row-name{font-size:13px;}
+    .sms-row-prev{font-size:11px;}
+    .sp-btn-phish,.sp-btn-legit{min-width:100px;height:40px;font-size:12px;}
+}
+{% endif %}
+
+/* ══════════════════════════════════════════════
+   WHATSAPP - Responsive
+══════════════════════════════════════════════ */
+{% if type == 'WHATSAPP' %}
 html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Arial,sans-serif;overflow:hidden;}
 .wa-shell{display:flex;height:100vh;overflow:hidden;}
+
+/* Strip gauche */
 .wa-strip{width:56px;background:#111b21;display:flex;flex-direction:column;align-items:center;padding-top:20px;gap:6px;border-right:1px solid #222d34;flex-shrink:0;}
 .wa-strip-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;cursor:pointer;margin-bottom:10px;}
 .wa-strip-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#8696a0;}
 
+/* Sidebar gauche (liste conversations) */
 .wa-sidebar{width:350px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid #222d34;background:#111b21;}
 .wa-sidebar-top{padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222d34;flex-shrink:0;}
 .wa-sidebar-title{font-size:20px;font-weight:700;color:#e9edef;}
@@ -186,6 +285,7 @@ html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Ar
 .wa-conv-time{font-size:12px;color:#8696a0;}
 .wa-conv-prev{font-size:13px;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 
+/* Zone chat */
 .wa-chat{flex:1;display:flex;flex-direction:column;background:#0b141a;position:relative;min-width:0;}
 .wa-sim-bar{background:rgba(255,159,10,.1);border-bottom:1px solid rgba(255,159,10,.2);padding:5px 16px;display:flex;align-items:center;gap:10px;font-size:11px;color:#ffd60a;flex-shrink:0;}
 .wa-sim-prog{flex:1;max-width:100px;height:3px;background:rgba(255,166,0,.15);border-radius:2px;overflow:hidden;}
@@ -208,17 +308,40 @@ html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Ar
 .wa-action-bar{display:flex;gap:8px;padding:8px 12px;background:#202c33;border-top:1px solid #222d34;flex-shrink:0;flex-wrap:wrap;}
 .wa-btn-phish,.wa-btn-legit{flex:1;min-width:120px;height:42px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:21px;display:flex;align-items:center;justify-content:center;gap:6px;}
 .wa-btn-phish{background:#ff3b30;color:white;border:none;}
+.wa-btn-phish:hover{background:#e0352b;}
 .wa-btn-legit{background:#2a3942;color:#25d366;border:none;}
+.wa-btn-legit:hover{background:#354a55;}
 .wa-ans-ok,.wa-ans-bad{flex:1;padding:10px;border-radius:21px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;}
 .wa-ans-ok{background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.25);}
 .wa-ans-bad{background:rgba(255,59,48,.1);color:#ff3b30;border:1px solid rgba(255,59,48,.25);}
 .wa-btn-next{padding:10px 16px;background:#2a3942;color:#8696a0;border:none;border-radius:21px;font-size:13px;cursor:pointer;font-family:inherit;}
+.wa-btn-next:hover{background:#354a55;}
 
 .wa-results{display:none;position:absolute;inset:0;background:#0b141a;z-index:100;overflow-y:auto;padding:20px;}
 .wa-results.open{display:block;}
+
+/* --- Mobile/Tablette (<768px) : WhatsApp style téléphone --- */
+@media (max-width: 768px) {
+    .wa-strip{display:none;}
+    .wa-sidebar{width:100%;position:absolute;inset:0;z-index:50;display:flex;}
+    .wa-sidebar.hidden-mobile{display:none;}
+    .wa-chat{position:absolute;inset:0;z-index:60;display:none;}
+    .wa-chat.open-mobile{display:flex;}
+    .wa-conv-av{width:40px;height:40px;font-size:15px;}
+    .wa-conv-name{font-size:14px;}
+    .wa-conv-prev{font-size:12px;}
+    .wa-btn-phish,.wa-btn-legit{min-width:100px;height:38px;font-size:12px;}
+}
+
+@media (max-width: 480px) {
+    .wa-sidebar-title{font-size:18px;}
+    .wa-conv{padding:8px 12px;gap:8px;}
+    .wa-bubble{max-width:80%;font-size:13px;}
+    .wa-btn-phish,.wa-btn-legit{min-width:80px;height:34px;font-size:11px;border-radius:17px;}
+}
 {% endif %}
 
-/* ════════════════════════ RÉSULTATS ════════════════════════ */
+/* ════════════════════════ RÉSULTATS (commun) ════════════════════════ */
 .res-wrap{max-width:500px;width:100%;margin:0 auto;}
 .res-card{background:#202c33;border-radius:16px;padding:22px;}
 .res-score-circle{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px;font-weight:900;}
@@ -236,13 +359,34 @@ html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Ar
 .ri-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-left:auto;flex-shrink:0;}
 .ri-badge.ok{background:rgba(48,209,88,.18);color:#30d158;}
 .ri-badge.bad{background:rgba(255,59,48,.18);color:#ff3b30;}
-.ri-expl{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;}
+.ri-expl{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-top:4px;}
 .btn-save{width:100%;height:46px;background:#34a853;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;}
+.btn-save:hover{background:#2d9249;}
 .btn-retry{width:100%;height:46px;background:#00a884;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;}
+.btn-retry:hover{background:#008f72;}
 .btn-home{display:block;width:100%;height:44px;line-height:44px;text-align:center;margin-top:10px;background:rgba(255,255,255,.06);border-radius:12px;font-size:14px;font-weight:600;color:#8696a0;text-decoration:none;}
+.btn-home:hover{background:rgba(255,255,255,.1);}
 
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(32,44,51,.97);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
+
+/* Résultats pour Gmail (fond clair) */
+.gm-results .res-card{background:white;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.gm-results .res-title,.gm-results .ri-name{color:#202124;}
+.gm-results .res-sub,.gm-results .ri-addr{color:#5f6368;}
+.gm-results .ri-expl{color:#444746;}
+.gm-results .btn-save{background:#1a73e8;color:white;}
+.gm-results .btn-retry{background:#34a853;color:white;}
+.gm-results .btn-home{background:#f1f3f4;color:#444746;}
+{% if type == 'GMAIL' %}
+@media (max-width: 768px) {
+    .gm-results{padding:12px 8px;}
+    .res-card{padding:16px;}
+    .res-score-circle{width:64px;height:64px;}
+    .res-score-circle span:first-child{font-size:22px !important;}
+    .res-title{font-size:15px;}
+}
+{% endif %}
 </style>
 </head>
 <body>
@@ -310,6 +454,7 @@ let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
   </div>
 </div>
 
+{# ════════════════════════ SMS ════════════════════════ #}
 {% elseif type == 'SMS' %}
 <div class="phone-wrap">
   <div class="dynamic-island"></div>
@@ -331,10 +476,11 @@ let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
   </div>
 </div>
 
+{# ════════════════════════ WHATSAPP ════════════════════════ #}
 {% elseif type == 'WHATSAPP' %}
 <div class="wa-shell">
-  <div class="wa-strip"><div class="wa-strip-av">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div><button class="wa-strip-btn on"><i class="fa-solid fa-message"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-circle-dot"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-bullhorn"></i></button></div>
-  <div class="wa-sidebar">
+  <div class="wa-strip"><div class="wa-strip-av">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div><button class="wa-strip-btn"><i class="fa-solid fa-message"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-circle-dot"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-bullhorn"></i></button></div>
+  <div class="wa-sidebar" id="waSidebar">
     <div class="wa-sidebar-top"><span class="wa-sidebar-title">WhatsApp</span><div class="wa-sidebar-icons"><button class="wa-sb-ico"><i class="fa-solid fa-pen-to-square"></i></button><button class="wa-sb-ico"><i class="fa-solid fa-ellipsis-vertical"></i></button></div></div>
     <div class="wa-conv-list" id="waConvList">
       {% for idx, item in items %}
@@ -345,9 +491,13 @@ let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
       {% endfor %}
     </div>
   </div>
-  <div class="wa-chat">
+  <div class="wa-chat" id="waChat">
     <div class="wa-sim-bar"><i class="fa-solid fa-shield-halved"></i><strong>Simulation</strong><div class="wa-sim-prog"><div class="wa-sim-prog-fill" id="simFill" style="width:0%"></div></div><span id="simTxt">0/{{ items|length }}</span></div>
-    <div class="wa-chat-header"><div class="wa-chat-av" id="waChatAv"></div><div class="wa-chat-info"><div class="wa-chat-name" id="waChatName">Sélectionnez une conversation</div><div class="wa-chat-status" id="waChatStatus"></div></div></div>
+    <div class="wa-chat-header">
+      <button class="sp-back" onclick="closeItem()" style="display:none;" id="waBackBtn"><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="wa-chat-av" id="waChatAv"></div>
+      <div class="wa-chat-info"><div class="wa-chat-name" id="waChatName">Sélectionnez une conversation</div><div class="wa-chat-status" id="waChatStatus"></div></div>
+    </div>
     <div class="wa-messages" id="waMessages"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation pour l'analyser</div></div>
     <div class="wa-action-bar" id="waActions"></div>
     <div class="wa-results" id="waResults"></div>
@@ -373,6 +523,10 @@ function closeItem(){
   } else if(SIM_TYPE==='SMS'){
     document.getElementById('smsList').style.display='';
     document.getElementById('smsPanel').classList.remove('open');
+  } else {
+    document.getElementById('waSidebar').classList.remove('hidden-mobile');
+    document.getElementById('waChat').classList.remove('open-mobile');
+    document.getElementById('waBackBtn').style.display='none';
   }
 }
 
@@ -428,6 +582,13 @@ function openWhatsapp(idx){
   av.textContent=item.avatarText||(item.name||'').slice(0,2).toUpperCase();
   document.getElementById('waChatName').textContent=item.name||'';
   document.getElementById('waChatStatus').textContent=item.status||'';
+  
+  if(window.innerWidth<=768){
+    document.getElementById('waSidebar').classList.add('hidden-mobile');
+    document.getElementById('waChat').classList.add('open-mobile');
+    document.getElementById('waBackBtn').style.display='flex';
+  }
+  
   let html='<div class="wa-msg-date"><span>Aujourd\'hui</span></div>';
   (item.messages||[]).forEach(m=>{
     html+='<div class="wa-msg-wrap '+(m.out?'out':'')+'"><div class="wa-bubble">'+(m.sender?'<div class="wa-bubble-sender">'+esc(m.sender)+'</div>':'')+esc(m.text||'')+'<div class="wa-bubble-time">'+m.time+'</div></div></div>';
@@ -469,12 +630,12 @@ function showResults(){
   else {const wr=document.getElementById('waResults');wr.innerHTML=html;wr.classList.add('open');}
 }
 
-function resetSim(){answers={};curIdx=null;startTs=Date.now();ITEMS.forEach((_,i)=>{const pfx=SIM_TYPE==='WHATSAPP'?'conv':'row';const el=document.getElementById(pfx+i);if(el){el.classList.remove('ok-ans','bad-ans');if(SIM_TYPE==='GMAIL'){el.classList.remove('read');el.classList.add('unread');}}});document.getElementById('simFill').style.width='0%';document.getElementById('simTxt').textContent='0/'+N;if(SIM_TYPE==='GMAIL'){document.getElementById('gmList').style.display='';document.getElementById('gmPanel').classList.remove('open');document.getElementById('gmResults').classList.remove('open');document.getElementById('gmUnread').textContent=N;}else if(SIM_TYPE==='SMS'){const rs=document.getElementById('smsResults');if(rs)rs.remove();document.getElementById('smsList').style.display='';document.getElementById('smsPanel').classList.remove('open');}else{document.getElementById('waResults').classList.remove('open');document.getElementById('waMessages').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation</div>';document.getElementById('waActions').innerHTML='';}}
+function resetSim(){answers={};curIdx=null;startTs=Date.now();ITEMS.forEach((_,i)=>{const pfx=SIM_TYPE==='WHATSAPP'?'conv':'row';const el=document.getElementById(pfx+i);if(el){el.classList.remove('ok-ans','bad-ans');if(SIM_TYPE==='GMAIL'){el.classList.remove('read');el.classList.add('unread');}}});document.getElementById('simFill').style.width='0%';document.getElementById('simTxt').textContent='0/'+N;if(SIM_TYPE==='GMAIL'){document.getElementById('gmList').style.display='';document.getElementById('gmPanel').classList.remove('open');document.getElementById('gmResults').classList.remove('open');document.getElementById('gmUnread').textContent=N;}else if(SIM_TYPE==='SMS'){const rs=document.getElementById('smsResults');if(rs)rs.remove();document.getElementById('smsList').style.display='';document.getElementById('smsPanel').classList.remove('open');}else{document.getElementById('waResults').classList.remove('open');document.getElementById('waMessages').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation</div>';document.getElementById('waActions').innerHTML='';if(window.innerWidth<=768){document.getElementById('waSidebar').classList.remove('hidden-mobile');document.getElementById('waChat').classList.remove('open-mobile');document.getElementById('waBackBtn').style.display='none';}}}
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
 function updateTime(){const n=new Date();const t=document.getElementById('iosTime');if(t)t.textContent=n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes();}
 updateTime();setInterval(updateTime,30000);
-{% if type == 'WHATSAPP' %}if(ITEMS.length>0) openItem(0);{% endif %}
+{% if type == 'WHATSAPP' %}if(ITEMS.length>0 && window.innerWidth>768) openItem(0);{% endif %}
 </script>
 </body>
 </html>
