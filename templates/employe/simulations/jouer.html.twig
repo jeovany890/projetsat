@@ -1,32 +1,20 @@
 {% extends 'employe/layout.html.twig' %}
-{% block page_title %}Simulation : {{ module.simulationTitre }}{% endblock %}
 
-{% block body %}
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>{{ module.simulationTitre }}</title>
+{% block page_title %}{{ module.titre }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;}
 
 /* ══════════════════════════════════════════════
-   VARIABLES GLOBALES
-══════════════════════════════════════════════ */
-:root {
-    --mobile-break: 768px;
-    --tablet-break: 1024px;
-}
-
-/* ══════════════════════════════════════════════
-   GMAIL - Responsive
+   GMAIL
 ══════════════════════════════════════════════ */
 {% if type == 'GMAIL' %}
 html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google Sans',Roboto,Arial,sans-serif;color:#202124;font-size:14px;}
 
-/* --- Desktop (>1024px) : Interface Gmail complète --- */
+/* Topbar */
 .gm-top{position:fixed;top:0;left:0;right:0;height:64px;background:#f6f8fc;display:flex;align-items:center;padding:0 8px;gap:4px;z-index:300;border-bottom:1px solid transparent;}
 .gm-hamburger{width:48px;height:48px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:#444746;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .gm-hamburger:hover{background:#e8eaed;}
@@ -39,15 +27,19 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gm-right{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
 .gm-icon-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#444746;font-size:18px;}
 .gm-icon-btn:hover{background:#e8eaed;}
-.gm-avatar{width:32px;height:32px;border-radius:50%;background:#1a73e8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;cursor:pointer;flex-shrink:0;}
+.gm-avatar{width:32px;height:32px;border-radius:50%;background:#1a73e8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;cursor:pointer;}
 
+/* Barre simulation */
 .sim-bar{position:fixed;top:64px;left:0;right:0;z-index:200;background:#fff8e1;border-bottom:2px solid #ffd54f;padding:5px 16px;display:flex;align-items:center;gap:10px;font-size:12px;color:#5d4037;flex-wrap:wrap;}
 .sim-bar strong{color:#e65100;}
 .sim-prog{width:100px;height:4px;background:#ffe082;border-radius:2px;overflow:hidden;flex-shrink:0;}
 .sim-prog-fill{height:100%;background:#f9a825;transition:width .3s;}
 #simTxt{font-weight:700;color:#7b5e00;font-size:12px;}
 
+/* Layout */
 .gm-shell{display:flex;padding-top:101px;height:100vh;overflow:hidden;}
+
+/* Sidebar */
 .gm-sb{width:256px;flex-shrink:0;overflow-y:auto;padding:8px 0 8px;transition:width .2s;scrollbar-width:none;}
 .gm-sb::-webkit-scrollbar{display:none;}
 .gm-sb.mini{width:72px;}
@@ -68,21 +60,40 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gm-sb.mini .gm-nav-label,.gm-sb.mini .gm-nav-count{max-width:0;opacity:0;}
 .gm-sb.mini .gm-nav{padding:0;justify-content:center;margin-right:8px;}
 
+.gm-sep{height:1px;background:#e2e8f0;margin:6px 16px;}
+.gm-sec-label{padding:8px 28px 3px;font-size:11px;font-weight:600;color:#444746;letter-spacing:.5px;text-transform:uppercase;}
+.gm-sb.mini .gm-sec-label{display:none;}
+
+/* Main */
 .gm-main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+
+/* Tabs */
 .gm-tabs{display:flex;background:white;border-bottom:1px solid #e2e8f0;flex-shrink:0;padding:0 8px;height:50px;overflow-x:auto;}
 .gm-tab{display:flex;align-items:center;gap:7px;padding:0 16px;cursor:pointer;border-bottom:3px solid transparent;font-size:13px;color:#444746;white-space:nowrap;flex-shrink:0;}
 .gm-tab:hover{background:#f1f3f4;}
 .gm-tab.active{color:#1a73e8;border-bottom-color:#1a73e8;font-weight:600;}
 .gm-tab-badge{font-size:10px;font-weight:700;padding:1px 5px;border-radius:10px;background:#1a73e8;color:white;}
 
+/* Toolbar */
 .gm-toolbar{display:flex;align-items:center;padding:0 8px;border-bottom:1px solid #e8eaed;background:white;flex-shrink:0;height:48px;gap:2px;}
+.gm-check{width:18px;height:18px;cursor:pointer;accent-color:#1a73e8;margin:0 8px;}
+.gm-tb-btn{width:32px;height:32px;border:none;background:transparent;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#444746;}
+.gm-tb-btn:hover{background:#e8eaed;}
+.gm-count{margin-left:auto;font-size:13px;color:#444746;display:flex;align-items:center;gap:2px;}
+
+/* Liste emails */
 .gm-list{flex:1;overflow-y:auto;background:white;}
 .gm-row{display:flex;align-items:center;padding:0 16px;height:50px;border-bottom:1px solid #f1f3f4;cursor:pointer;transition:background .1s;position:relative;}
 .gm-row:hover{background:#f2f6fc;box-shadow:inset 1px 0 0 #c6d5f5,inset -1px 0 0 #c6d5f5;}
 .gm-row.unread{background:#fff;font-weight:600;}
 .gm-row.read{background:#f6f8fc;font-weight:400;}
+.gm-row.unread .gm-sender,.gm-row.unread .gm-subj{color:#202124;}
+.gm-row.read .gm-sender,.gm-row.read .gm-subj{color:#5f6368;font-weight:400;}
 .gm-row.ok-ans{border-left:3px solid #34a853;}
 .gm-row.bad-ans{border-left:3px solid #ea4335;}
+.gm-row-check{width:18px;height:18px;cursor:pointer;accent-color:#1a73e8;flex-shrink:0;}
+.gm-row-star{font-size:16px;margin:0 8px;color:#dadce0;cursor:pointer;flex-shrink:0;}
+.gm-row-star.starred{color:#f4b400;}
 .gm-row-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0;margin:0 12px 0 4px;}
 .gm-row-body{flex:1;min-width:0;display:flex;align-items:baseline;gap:6px;overflow:hidden;}
 .gm-sender{font-size:14px;width:180px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -92,12 +103,16 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gm-preview{font-size:14px;color:#9aa0a6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:400;}
 .gm-row-right{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-left:8px;}
 .gm-time{font-size:12px;color:#5f6368;white-space:nowrap;}
+.gm-row.unread .gm-time{font-weight:700;color:#202124;}
 
+/* Panel email ouvert */
 .gm-panel{display:none;flex-direction:column;flex:1;background:white;overflow:hidden;}
 .gm-panel.open{display:flex;}
 .gp-topbar{display:flex;align-items:center;gap:4px;padding:6px 8px;border-bottom:1px solid #e8eaed;flex-shrink:0;}
 .gp-back-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border:none;background:transparent;cursor:pointer;font-size:14px;color:#444746;border-radius:4px;font-family:inherit;}
 .gp-back-btn:hover{background:#f1f3f4;}
+.gp-back-btn i{font-size:18px;}
+.gp-prog{margin-left:auto;font-size:12px;color:#5f6368;}
 .gp-scroll{flex:1;overflow-y:auto;padding:20px 28px;}
 .gp-subject{font-size:22px;font-weight:400;color:#202124;margin-bottom:18px;}
 .gp-from-row{display:flex;align-items:flex-start;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8eaed;}
@@ -108,105 +123,141 @@ html,body{height:100%;overflow:hidden;background:#f6f8fc;font-family:'Google San
 .gp-from-time{font-size:12px;color:#5f6368;margin-top:2px;}
 .gp-body{font-size:14px;color:#202124;line-height:1.7;}
 .gp-mail-box{border:1px solid #e8eaed;border-radius:8px;padding:18px 22px;margin-bottom:12px;}
+.gp-indicator{display:flex;align-items:flex-start;gap:10px;border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;}
+.gp-indicator.warn{background:#fff3e0;border:1px solid #ffb74d;color:#e65100;}
+.gp-indicator.safe{background:#e8f5e9;border:1px solid #a5d6a7;color:#2e7d32;}
 
+/* Actions bas panel */
 .gp-actions{flex-shrink:0;padding:10px 18px;border-top:1px solid #e8eaed;background:white;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.btn-phish,.btn-legit{flex:1;min-width:120px;height:42px;font-size:14px;font-weight:600;cursor:pointer;border-radius:21px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
-.btn-phish{background:#d93025;color:white;border:none;}
+.btn-phish{height:42px;padding:0 20px;background:#d93025;color:white;border:none;border-radius:21px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .btn-phish:hover{background:#c5221f;}
-.btn-legit{background:white;color:#1a73e8;border:2px solid #1a73e8;}
+.btn-legit{height:42px;padding:0 20px;background:white;color:#1a73e8;border:2px solid #1a73e8;border-radius:21px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .btn-legit:hover{background:#e8f0fe;}
-.ans-ok,.ans-bad{flex:1;padding:10px;font-size:13px;border:2px solid;border-radius:21px;display:flex;align-items:center;gap:6px;justify-content:center;}
-.ans-ok{background:#e8f5e9;color:#1b5e20;border-color:#a5d6a7;}
-.ans-bad{background:#fde8e8;color:#b71c1c;border-color:#ffcdd2;}
-.btn-next-gm{flex:0 0 auto;padding:8px 18px;background:white;border:1px solid #dadce0;font-size:14px;color:#444746;border-radius:21px;cursor:pointer;font-family:inherit;}
+.ans-ok{padding:8px 18px;border-radius:21px;font-size:14px;font-weight:600;background:#e8f5e9;color:#1b5e20;border:2px solid #a5d6a7;display:flex;align-items:center;gap:8px;}
+.ans-bad{padding:8px 18px;border-radius:21px;font-size:14px;font-weight:600;background:#fde8e8;color:#b71c1c;border:2px solid #ffcdd2;display:flex;align-items:center;gap:8px;}
+.btn-next-gm{padding:8px 18px;border:1px solid #dadce0;border-radius:21px;background:white;cursor:pointer;font-size:14px;color:#444746;font-family:inherit;}
 .btn-next-gm:hover{background:#f1f3f4;}
 
+/* Résultats Gmail */
 .gm-results{display:none;flex:1;overflow-y:auto;background:#f6f8fc;padding:24px 16px;}
 .gm-results.open{display:flex;flex-direction:column;align-items:center;}
 
-/* --- Mobile/Tablette (<1024px) : Interface Gmail simplifiée style téléphone --- */
-@media (max-width: 1024px) {
-    .gm-sb{width:72px;}
-    .gm-sb .gm-compose-label,.gm-sb .gm-nav-label,.gm-sb .gm-nav-count{max-width:0;opacity:0;}
-    .gm-sb .gm-compose-btn{margin-left:8px;padding:14px;width:auto;}
-    .gm-sb .gm-nav{padding:0;justify-content:center;margin-right:8px;}
-    .gm-search{max-width:400px;}
-}
-
-@media (max-width: 768px) {
-    .gm-top{height:56px;padding:0 4px;gap:2px;}
-    .gm-hamburger{width:40px;height:40px;font-size:16px;}
-    .gm-logo-svg{width:80px;height:30px;}
-    .gm-search{max-width:none;height:38px;margin:0 4px;padding:0 8px 0 12px;}
-    .gm-search input{font-size:14px;}
-    .gm-icon-btn{width:36px;height:36px;font-size:16px;}
-    .gm-avatar{width:28px;height:28px;font-size:11px;}
-    
-    .sim-bar{top:56px;font-size:10px;padding:4px 10px;gap:6px;}
-    .gm-shell{padding-top:85px;}
-    
-    .gm-sb{display:none;}
-    .gm-tabs{height:42px;}
-    .gm-tab{font-size:11px;padding:0 10px;}
-    .gm-toolbar{height:40px;}
-    .gm-row{height:44px;padding:0 10px;}
-    .gm-row-av{width:30px;height:30px;font-size:11px;margin:0 8px 0 2px;}
-    .gm-sender{width:100px;font-size:12px;}
-    .gm-subj{font-size:12px;max-width:140px;}
-    .gm-preview{font-size:12px;}
-    .gm-time{font-size:10px;}
-    
-    .gp-scroll{padding:12px 14px;}
-    .gp-subject{font-size:16px;margin-bottom:12px;}
-    .gp-from-av{width:32px;height:32px;font-size:13px;}
-    .gp-from-name{font-size:13px;}
-    .gp-body{font-size:13px;}
-    .gp-mail-box{padding:12px 14px;}
-    
-    .gp-actions{padding:8px 10px;gap:6px;}
-    .btn-phish,.btn-legit{min-width:100px;height:38px;font-size:12px;border-radius:19px;}
-    .btn-next-gm{font-size:12px;padding:6px 12px;}
-}
-
-@media (max-width: 480px) {
-    .gm-sender{width:70px;font-size:11px;}
-    .gm-subj{max-width:90px;font-size:11px;}
-    .gm-preview{display:none;}
-    .gm-sep-dot{display:none;}
-    .gm-row-content{gap:0;}
-    .gm-row-right{margin-left:4px;}
-    .btn-phish,.btn-legit{min-width:80px;height:34px;font-size:11px;border-radius:17px;gap:4px;}
-    .btn-phish i,.btn-legit i{font-size:12px;}
-}
-{% endif %}
-
 /* ══════════════════════════════════════════════
-   SMS - Déjà responsive (max-width:430px)
-   S'adapte à tous les écrans en restant centré
+   SMS (iPhone style) — RESPONSIVE
 ══════════════════════════════════════════════ */
-{% if type == 'SMS' %}
-html,body{height:100%;background:#1c1c1e;font-family:-apple-system,'SF Pro Text',Arial,sans-serif;display:flex;align-items:flex-start;justify-content:center;padding:0;overflow-x:hidden;}
-.phone-wrap{width:100%;max-width:430px;min-height:100vh;background:#1c1c1e;display:flex;flex-direction:column;position:relative;overflow:hidden;margin:0 auto;}
-
-/* Sur grand écran, on garde le format téléphone (max 430px centré) */
-@media (min-width: 769px) {
-    .phone-wrap{border-left:1px solid #333;border-right:1px solid #333;box-shadow:0 0 40px rgba(0,0,0,0.5);}
-    html{background:#0a0a0a;}
+{% elseif type == 'SMS' %}
+html,body{
+  height:100%;
+  background:#1c1c1e;
+  font-family:-apple-system,'SF Pro Text',Arial,sans-serif;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:0;
+  overflow-x:hidden;
 }
 
-.ios-status{height:50px;padding:14px 24px 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:#1c1c1e;}
-.ios-time{font-size:15px;font-weight:700;color:white;}
-.dynamic-island{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#000;border-radius:20px;z-index:100;}
+.phone-wrap{
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  background:#1c1c1e;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
 
-.sim-bar-sms{background:rgba(255,159,10,.12);border-bottom:1px solid rgba(255,159,10,.3);padding:6px 16px;display:flex;align-items:center;gap:8px;font-size:11px;color:#ffd60a;flex-shrink:0;flex-wrap:wrap;}
+/* Status bar */
+.ios-status{
+  height:50px;
+  padding:14px 24px 0;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+  background:#1c1c1e;
+}
+.ios-time{font-size:15px;font-weight:700;color:white;}
+.ios-status-icons{display:flex;align-items:center;gap:6px;color:white;font-size:12px;}
+
+/* Dynamic island */
+.dynamic-island{
+  position:absolute;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  width:120px;
+  height:34px;
+  background:#000;
+  border-radius:20px;
+  z-index:100;
+}
+
+/* Sim bar */
+.sim-bar-sms{
+  background:rgba(255,159,10,.12);
+  border-bottom:1px solid rgba(255,159,10,.3);
+  padding:6px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:11px;
+  color:#ffd60a;
+  flex-shrink:0;
+}
 .sim-prog-sms{flex:1;max-width:80px;height:3px;background:rgba(255,166,0,.2);border-radius:2px;overflow:hidden;}
 .sim-prog-sms-fill{height:100%;background:#ff9f0a;transition:width .3s;}
 #simTxt{font-size:11px;font-weight:700;color:#ffd60a;}
 
-.sms-app-header{background:#1c1c1e;padding:8px 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+/* App header */
+.sms-app-header{
+  background:#1c1c1e;
+  padding:8px 16px 12px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
 .sms-title{font-size:28px;font-weight:700;color:white;}
+.sms-header-btns{display:flex;gap:8px;}
+.sms-hbtn{width:34px;height:34px;border-radius:50%;border:none;background:rgba(255,255,255,.12);cursor:pointer;display:flex;align-items:center;justify-content:center;color:white;font-size:15px;}
+
+/* Tabs */
+.sms-filter-bar{
+  display:flex;
+  gap:8px;
+  padding:4px 14px 10px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  flex-shrink:0;
+}
+.sms-filter-bar::-webkit-scrollbar{display:none;}
+.sms-filter-chip{
+  padding:5px 14px;
+  border-radius:14px;
+  border:none;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  font-family:inherit;
+  white-space:nowrap;
+}
+.sms-filter-chip.on{background:#ff9f0a;color:white;}
+.sms-filter-chip.off{background:#2c2c2e;color:rgba(255,255,255,.7);}
+
+/* Liste SMS */
 .sms-list{flex:1;overflow-y:auto;scrollbar-width:none;background:#1c1c1e;}
-.sms-row{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.07);cursor:pointer;transition:background .1s;}
+.sms-list::-webkit-scrollbar{display:none;}
+.sms-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:10px 16px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  cursor:pointer;
+  transition:background .1s;
+}
 .sms-row:hover{background:rgba(255,255,255,.04);}
 .sms-row.ok-ans{border-left:3px solid #30d158;}
 .sms-row.bad-ans{border-left:3px solid #ff3b30;}
@@ -218,64 +269,153 @@ html,body{height:100%;background:#1c1c1e;font-family:-apple-system,'SF Pro Text'
 .sms-row-name{font-size:15px;font-weight:600;color:white;}
 .sms-row-time{font-size:12px;color:rgba(255,255,255,.45);}
 .sms-row-prev{font-size:13px;color:rgba(255,255,255,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sms-badge{min-width:20px;height:20px;background:#ff9f0a;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;padding:0 5px;flex-shrink:0;}
 
-.sms-panel{display:none;flex-direction:column;position:absolute;inset:0;background:#1c1c1e;z-index:50;}
+/* Panel détail SMS */
+.sms-panel{
+  display:none;
+  flex-direction:column;
+  position:absolute;
+  inset:0;
+  background:#1c1c1e;
+  z-index:50;
+}
 .sms-panel.open{display:flex;}
-.sp-nav{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0;gap:8px;}
+.sp-nav{
+  display:flex;
+  align-items:center;
+  padding:10px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+  gap:8px;
+}
 .sp-back{background:transparent;border:none;color:#ff9f0a;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:4px;font-family:inherit;padding:8px;}
+.sp-back i{font-size:18px;}
 .sp-contact-info{flex:1;text-align:center;}
 .sp-contact-name{font-size:15px;font-weight:700;color:white;}
 .sp-contact-num{font-size:12px;color:rgba(255,255,255,.45);}
+.sp-actions-nav{display:flex;gap:8px;}
+.sp-nav-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.7);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
 .sp-scroll{flex:1;overflow-y:auto;padding:12px;scrollbar-width:none;}
+.sp-scroll::-webkit-scrollbar{display:none;}
 .sp-date{text-align:center;font-size:11px;color:rgba(255,255,255,.35);margin:6px 0 14px;}
 .sms-bubble-wrap{display:flex;justify-content:flex-start;margin-bottom:8px;}
-.sms-bubble{max-width:82%;background:#2c2c2e;border-radius:4px 18px 18px 18px;padding:10px 14px;font-size:14px;line-height:1.55;color:white;}
-
-.sp-action-bar{flex-shrink:0;padding:10px 12px 24px;background:#1c1c1e;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px;flex-wrap:wrap;}
-.sp-btn-phish,.sp-btn-legit{flex:1;min-width:120px;height:44px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:22px;display:flex;align-items:center;justify-content:center;gap:6px;}
-.sp-btn-phish{background:#ff3b30;color:white;border:none;}
-.sp-btn-phish:hover{background:#e0352b;}
-.sp-btn-legit{background:#2c2c2e;color:#30d158;border:none;}
-.sp-btn-legit:hover{background:#3a3a3c;}
-.sp-ans-ok,.sp-ans-bad{flex:1;padding:10px;border-radius:22px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;}
-.sp-ans-ok{background:rgba(48,209,88,.12);color:#30d158;border:1px solid rgba(48,209,88,.3);}
-.sp-ans-bad{background:rgba(255,59,48,.12);color:#ff3b30;border:1px solid rgba(255,59,48,.3);}
-.sp-btn-next{padding:10px 16px;background:#2c2c2e;color:rgba(255,255,255,.55);border:none;border-radius:22px;font-size:13px;cursor:pointer;font-family:inherit;}
-.sp-btn-next:hover{background:#3a3a3c;}
-
-@media (max-width: 430px) {
-    .sms-title{font-size:24px;}
-    .sms-av{width:40px;height:40px;}
-    .sms-av i{font-size:16px;}
-    .sms-av-txt{font-size:14px;}
-    .sms-row-name{font-size:13px;}
-    .sms-row-prev{font-size:11px;}
-    .sp-btn-phish,.sp-btn-legit{min-width:100px;height:40px;font-size:12px;}
+.sms-bubble{
+  max-width:82%;
+  background:#2c2c2e;
+  border-radius:4px 18px 18px 18px;
+  padding:10px 14px;
+  font-size:14px;
+  line-height:1.55;
+  color:white;
 }
-{% endif %}
+.sms-bubble-time{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px;}
+.sms-suspect-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  background:rgba(255,59,48,.15);
+  border:1px solid rgba(255,59,48,.3);
+  border-radius:10px;
+  padding:3px 8px;
+  font-size:11px;
+  color:#ff6b6b;
+  margin-top:5px;
+}
+
+/* Boutons actions SMS */
+.sp-action-bar{
+  flex-shrink:0;
+  padding:10px 12px 24px;
+  background:#1c1c1e;
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.sp-btn-phish{flex:1;min-width:120px;height:44px;background:#ff3b30;color:white;border:none;border-radius:22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sp-btn-legit{flex:1;min-width:120px;height:44px;background:#2c2c2e;color:#30d158;border:none;border-radius:22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sp-ans-ok{flex:1;padding:10px;border-radius:22px;font-size:13px;font-weight:600;background:rgba(48,209,88,.12);color:#30d158;border:1px solid rgba(48,209,88,.3);display:flex;align-items:center;gap:6px;justify-content:center;}
+.sp-ans-bad{flex:1;padding:10px;border-radius:22px;font-size:13px;font-weight:600;background:rgba(255,59,48,.12);color:#ff3b30;border:1px solid rgba(255,59,48,.3);display:flex;align-items:center;gap:6px;justify-content:center;}
+.sp-btn-next{padding:10px 16px;background:#2c2c2e;color:rgba(255,255,255,.55);border:none;border-radius:22px;font-size:13px;cursor:pointer;font-family:inherit;}
+
+/* Barre du bas */
+.ios-bottom{
+  height:54px;
+  background:#1c1c1e;
+  border-top:1px solid rgba(255,255,255,.07);
+  display:flex;
+  align-items:center;
+  justify-content:space-around;
+  flex-shrink:0;
+}
+.ios-bb-item{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:rgba(255,255,255,.45);cursor:pointer;}
+.ios-bb-item.on{color:#ff9f0a;}
+.ios-bb-item i{font-size:22px;}
 
 /* ══════════════════════════════════════════════
-   WHATSAPP - Responsive
+   WHATSAPP
 ══════════════════════════════════════════════ */
-{% if type == 'WHATSAPP' %}
+{% elseif type == 'WHATSAPP' %}
 html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Arial,sans-serif;overflow:hidden;}
+
 .wa-shell{display:flex;height:100vh;overflow:hidden;}
 
-/* Strip gauche */
-.wa-strip{width:56px;background:#111b21;display:flex;flex-direction:column;align-items:center;padding-top:20px;gap:6px;border-right:1px solid #222d34;flex-shrink:0;}
+/* Left icon strip */
+.wa-strip{
+  width:56px;
+  background:#111b21;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding-top:20px;
+  gap:6px;
+  border-right:1px solid #222d34;
+  flex-shrink:0;
+}
 .wa-strip-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#25d366,#128c7e);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;cursor:pointer;margin-bottom:10px;}
-.wa-strip-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#8696a0;}
+.wa-strip-btn{width:40px;height:40px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:#8696a0;transition:background .15s;}
+.wa-strip-btn:hover,.wa-strip-btn.on{background:#202c33;color:#00a884;}
 
-/* Sidebar gauche (liste conversations) */
-.wa-sidebar{width:350px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid #222d34;background:#111b21;}
-.wa-sidebar-top{padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222d34;flex-shrink:0;}
+/* Sidebar conversations */
+.wa-sidebar{
+  width:350px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  border-right:1px solid #222d34;
+  background:#111b21;
+}
+.wa-sidebar-top{
+  padding:14px 16px 8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  border-bottom:1px solid #222d34;
+  flex-shrink:0;
+}
 .wa-sidebar-title{font-size:20px;font-weight:700;color:#e9edef;}
 .wa-sidebar-icons{display:flex;gap:4px;}
 .wa-sb-ico{width:36px;height:36px;border-radius:50%;border:none;background:transparent;display:flex;align-items:center;justify-content:center;font-size:17px;color:#8696a0;cursor:pointer;}
+.wa-sb-ico:hover{background:#202c33;}
+
+.wa-search-wrap{padding:8px 12px;background:#111b21;flex-shrink:0;}
+.wa-search-inner{background:#202c33;border-radius:8px;display:flex;align-items:center;gap:8px;padding:8px 12px;}
+.wa-search-inner i{color:#8696a0;font-size:15px;}
+.wa-search-inner input{border:none;background:transparent;outline:none;font-size:14px;color:#e9edef;width:100%;font-family:inherit;}
+.wa-search-inner input::placeholder{color:#8696a0;}
+
+.wa-filters{display:flex;gap:6px;padding:4px 12px 8px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.wa-filters::-webkit-scrollbar{display:none;}
+.wa-filter-chip{padding:4px 14px;border-radius:16px;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+.wa-filter-chip.on{background:#00a884;color:white;}
+.wa-filter-chip.off{background:#222d34;color:#8696a0;}
 
 .wa-conv-list{flex:1;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#222d34 transparent;}
 .wa-conv{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .1s;}
 .wa-conv:hover{background:#1f2c33;}
+.wa-conv.active{background:#2a3942;}
 .wa-conv.ok-ans{border-left:3px solid #25d366;}
 .wa-conv.bad-ans{border-left:3px solid #ff3b30;}
 .wa-conv-av{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:white;flex-shrink:0;}
@@ -284,19 +424,46 @@ html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Ar
 .wa-conv-name{font-size:15px;font-weight:500;color:#e9edef;}
 .wa-conv-time{font-size:12px;color:#8696a0;}
 .wa-conv-prev{font-size:13px;color:#8696a0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wa-conv-badge{min-width:20px;height:20px;background:#25d366;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;padding:0 5px;flex-shrink:0;}
 
 /* Zone chat */
 .wa-chat{flex:1;display:flex;flex-direction:column;background:#0b141a;position:relative;min-width:0;}
-.wa-sim-bar{background:rgba(255,159,10,.1);border-bottom:1px solid rgba(255,159,10,.2);padding:5px 16px;display:flex;align-items:center;gap:10px;font-size:11px;color:#ffd60a;flex-shrink:0;}
+
+/* Sim bar WA */
+.wa-sim-bar{
+  background:rgba(255,159,10,.1);
+  border-bottom:1px solid rgba(255,159,10,.2);
+  padding:5px 16px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:11px;
+  color:#ffd60a;
+  flex-shrink:0;
+}
+.wa-sim-bar strong{color:#ff9f0a;}
 .wa-sim-prog{flex:1;max-width:100px;height:3px;background:rgba(255,166,0,.15);border-radius:2px;overflow:hidden;}
 .wa-sim-prog-fill{height:100%;background:#ff9f0a;transition:width .3s;}
 
-.wa-chat-header{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#202c33;border-bottom:1px solid #222d34;flex-shrink:0;}
-.wa-chat-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;color:white;}
+/* Chat header */
+.wa-chat-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 16px;
+  background:#202c33;
+  border-bottom:1px solid #222d34;
+  flex-shrink:0;
+}
+.wa-chat-av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
 .wa-chat-info{flex:1;}
 .wa-chat-name{font-size:15px;font-weight:600;color:#e9edef;}
 .wa-chat-status{font-size:12px;color:#8696a0;}
+.wa-chat-actions{display:flex;gap:2px;}
+.wa-chat-ico{width:36px;height:36px;border-radius:50%;border:none;background:transparent;font-size:18px;color:#8696a0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.wa-chat-ico:hover{background:#2a3942;}
 
+/* Messages */
 .wa-messages{flex:1;overflow-y:auto;padding:12px 16px;scrollbar-width:thin;scrollbar-color:#222d34 transparent;}
 .wa-msg-date{text-align:center;margin:6px 0 12px;}
 .wa-msg-date span{background:#182229;color:#8696a0;font-size:12px;padding:4px 12px;border-radius:8px;}
@@ -304,97 +471,93 @@ html,body{height:100%;background:#111b21;font-family:-apple-system,'Segoe UI',Ar
 .wa-msg-wrap.out{justify-content:flex-end;}
 .wa-bubble{max-width:66%;background:#202c33;border-radius:4px 12px 12px 12px;padding:8px 12px;font-size:14px;line-height:1.55;color:#e9edef;}
 .wa-msg-wrap.out .wa-bubble{background:#005c4b;border-radius:12px 4px 12px 12px;}
+.wa-bubble-sender{font-size:12px;font-weight:700;margin-bottom:2px;}
+.wa-bubble-time{font-size:11px;color:rgba(255,255,255,.35);text-align:right;margin-top:3px;}
 
-.wa-action-bar{display:flex;gap:8px;padding:8px 12px;background:#202c33;border-top:1px solid #222d34;flex-shrink:0;flex-wrap:wrap;}
-.wa-btn-phish,.wa-btn-legit{flex:1;min-width:120px;height:42px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;border-radius:21px;display:flex;align-items:center;justify-content:center;gap:6px;}
-.wa-btn-phish{background:#ff3b30;color:white;border:none;}
-.wa-btn-phish:hover{background:#e0352b;}
-.wa-btn-legit{background:#2a3942;color:#25d366;border:none;}
-.wa-btn-legit:hover{background:#354a55;}
-.wa-ans-ok,.wa-ans-bad{flex:1;padding:10px;border-radius:21px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;justify-content:center;}
-.wa-ans-ok{background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.25);}
-.wa-ans-bad{background:rgba(255,59,48,.1);color:#ff3b30;border:1px solid rgba(255,59,48,.25);}
+/* Input row */
+.wa-input-bar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  background:#202c33;
+  border-top:1px solid #222d34;
+  flex-shrink:0;
+}
+.wa-emoji-btn{width:36px;height:36px;border-radius:50%;border:none;background:transparent;font-size:20px;color:#8696a0;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.wa-input-field{flex:1;background:#2a3942;border-radius:10px;border:none;padding:10px 14px;font-size:14px;color:#e9edef;outline:none;font-family:inherit;}
+.wa-input-field::placeholder{color:#8696a0;}
+.wa-mic-btn{width:40px;height:40px;border-radius:50%;background:#00a884;border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:white;}
+
+/* Boutons actions WA */
+.wa-action-bar{
+  display:flex;
+  gap:8px;
+  padding:8px 12px;
+  background:#202c33;
+  border-top:1px solid #222d34;
+  flex-shrink:0;
+  flex-wrap:wrap;
+}
+.wa-btn-phish{flex:1;min-width:120px;height:42px;background:#ff3b30;color:white;border:none;border-radius:21px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.wa-btn-legit{flex:1;min-width:120px;height:42px;background:#2a3942;color:#25d366;border:none;border-radius:21px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.wa-ans-ok{flex:1;padding:10px;border-radius:21px;font-size:13px;font-weight:600;background:rgba(37,211,102,.1);color:#25d366;border:1px solid rgba(37,211,102,.25);display:flex;align-items:center;gap:6px;justify-content:center;}
+.wa-ans-bad{flex:1;padding:10px;border-radius:21px;font-size:13px;font-weight:600;background:rgba(255,59,48,.1);color:#ff3b30;border:1px solid rgba(255,59,48,.25);display:flex;align-items:center;gap:6px;justify-content:center;}
 .wa-btn-next{padding:10px 16px;background:#2a3942;color:#8696a0;border:none;border-radius:21px;font-size:13px;cursor:pointer;font-family:inherit;}
-.wa-btn-next:hover{background:#354a55;}
 
+/* Panel résultats WA */
 .wa-results{display:none;position:absolute;inset:0;background:#0b141a;z-index:100;overflow-y:auto;padding:20px;}
 .wa-results.open{display:block;}
-
-/* --- Mobile/Tablette (<768px) : WhatsApp style téléphone --- */
-@media (max-width: 768px) {
-    .wa-strip{display:none;}
-    .wa-sidebar{width:100%;position:absolute;inset:0;z-index:50;display:flex;}
-    .wa-sidebar.hidden-mobile{display:none;}
-    .wa-chat{position:absolute;inset:0;z-index:60;display:none;}
-    .wa-chat.open-mobile{display:flex;}
-    .wa-conv-av{width:40px;height:40px;font-size:15px;}
-    .wa-conv-name{font-size:14px;}
-    .wa-conv-prev{font-size:12px;}
-    .wa-btn-phish,.wa-btn-legit{min-width:100px;height:38px;font-size:12px;}
-}
-
-@media (max-width: 480px) {
-    .wa-sidebar-title{font-size:18px;}
-    .wa-conv{padding:8px 12px;gap:8px;}
-    .wa-bubble{max-width:80%;font-size:13px;}
-    .wa-btn-phish,.wa-btn-legit{min-width:80px;height:34px;font-size:11px;border-radius:17px;}
-}
 {% endif %}
 
-/* ════════════════════════ RÉSULTATS (commun) ════════════════════════ */
-.res-wrap{max-width:500px;width:100%;margin:0 auto;}
-.res-card{background:#202c33;border-radius:16px;padding:22px;}
-.res-score-circle{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px;font-weight:900;}
-.rs-good{background:rgba(48,209,88,.12);color:#30d158;border:3px solid #30d158;}
-.rs-mid{background:rgba(10,132,255,.12);color:#0a84ff;border:3px solid #0a84ff;}
-.rs-bad{background:rgba(255,59,48,.12);color:#ff3b30;border:3px solid #ff3b30;}
-.res-title{font-size:17px;font-weight:700;text-align:center;color:#e9edef;margin-bottom:4px;}
-.res-sub{font-size:13px;color:#8696a0;text-align:center;margin-bottom:14px;}
+/* ══════════════════════════════════════════════
+   RÉSULTATS COMMUNS
+══════════════════════════════════════════════ */
+.res-wrap{max-width:{% if type=='GMAIL' %}640px{% else %}500px{% endif %};width:100%;margin:0 auto;}
+.res-card{
+  background:{% if type=='GMAIL' %}white{% else %}#202c33{% endif %};
+  border-radius:16px;
+  padding:{% if type=='GMAIL' %}32px{% else %}22px{% endif %};
+  {% if type=='GMAIL' %}box-shadow:0 2px 12px rgba(0,0,0,.08);{% endif %}
+}
+.res-score-circle{
+  width:{% if type=='GMAIL' %}96px{% else %}84px{% endif %};
+  height:{% if type=='GMAIL' %}96px{% else %}84px{% endif %};
+  border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  margin:0 auto 16px;font-weight:900;
+}
+.rs-good{background:{% if type=='GMAIL' %}#e8f5e9{% else %}rgba(48,209,88,.12){% endif %};color:{% if type=='GMAIL' %}#1b5e20{% else %}#30d158{% endif %};border:{% if type=='GMAIL' %}4{% else %}3{% endif %}px solid {% if type=='GMAIL' %}#4caf50{% else %}#30d158{% endif %};}
+.rs-mid {background:{% if type=='GMAIL' %}#e3f2fd{% else %}rgba(10,132,255,.12){% endif %};color:{% if type=='GMAIL' %}#1565c0{% else %}#0a84ff{% endif %};border:{% if type=='GMAIL' %}4{% else %}3{% endif %}px solid {% if type=='GMAIL' %}#2196f3{% else %}#0a84ff{% endif %};}
+.rs-bad {background:{% if type=='GMAIL' %}#fde8e8{% else %}rgba(255,59,48,.12){% endif %};color:{% if type=='GMAIL' %}#b71c1c{% else %}#ff3b30{% endif %};border:{% if type=='GMAIL' %}4{% else %}3{% endif %}px solid {% if type=='GMAIL' %}#f44336{% else %}#ff3b30{% endif %};}
+.res-title{font-size:{% if type=='GMAIL' %}22px{% else %}17px{% endif %};font-weight:700;text-align:center;color:{% if type=='GMAIL' %}#202124{% else %}#e9edef{% endif %};margin-bottom:4px;}
+.res-sub{font-size:13px;color:{% if type=='GMAIL' %}#5f6368{% else %}#8696a0{% endif %};text-align:center;margin-bottom:{% if type=='GMAIL' %}20px{% else %}14px{% endif %};}
 .res-item{border-radius:10px;padding:12px;margin-bottom:8px;border:1px solid transparent;}
-.ri-ok{background:rgba(48,209,88,.06);border-color:rgba(48,209,88,.2);}
-.ri-bad{background:rgba(255,59,48,.06);border-color:rgba(255,59,48,.2);}
+.ri-ok{background:{% if type=='GMAIL' %}#f0fdf4{% else %}rgba(48,209,88,.06){% endif %};border-color:{% if type=='GMAIL' %}#bbf7d0{% else %}rgba(48,209,88,.2){% endif %};}
+.ri-bad{background:{% if type=='GMAIL' %}#fef2f2{% else %}rgba(255,59,48,.06){% endif %};border-color:{% if type=='GMAIL' %}#fecaca{% else %}rgba(255,59,48,.2){% endif %};}
 .ri-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px;}
-.ri-name{font-size:14px;font-weight:700;color:#e9edef;}
-.ri-addr{font-size:12px;color:#8696a0;}
+.ri-name{font-size:14px;font-weight:700;color:{% if type=='GMAIL' %}#202124{% else %}#e9edef{% endif %};}
+.ri-addr{font-size:12px;color:{% if type=='GMAIL' %}#5f6368{% else %}#8696a0{% endif %};}
 .ri-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;margin-left:auto;flex-shrink:0;}
-.ri-badge.ok{background:rgba(48,209,88,.18);color:#30d158;}
-.ri-badge.bad{background:rgba(255,59,48,.18);color:#ff3b30;}
-.ri-expl{font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-top:4px;}
-.btn-save{width:100%;height:46px;background:#34a853;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:12px;}
-.btn-save:hover{background:#2d9249;}
-.btn-retry{width:100%;height:46px;background:#00a884;color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;}
-.btn-retry:hover{background:#008f72;}
-.btn-home{display:block;width:100%;height:44px;line-height:44px;text-align:center;margin-top:10px;background:rgba(255,255,255,.06);border-radius:12px;font-size:14px;font-weight:600;color:#8696a0;text-decoration:none;}
-.btn-home:hover{background:rgba(255,255,255,.1);}
+.ri-badge.ok{background:{% if type=='GMAIL' %}#dcfce7{% else %}rgba(48,209,88,.18){% endif %};color:{% if type=='GMAIL' %}#166534{% else %}#30d158{% endif %};}
+.ri-badge.bad{background:{% if type=='GMAIL' %}#fee2e2{% else %}rgba(255,59,48,.18){% endif %};color:{% if type=='GMAIL' %}#991b1b{% else %}#ff3b30{% endif %};}
+.ri-expl{font-size:13px;color:{% if type=='GMAIL' %}#374151{% else %}rgba(255,255,255,.6){% endif %};line-height:1.6;}
+.btn-save{width:100%;height:46px;background:#34a853;color:white;border:none;border-radius:{% if type=='GMAIL' %}10px{% else %}12px{% endif %};font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:{% if type=='GMAIL' %}16px{% else %}12px{% endif %};}
+.btn-retry{width:100%;height:46px;background:{% if type=='GMAIL' %}#1a73e8{% elseif type=='SMS' %}#ff9f0a{% else %}#00a884{% endif %};color:white;border:none;border-radius:{% if type=='GMAIL' %}10px{% else %}12px{% endif %};font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:10px;}
+.btn-home{display:block;width:100%;height:44px;line-height:44px;text-align:center;margin-top:10px;background:{% if type=='GMAIL' %}#f1f3f4{% else %}rgba(255,255,255,.06){% endif %};border-radius:{% if type=='GMAIL' %}10px{% else %}12px{% endif %};font-size:14px;font-weight:600;color:{% if type=='GMAIL' %}#5f6368{% else %}#8696a0{% endif %};text-decoration:none;}
 
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(32,44,51,.97);color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+/* Toast */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:{% if type=='GMAIL' %}#202124{% else %}rgba(32,44,51,.97){% endif %};color:white;padding:12px 24px;border-radius:8px;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;}
-
-/* Résultats pour Gmail (fond clair) */
-.gm-results .res-card{background:white;box-shadow:0 1px 3px rgba(0,0,0,.1);}
-.gm-results .res-title,.gm-results .ri-name{color:#202124;}
-.gm-results .res-sub,.gm-results .ri-addr{color:#5f6368;}
-.gm-results .ri-expl{color:#444746;}
-.gm-results .btn-save{background:#1a73e8;color:white;}
-.gm-results .btn-retry{background:#34a853;color:white;}
-.gm-results .btn-home{background:#f1f3f4;color:#444746;}
-{% if type == 'GMAIL' %}
-@media (max-width: 768px) {
-    .gm-results{padding:12px 8px;}
-    .res-card{padding:16px;}
-    .res-score-circle{width:64px;height:64px;}
-    .res-score-circle span:first-child{font-size:22px !important;}
-    .res-title{font-size:15px;}
-}
-{% endif %}
 </style>
-</head>
-<body>
+{% endblock %}
 
+{% block body %}
+{# ── Données JS ── #}
 <script>
 const ITEMS   = {{ items|json_encode|raw }};
 const SIM_TYPE= "{{ type }}";
-const MODULE_ID = {{ module.id }};
+const SIM_ID  = {{ module.id }};
 const USER_AV = "{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}";
 const FORM_URL= "{{ path('employe_simulation_jouer', {id: module.id}) }}";
 let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
@@ -402,103 +565,351 @@ let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
 
 {# ════════════════════════ GMAIL ════════════════════════ #}
 {% if type == 'GMAIL' %}
+<!-- Topbar -->
 <div class="gm-top">
-  <button class="gm-hamburger" onclick="document.getElementById('gmSb').classList.toggle('mini')"><i class="fa-solid fa-bars"></i></button>
+  <button class="gm-hamburger" onclick="document.getElementById('gmSb').classList.toggle('mini')" title="Menu">
+    <i class="fa-solid fa-bars"></i>
+  </button>
   <a class="gm-logo" href="#">
-    <svg class="gm-logo-svg" viewBox="0 0 110 40"><rect x="0" y="6" width="28" height="28" rx="2" fill="white" stroke="#dadce0" stroke-width="1"/><path d="M2 8 L14 18 L26 8" stroke="#EA4335" stroke-width="2" fill="none"/><text x="34" y="28" font-family="Product Sans,Google Sans,Arial" font-size="22" fill="#5f6368">Gmail</text></svg>
+    <svg class="gm-logo-svg" viewBox="0 0 110 40" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="6" width="28" height="28" rx="2" fill="white" stroke="#dadce0" stroke-width="1"/>
+      <path d="M2 8 L14 18 L26 8" stroke="#EA4335" stroke-width="2" fill="none"/>
+      <text x="34" y="28" font-family="Product Sans,Google Sans,Arial" font-size="22" fill="#5f6368" font-weight="400">Gmail</text>
+    </svg>
   </a>
-  <div class="gm-search"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Rechercher dans les e-mails"></div>
+  <div class="gm-search">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" placeholder="Rechercher dans les e-mails">
+  </div>
   <div class="gm-right">
-    <button class="gm-icon-btn"><i class="fa-regular fa-circle-question"></i></button>
-    <button class="gm-icon-btn"><i class="fa-solid fa-gear"></i></button>
-    <button class="gm-icon-btn"><i class="fa-solid fa-grip"></i></button>
-    <div class="gm-avatar">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div>
+    <button class="gm-icon-btn" title="Aide"><i class="fa-regular fa-circle-question"></i></button>
+    <button class="gm-icon-btn" title="Paramètres"><i class="fa-solid fa-gear"></i></button>
+    <button class="gm-icon-btn" title="Applications Google"><i class="fa-solid fa-grip"></i></button>
+    <div class="gm-avatar" title="{{ app.user.prenom }} {{ app.user.nom }}">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div>
   </div>
 </div>
 
-<div class="sim-bar"><i class="fa-solid fa-shield-halved"></i><strong>Simulation en cours</strong> — Analysez chaque email<div class="sim-prog"><div class="sim-prog-fill" id="simFill" style="width:0%"></div></div><span id="simTxt">0/{{ items|length }}</span></div>
+<!-- Barre simulation -->
+<div class="sim-bar">
+  <i class="fa-solid fa-shield-halved"></i>
+  <strong>Simulation en cours</strong> — Analysez chaque email : phishing ou légitime ?
+  <div class="sim-prog"><div class="sim-prog-fill" id="simFill" style="width:0%"></div></div>
+  <span id="simTxt">0/{{ items|length }}</span>
+</div>
 
+<!-- Shell -->
 <div class="gm-shell">
+  <!-- Sidebar -->
   <div class="gm-sb" id="gmSb">
-    <button class="gm-compose-btn"><i class="fa-solid fa-pen-to-square"></i><span class="gm-compose-label">Nouveau message</span></button>
-    <a class="gm-nav active" href="#"><i class="fa-solid fa-inbox"></i><span class="gm-nav-label">Boîte de réception</span><span class="gm-nav-count" id="gmUnread">{{ items|length }}</span></a>
-    <a class="gm-nav" href="#"><i class="fa-regular fa-star"></i><span class="gm-nav-label">Messages suivis</span></a>
-    <a class="gm-nav" href="#"><i class="fa-regular fa-clock"></i><span class="gm-nav-label">En attente</span></a>
-    <a class="gm-nav" href="#"><i class="fa-solid fa-paper-plane"></i><span class="gm-nav-label">Messages envoyés</span></a>
+    <button class="gm-compose-btn">
+      <i class="fa-solid fa-pen-to-square"></i>
+      <span class="gm-compose-label">Nouveau message</span>
+    </button>
+
+    <a class="gm-nav active" href="#">
+      <i class="fa-solid fa-inbox"></i>
+      <span class="gm-nav-label">Boîte de réception</span>
+      <span class="gm-nav-count" id="gmUnread">{{ items|length }}</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-regular fa-star"></i>
+      <span class="gm-nav-label">Messages suivis</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-regular fa-clock"></i>
+      <span class="gm-nav-label">En attente</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-solid fa-paper-plane"></i>
+      <span class="gm-nav-label">Messages envoyés</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-regular fa-file-lines"></i>
+      <span class="gm-nav-label">Brouillons</span>
+      <span class="gm-nav-count">6</span>
+    </a>
+    <div class="gm-sep"></div>
+    <div class="gm-sec-label">Libellés</div>
+    <a class="gm-nav" href="#">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span class="gm-nav-label">Spam</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-regular fa-trash-can"></i>
+      <span class="gm-nav-label">Corbeille</span>
+    </a>
+    <div class="gm-sep"></div>
+    <div class="gm-sec-label">Catégories</div>
+    <a class="gm-nav" href="#">
+      <i class="fa-solid fa-tag"></i>
+      <span class="gm-nav-label">Promotions</span>
+      <span class="gm-nav-count">3</span>
+    </a>
+    <a class="gm-nav" href="#">
+      <i class="fa-solid fa-users"></i>
+      <span class="gm-nav-label">Réseaux sociaux</span>
+    </a>
   </div>
+
+  <!-- Zone principale -->
   <div class="gm-main">
-    <div class="gm-tabs"><div class="gm-tab active"><i class="fa-solid fa-inbox"></i> Principal</div><div class="gm-tab"><i class="fa-solid fa-tag"></i> Promotions</div><div class="gm-tab"><i class="fa-solid fa-users"></i> Réseaux sociaux</div></div>
-    <div class="gm-toolbar"><input type="checkbox" class="gm-check"><button class="gm-tb-btn"><i class="fa-solid fa-arrows-rotate"></i></button></div>
+    <!-- Tabs -->
+    <div class="gm-tabs">
+      <div class="gm-tab active"><i class="fa-solid fa-inbox"></i> Principal</div>
+      <div class="gm-tab"><i class="fa-solid fa-tag"></i> Promotions <span class="gm-tab-badge">3</span></div>
+      <div class="gm-tab"><i class="fa-solid fa-users"></i> Réseaux sociaux</div>
+      <div class="gm-tab"><i class="fa-solid fa-bell"></i> Alertes <span class="gm-tab-badge">2</span></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="gm-toolbar">
+      <input type="checkbox" class="gm-check">
+      <button class="gm-tb-btn" title="Actualiser"><i class="fa-solid fa-arrows-rotate"></i></button>
+      <button class="gm-tb-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      <div class="gm-count">
+        <span>1–{{ items|length }} sur {{ items|length }}</span>
+        <button class="gm-tb-btn"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="gm-tb-btn"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Liste emails -->
     <div class="gm-list" id="gmList">
       {% for idx, item in items %}
       <div class="gm-row unread" id="row{{ idx }}" onclick="openItem({{ idx }})">
+        <input type="checkbox" class="gm-row-check" onclick="event.stopPropagation()">
+        <i class="fa-regular fa-star gm-row-star" onclick="event.stopPropagation();this.classList.toggle('fa-solid');this.classList.toggle('fa-regular');this.classList.toggle('starred')"></i>
         <div class="gm-row-av" style="background:{{ item.avatar_color|default('#9e9e9e') }};">{{ item.avatar_text|default(item.sender_name|slice(0,2)|upper) }}</div>
         <div class="gm-row-body">
           <span class="gm-sender">{{ item.sender_name }}</span>
-          <div class="gm-row-content"><span class="gm-subj">{{ item.subject }}</span><span class="gm-sep-dot"> – </span><span class="gm-preview">{{ item.body|striptags|slice(0,80) }}</span></div>
+          <div class="gm-row-content">
+            <span class="gm-subj">{{ item.subject }}</span>
+            <span class="gm-sep-dot"> – </span>
+            <span class="gm-preview">{{ item.preview|default(item.body|striptags|slice(0,80)) }}</span>
+          </div>
         </div>
-        <div class="gm-row-right"><span class="gm-time">{{ item.time|default("Aujourd'hui") }}</span></div>
+        <div class="gm-row-right">
+          <span class="gm-time">{{ item.time|default("Aujourd'hui") }}</span>
+        </div>
       </div>
       {% endfor %}
     </div>
+
+    <!-- Panel email ouvert -->
     <div class="gm-panel" id="gmPanel">
-      <div class="gp-topbar"><button class="gp-back-btn" onclick="closeItem()"><i class="fa-solid fa-arrow-left"></i> Retour</button></div>
+      <div class="gp-topbar">
+        <button class="gp-back-btn" onclick="closeItem()">
+          <i class="fa-solid fa-arrow-left"></i> Retour
+        </button>
+        <span class="gp-prog" id="gpProg"></span>
+        <button class="gm-tb-btn" style="margin-left:4px" title="Archiver"><i class="fa-solid fa-box-archive"></i></button>
+        <button class="gm-tb-btn" title="Spam"><i class="fa-solid fa-ban"></i></button>
+        <button class="gm-tb-btn" title="Supprimer"><i class="fa-regular fa-trash-can"></i></button>
+        <button class="gm-tb-btn" title="Marquer comme non lu"><i class="fa-regular fa-envelope"></i></button>
+      </div>
       <div class="gp-scroll">
         <div class="gp-subject" id="gpSubject"></div>
-        <div class="gp-from-row"><div class="gp-from-av" id="gpAv"></div><div class="gp-from-meta"><div class="gp-from-name" id="gpName"></div><div class="gp-from-email" id="gpEmail"></div><div class="gp-from-time" id="gpTime"></div></div></div>
+        <div class="gp-from-row">
+          <div class="gp-from-av" id="gpAv"></div>
+          <div class="gp-from-meta">
+            <div class="gp-from-name" id="gpName"></div>
+            <div class="gp-from-email" id="gpEmail"></div>
+            <div class="gp-from-time" id="gpTime"></div>
+          </div>
+          <div style="display:flex;gap:4px;margin-left:auto;">
+            <button class="gm-tb-btn" title="Répondre"><i class="fa-solid fa-reply"></i></button>
+            <button class="gm-tb-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+          </div>
+        </div>
         <div class="gp-body" id="gpBody"></div>
       </div>
       <div class="gp-actions" id="gpActions"></div>
     </div>
+
+    <!-- Résultats Gmail -->
     <div class="gm-results" id="gmResults"></div>
-  </div>
-</div>
+  </div><!-- /gm-main -->
+</div><!-- /gm-shell -->
 
 {# ════════════════════════ SMS ════════════════════════ #}
 {% elseif type == 'SMS' %}
 <div class="phone-wrap">
   <div class="dynamic-island"></div>
-  <div class="ios-status"><span class="ios-time" id="iosTime">15:05</span><div><i class="fa-solid fa-signal"></i> <i class="fa-solid fa-wifi"></i> <i class="fa-solid fa-battery-three-quarters"></i></div></div>
-  <div class="sim-bar-sms"><i class="fa-solid fa-shield-halved"></i><strong>Simulation</strong><div class="sim-prog-sms"><div class="sim-prog-sms-fill" id="simFill" style="width:0%"></div></div><span id="simTxt">0/{{ items|length }}</span></div>
-  <div class="sms-app-header"><span class="sms-title">Conversations</span></div>
+  <div class="ios-status">
+    <span class="ios-time" id="iosTime">15:05</span>
+    <div class="ios-status-icons">
+      <i class="fa-solid fa-signal"></i>
+      <i class="fa-solid fa-wifi"></i>
+      <i class="fa-solid fa-battery-three-quarters"></i>
+    </div>
+  </div>
+
+  <div class="sim-bar-sms">
+    <i class="fa-solid fa-shield-halved"></i>
+    <strong>Simulation</strong> — Détectez les SMS frauduleux
+    <div class="sim-prog-sms"><div class="sim-prog-sms-fill" id="simFill" style="width:0%"></div></div>
+    <span id="simTxt">0/{{ items|length }}</span>
+  </div>
+
+  <div class="sms-app-header">
+    <span class="sms-title">Conversations</span>
+    <div class="sms-header-btns">
+      <button class="sms-hbtn" title="Rechercher"><i class="fa-solid fa-magnifying-glass"></i></button>
+      <button class="sms-hbtn" title="Nouveau message"><i class="fa-solid fa-pencil"></i></button>
+    </div>
+  </div>
+
+  <div class="sms-filter-bar">
+    <button class="sms-filter-chip on">Tous</button>
+    <button class="sms-filter-chip off">Non lus <span style="background:rgba(255,255,255,.25);padding:1px 5px;border-radius:8px;font-size:11px;">{{ items|length }}</span></button>
+    <button class="sms-filter-chip off">Archivés</button>
+  </div>
+
   <div class="sms-list" id="smsList">
     {% for idx, item in items %}
     <div class="sms-row" id="row{{ idx }}" onclick="openItem({{ idx }})">
-      <div class="sms-av">{% if item.num matches '/^[0-9]/' %}<i class="fa-solid fa-building"></i>{% else %}<span class="sms-av-txt">{{ item.name|slice(0,2)|upper }}</span>{% endif %}</div>
-      <div class="sms-row-body"><div class="sms-row-top"><span class="sms-row-name">{{ item.name }}</span><span class="sms-row-time">{{ item.date|default("Aujourd'hui") }}</span></div><div class="sms-row-prev">{{ item.message|slice(0,55) }}...</div></div>
+      <div class="sms-av">
+        {% if item.num is defined and item.num matches '/^[0-9]/' %}
+          <i class="fa-solid fa-building"></i>
+        {% else %}
+          <span class="sms-av-txt">{{ item.name|slice(0,2)|upper }}</span>
+        {% endif %}
+      </div>
+      <div class="sms-row-body">
+        <div class="sms-row-top">
+          <span class="sms-row-name">{{ item.name }}</span>
+          <span class="sms-row-time">{{ item.date|default("Aujourd'hui") }}</span>
+        </div>
+        <div class="sms-row-prev">{{ item.message|slice(0,55) }}...</div>
+      </div>
+      <div class="sms-badge">1</div>
     </div>
     {% endfor %}
   </div>
+
+  <!-- Panel SMS détail -->
   <div class="sms-panel" id="smsPanel">
-    <div class="sp-nav"><button class="sp-back" onclick="closeItem()"><i class="fa-solid fa-chevron-left"></i> Retour</button><div class="sp-contact-info"><div class="sp-contact-name" id="spName"></div><div class="sp-contact-num" id="spNum"></div></div></div>
+    <div class="sp-nav">
+      <button class="sp-back" onclick="closeItem()"><i class="fa-solid fa-chevron-left"></i> Retour</button>
+      <div class="sp-contact-info">
+        <div class="sp-contact-name" id="spName"></div>
+        <div class="sp-contact-num" id="spNum"></div>
+      </div>
+      <div class="sp-actions-nav">
+        <button class="sp-nav-btn" title="Appeler"><i class="fa-solid fa-phone"></i></button>
+        <button class="sp-nav-btn" title="Plus"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+    </div>
     <div class="sp-scroll" id="spScroll"></div>
     <div class="sp-action-bar" id="spActions"></div>
   </div>
-</div>
+
+  <div class="ios-bottom">
+    <div class="ios-bb-item on">
+      <i class="fa-solid fa-message"></i>
+      <span>Messages</span>
+    </div>
+    <div class="ios-bb-item">
+      <i class="fa-solid fa-address-book"></i>
+      <span>Contacts</span>
+    </div>
+    <div class="ios-bb-item">
+      <i class="fa-solid fa-gear"></i>
+      <span>Réglages</span>
+    </div>
+  </div>
+</div><!-- /phone-wrap -->
 
 {# ════════════════════════ WHATSAPP ════════════════════════ #}
 {% elseif type == 'WHATSAPP' %}
 <div class="wa-shell">
-  <div class="wa-strip"><div class="wa-strip-av">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div><button class="wa-strip-btn"><i class="fa-solid fa-message"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-circle-dot"></i></button><button class="wa-strip-btn"><i class="fa-solid fa-bullhorn"></i></button></div>
-  <div class="wa-sidebar" id="waSidebar">
-    <div class="wa-sidebar-top"><span class="wa-sidebar-title">WhatsApp</span><div class="wa-sidebar-icons"><button class="wa-sb-ico"><i class="fa-solid fa-pen-to-square"></i></button><button class="wa-sb-ico"><i class="fa-solid fa-ellipsis-vertical"></i></button></div></div>
+  <!-- Strip gauche -->
+  <div class="wa-strip">
+    <div class="wa-strip-av">{{ app.user.prenom|slice(0,1)|upper }}{{ app.user.nom|slice(0,1)|upper }}</div>
+    <button class="wa-strip-btn on" title="Messages"><i class="fa-solid fa-message"></i></button>
+    <button class="wa-strip-btn" title="Statuts"><i class="fa-solid fa-circle-dot"></i></button>
+    <button class="wa-strip-btn" title="Channels"><i class="fa-solid fa-bullhorn"></i></button>
+    <button class="wa-strip-btn" title="Communautés"><i class="fa-solid fa-users"></i></button>
+    <div style="flex:1;"></div>
+    <button class="wa-strip-btn" title="Paramètres"><i class="fa-solid fa-gear"></i></button>
+  </div>
+
+  <!-- Sidebar conversations -->
+  <div class="wa-sidebar">
+    <div class="wa-sidebar-top">
+      <span class="wa-sidebar-title">WhatsApp</span>
+      <div class="wa-sidebar-icons">
+        <button class="wa-sb-ico" title="Nouveau chat"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="wa-sb-ico" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+    </div>
+
+    <div class="wa-search-wrap">
+      <div class="wa-search-inner">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Rechercher ou démarrer une discussion">
+      </div>
+    </div>
+
+    <div class="wa-filters">
+      <button class="wa-filter-chip on">Tous</button>
+      <button class="wa-filter-chip off">Non lus <span style="background:rgba(255,255,255,.2);padding:1px 6px;border-radius:8px;font-size:11px;margin-left:3px;">{{ items|length }}</span></button>
+      <button class="wa-filter-chip off">Favoris</button>
+      <button class="wa-filter-chip off">Groupes</button>
+    </div>
+
     <div class="wa-conv-list" id="waConvList">
       {% for idx, item in items %}
       <div class="wa-conv" id="conv{{ idx }}" onclick="openItem({{ idx }})">
         <div class="wa-conv-av" style="background:{{ item.avatarBg|default('#25d366') }};">{{ item.avatarText|default(item.name|slice(0,2)|upper) }}</div>
-        <div class="wa-conv-body"><div class="wa-conv-top"><span class="wa-conv-name">{{ item.name }}</span><span class="wa-conv-time">{{ item.messages|last ? item.messages|last.time : '' }}</span></div><div class="wa-conv-prev">{{ item.messages|last ? item.messages|last.text|slice(0,50) : '' }}</div></div>
+        <div class="wa-conv-body">
+          <div class="wa-conv-top">
+            <span class="wa-conv-name">{{ item.name }}</span>
+            <span class="wa-conv-time">{{ item.messages|last ? item.messages|last.time : '' }}</span>
+          </div>
+          <div class="wa-conv-prev">{{ item.messages|last ? item.messages|last.text|slice(0,50) : '' }}</div>
+        </div>
+        {% if item.is_phishing %}<div class="wa-conv-badge">!</div>{% endif %}
       </div>
       {% endfor %}
     </div>
   </div>
-  <div class="wa-chat" id="waChat">
-    <div class="wa-sim-bar"><i class="fa-solid fa-shield-halved"></i><strong>Simulation</strong><div class="wa-sim-prog"><div class="wa-sim-prog-fill" id="simFill" style="width:0%"></div></div><span id="simTxt">0/{{ items|length }}</span></div>
-    <div class="wa-chat-header">
-      <button class="sp-back" onclick="closeItem()" style="display:none;" id="waBackBtn"><i class="fa-solid fa-arrow-left"></i></button>
-      <div class="wa-chat-av" id="waChatAv"></div>
-      <div class="wa-chat-info"><div class="wa-chat-name" id="waChatName">Sélectionnez une conversation</div><div class="wa-chat-status" id="waChatStatus"></div></div>
+
+  <!-- Zone chat -->
+  <div class="wa-chat">
+    <div class="wa-sim-bar">
+      <i class="fa-solid fa-shield-halved"></i>
+      <strong>Simulation</strong> — Phishing WhatsApp
+      <div class="wa-sim-prog"><div class="wa-sim-prog-fill" id="simFill" style="width:0%"></div></div>
+      <span id="simTxt">0/{{ items|length }}</span>
     </div>
-    <div class="wa-messages" id="waMessages"><div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation pour l'analyser</div></div>
+
+    <div class="wa-chat-header">
+      <div class="wa-chat-av" id="waChatAv" style="background:#444;color:white;"></div>
+      <div class="wa-chat-info">
+        <div class="wa-chat-name" id="waChatName">Sélectionnez une conversation</div>
+        <div class="wa-chat-status" id="waChatStatus"></div>
+      </div>
+      <div class="wa-chat-actions">
+        <button class="wa-chat-ico" title="Rechercher"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button class="wa-chat-ico" title="Appel vidéo"><i class="fa-solid fa-video"></i></button>
+        <button class="wa-chat-ico" title="Appel"><i class="fa-solid fa-phone"></i></button>
+        <button class="wa-chat-ico" title="Menu"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+      </div>
+    </div>
+
+    <div class="wa-messages" id="waMessages">
+      <div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;text-align:center;padding:20px;">
+        <div><i class="fa-solid fa-lock" style="font-size:32px;margin-bottom:12px;display:block;color:#2a3942;"></i>Cliquez sur une conversation pour l'analyser</div>
+      </div>
+    </div>
+
+    <div class="wa-input-bar">
+      <button class="wa-emoji-btn" title="Emoji"><i class="fa-regular fa-face-smile"></i></button>
+      <input class="wa-input-field" type="text" placeholder="Message">
+      <button class="wa-emoji-btn" title="Joindre"><i class="fa-solid fa-paperclip"></i></button>
+      <button class="wa-mic-btn" title="Micro"><i class="fa-solid fa-microphone"></i></button>
+    </div>
     <div class="wa-action-bar" id="waActions"></div>
     <div class="wa-results" id="waResults"></div>
   </div>
@@ -506,7 +917,10 @@ let answers={}, curIdx=null, startTs=Date.now(), N=ITEMS.length;
 {% endif %}
 
 <div class="toast" id="toast"></div>
+{% endblock %}
 
+{% block javascripts %}
+{{ parent() }}
 <script>
 function openItem(idx){
   curIdx=idx;
@@ -523,10 +937,6 @@ function closeItem(){
   } else if(SIM_TYPE==='SMS'){
     document.getElementById('smsList').style.display='';
     document.getElementById('smsPanel').classList.remove('open');
-  } else {
-    document.getElementById('waSidebar').classList.remove('hidden-mobile');
-    document.getElementById('waChat').classList.remove('open-mobile');
-    document.getElementById('waBackBtn').style.display='none';
   }
 }
 
@@ -534,109 +944,238 @@ function answer(idx, choice){
   const item=ITEMS[idx];
   const correct=(choice==='phishing')===!!item.is_phishing;
   answers[idx]={choice,correct};
+
   const pfx=SIM_TYPE==='WHATSAPP'?'conv':'row';
   const row=document.getElementById(pfx+idx);
   if(row){row.classList.remove('ok-ans','bad-ans');row.classList.add(correct?'ok-ans':'bad-ans');}
+
   const done=Object.keys(answers).length;
   document.getElementById('simFill').style.width=(done/N*100)+'%';
   document.getElementById('simTxt').textContent=done+'/'+N;
-  showToast(correct?'Bonne réponse !':'Mauvaise réponse');
+  const ub=document.getElementById('gmUnread');
+  if(ub) ub.textContent=Math.max(0,N-done)||'';
+
+  showToast(correct?'✅ Bonne réponse !':'❌ Mauvaise réponse');
   renderActions(idx);
   if(done>=N) setTimeout(showResults,1400);
 }
 
+/* ── GMAIL ── */
 function openGmail(idx){
   const item=ITEMS[idx];
   document.getElementById('gmList').style.display='none';
   document.getElementById('gmPanel').classList.add('open');
   document.getElementById('gmResults').classList.remove('open');
+
   const row=document.getElementById('row'+idx);
   row.classList.remove('unread');row.classList.add('read');
+
   document.getElementById('gpSubject').textContent=item.subject||'';
   const av=document.getElementById('gpAv');
   av.style.background=item.avatar_color||'#9e9e9e';
   av.textContent=item.avatar_text||(item.sender_name||'').slice(0,2).toUpperCase();
   document.getElementById('gpName').textContent=item.sender_name||'';
-  document.getElementById('gpEmail').innerHTML='<i class="fa-regular fa-envelope"></i> '+esc(item.sender_email||'');
-  document.getElementById('gpTime').innerHTML='<i class="fa-regular fa-clock"></i> '+(item.time||"Aujourd'hui");
-  document.getElementById('gpBody').innerHTML='<div class="gp-mail-box">'+(item.body||'')+'</div>';
+  document.getElementById('gpEmail').innerHTML='<i class="fa-regular fa-envelope" style="margin-right:4px;"></i>'+esc(item.sender_email||'');
+  document.getElementById('gpTime').innerHTML='<i class="fa-regular fa-clock" style="margin-right:4px;"></i>'+(item.time||"Aujourd'hui");
+
+  const isP=!!item.is_phishing;
+  let body='<div class="gp-mail-box">'+(item.body||'')+'</div>';
+  body+=`<div class="gp-indicator ${isP?'warn':'safe'}">
+    <i class="fa-solid ${isP?'fa-triangle-exclamation':'fa-circle-check'}"></i>
+    <div><strong>Expéditeur :</strong> ${esc(item.sender_email||'')} — ${isP?'Vérifiez ce domaine : est-il bien le domaine officiel ?':'Domaine vérifié — correspond à l\'expéditeur affiché.'}</div>
+  </div>`;
+  document.getElementById('gpBody').innerHTML=body;
+  document.getElementById('gpProg').textContent='Email '+(idx+1)+'/'+N+' · '+Object.keys(answers).length+' répondus';
   renderActions(idx);
 }
 
+/* ── SMS ── */
 function openSms(idx){
   const item=ITEMS[idx];
   document.getElementById('smsList').style.display='none';
   document.getElementById('smsPanel').classList.add('open');
   document.getElementById('spName').textContent=item.name||'';
   document.getElementById('spNum').textContent=item.num||'';
-  document.getElementById('spScroll').innerHTML='<div class="sp-date">'+item.date+'</div><div class="sms-bubble-wrap"><div class="sms-bubble">'+esc(item.message||'')+'<div class="sms-bubble-time">'+item.date+'</div></div></div>';
+
+  const msg=(item.message||'').replace(/(https?:\/\/[^\s]+|bit\.ly\/[^\s]+)/g,
+    '<span style="color:#ff9f0a;text-decoration:underline;">$1</span>');
+  document.getElementById('spScroll').innerHTML=`
+    <div class="sp-date">${item.date||"Aujourd'hui"}</div>
+    <div class="sms-bubble-wrap"><div class="sms-bubble">
+      ${msg}
+      ${item.hasLink?'<div class="sms-suspect-tag"><i class="fa-solid fa-link"></i> Lien suspect détecté</div>':''}
+      <div class="sms-bubble-time">${(item.date||'').split(' ').pop()||''}</div>
+    </div></div>`;
   renderActions(idx);
 }
 
+/* ── WHATSAPP ── */
 function openWhatsapp(idx){
   const item=ITEMS[idx];
   document.querySelectorAll('.wa-conv').forEach(e=>e.classList.remove('active'));
-  const c=document.getElementById('conv'+idx);if(c)c.classList.add('active');
+  const c=document.getElementById('conv'+idx);
+  if(c) c.classList.add('active');
+
   const av=document.getElementById('waChatAv');
   av.style.background=item.avatarBg||'#25d366';
   av.textContent=item.avatarText||(item.name||'').slice(0,2).toUpperCase();
   document.getElementById('waChatName').textContent=item.name||'';
   document.getElementById('waChatStatus').textContent=item.status||'';
-  
-  if(window.innerWidth<=768){
-    document.getElementById('waSidebar').classList.add('hidden-mobile');
-    document.getElementById('waChat').classList.add('open-mobile');
-    document.getElementById('waBackBtn').style.display='flex';
-  }
-  
+
   let html='<div class="wa-msg-date"><span>Aujourd\'hui</span></div>';
   (item.messages||[]).forEach(m=>{
-    html+='<div class="wa-msg-wrap '+(m.out?'out':'')+'"><div class="wa-bubble">'+(m.sender?'<div class="wa-bubble-sender">'+esc(m.sender)+'</div>':'')+esc(m.text||'')+'<div class="wa-bubble-time">'+m.time+'</div></div></div>';
+    html+=`<div class="wa-msg-wrap ${m.out?'out':''}"><div class="wa-bubble">
+      ${!m.out&&m.sender?`<div class="wa-bubble-sender" style="color:${m.senderColor||'#25d366'};">${esc(m.sender)}</div>`:''}
+      ${esc(m.text||'')}
+      <div class="wa-bubble-time">${m.time||''} ${m.out?'<i class="fa-solid fa-check-double" style="font-size:11px;"></i>':''}</div>
+    </div></div>`;
   });
   document.getElementById('waMessages').innerHTML=html;
   setTimeout(()=>{const w=document.getElementById('waMessages');w.scrollTop=w.scrollHeight;},50);
   renderActions(idx);
 }
 
+/* ── Actions ── */
 function renderActions(idx){
-  const barId=SIM_TYPE==='GMAIL'?'gpActions':SIM_TYPE==='SMS'?'spActions':'waActions';
+  let barId;
+  if(SIM_TYPE==='GMAIL') barId='gpActions';
+  else if(SIM_TYPE==='SMS') barId='spActions';
+  else barId='waActions';
   const bar=document.getElementById(barId);
   const done=Object.keys(answers).length;
+
+  const PHISH = SIM_TYPE==='GMAIL'
+    ? `<button class="btn-phish" onclick="answer(${idx},'phishing')"><i class="fa-solid fa-triangle-exclamation"></i> Signaler phishing</button>`
+    : SIM_TYPE==='SMS'
+    ? `<button class="sp-btn-phish" onclick="answer(${idx},'phishing')"><i class="fa-solid fa-triangle-exclamation"></i> C'est une arnaque</button>`
+    : `<button class="wa-btn-phish" onclick="answer(${idx},'phishing')"><i class="fa-solid fa-triangle-exclamation"></i> Phishing / Arnaque</button>`;
+
+  const LEGIT = SIM_TYPE==='GMAIL'
+    ? `<button class="btn-legit" onclick="answer(${idx},'legit')"><i class="fa-solid fa-circle-check"></i> Email légitime</button>`
+    : SIM_TYPE==='SMS'
+    ? `<button class="sp-btn-legit" onclick="answer(${idx},'legit')"><i class="fa-solid fa-circle-check"></i> Message légitime</button>`
+    : `<button class="wa-btn-legit" onclick="answer(${idx},'legit')"><i class="fa-solid fa-circle-check"></i> Message légitime</button>`;
+
+  const NEXT = SIM_TYPE==='GMAIL'
+    ? `<button class="btn-next-gm" onclick="closeItem()"><i class="fa-solid fa-arrow-left"></i> Suivant</button>`
+    : SIM_TYPE==='SMS'
+    ? `<button class="sp-btn-next" onclick="closeItem()">Suivant</button>`
+    : `<button class="wa-btn-next" onclick="openItem(${(idx+1)%N})">Suivant →</button>`;
+
+  const RESULTS = SIM_TYPE==='GMAIL'
+    ? `<button class="btn-legit" onclick="showResults()">Voir les résultats <i class="fa-solid fa-arrow-right"></i></button>`
+    : SIM_TYPE==='SMS'
+    ? `<button class="sp-btn-legit" onclick="showResults()">Voir les résultats →</button>`
+    : `<button class="wa-btn-legit" onclick="showResults()">Voir les résultats →</button>`;
+
   if(answers[idx]!==undefined){
     const ok=answers[idx].correct;
-    bar.innerHTML='<div class="'+(SIM_TYPE==='GMAIL'?(ok?'ans-ok':'ans-bad'):SIM_TYPE==='SMS'?(ok?'sp-ans-ok':'sp-ans-bad'):(ok?'wa-ans-ok':'wa-ans-bad'))+'"><i class="fa-solid '+(ok?'fa-circle-check':'fa-circle-xmark')+'"></i> '+(ok?'Correct !':'Incorrect')+'</div>'+(done<N?('<button class="'+(SIM_TYPE==='GMAIL'?'btn-next-gm':SIM_TYPE==='SMS'?'sp-btn-next':'wa-btn-next')+'" onclick="openItem('+((idx+1)%N)+')">Suivant →</button>'):('<button class="'+(SIM_TYPE==='GMAIL'?'btn-legit':SIM_TYPE==='SMS'?'sp-btn-legit':'wa-btn-legit')+'" onclick="showResults()">Voir les résultats</button>'));
+    const okCls=SIM_TYPE==='GMAIL'?'ans-ok':SIM_TYPE==='SMS'?'sp-ans-ok':'wa-ans-ok';
+    const badCls=SIM_TYPE==='GMAIL'?'ans-bad':SIM_TYPE==='SMS'?'sp-ans-bad':'wa-ans-bad';
+    bar.innerHTML=`<div class="${ok?okCls:badCls}"><i class="fa-solid ${ok?'fa-circle-check':'fa-circle-xmark'}"></i> ${ok?'Correct !':'Incorrect'}</div>${done<N?NEXT:RESULTS}`;
   } else {
-    bar.innerHTML=(SIM_TYPE==='GMAIL'?'<button class="btn-phish" onclick="answer('+idx+',\'phishing\')"><i class="fa-solid fa-triangle-exclamation"></i> Signaler phishing</button><button class="btn-legit" onclick="answer('+idx+',\'legit\')"><i class="fa-solid fa-circle-check"></i> Email légitime</button>':SIM_TYPE==='SMS'?'<button class="sp-btn-phish" onclick="answer('+idx+',\'phishing\')"><i class="fa-solid fa-triangle-exclamation"></i> Arnaque</button><button class="sp-btn-legit" onclick="answer('+idx+',\'legit\')"><i class="fa-solid fa-circle-check"></i> Légitime</button>':'<button class="wa-btn-phish" onclick="answer('+idx+',\'phishing\')"><i class="fa-solid fa-triangle-exclamation"></i> Phishing</button><button class="wa-btn-legit" onclick="answer('+idx+',\'legit\')"><i class="fa-solid fa-circle-check"></i> Légitime</button>');
+    bar.innerHTML=PHISH+LEGIT;
   }
 }
 
+/* ── Résultats ── */
 function showResults(){
-  let score=0;ITEMS.forEach((_,i)=>{if(answers[i]?.correct)score++;});
-  const pct=Math.round(score/N*100),cls=pct===100?'rs-good':pct>=60?'rs-mid':'rs-bad';
+  let score=0;
+  ITEMS.forEach((_,i)=>{if(answers[i]?.correct)score++;});
+  const pct=Math.round(score/N*100);
+  const cls=pct===100?'rs-good':pct>=60?'rs-mid':'rs-bad';
+  const msg=pct===100?'Vigilance parfaite !':pct>=60?'Bien joué !':'Restez vigilant !';
   const tSecs=Math.round((Date.now()-startTs)/1000);
-  const reponsesData=ITEMS.map((item,i)=>({choice:answers[i]?.choice??null,correct:answers[i]?.correct??false}));
+
+  const reponsesData=ITEMS.map((item,i)=>({
+    id:item.id||i,choice:answers[i]?.choice??null,correct:answers[i]?.correct??false
+  }));
   const jsonData=JSON.stringify({score:pct,total:N,correctes:score,reponses:reponsesData,temps_secondes:tSecs});
-  
-  let html='<div class="res-wrap"><div class="res-card"><div class="res-score-circle '+cls+'"><span style="font-size:28px;">'+score+'/'+N+'</span><span style="font-size:12px;">'+pct+'%</span></div><div class="res-title">'+(pct===100?'Parfait !':pct>=60?'Bien joué !':'Restez vigilant !')+'</div><div class="res-sub">Détail de vos réponses :</div>';
+  const jsonSafe=jsonData.replace(/'/g,"\\'");
+
+  let html=`<div class="res-wrap"><div class="res-card">
+    <div class="res-score-circle ${cls}">
+      <span style="font-size:28px;line-height:1;">${score}/${N}</span>
+      <span style="font-size:12px;">${pct}%</span>
+    </div>
+    <div class="res-title">${msg}</div>
+    <div class="res-sub">Détail de vos réponses :</div>`;
+
   ITEMS.forEach((item,i)=>{
     const ok=answers[i]?.correct??false;
     const name=item.sender_name||item.name||'';
-    html+='<div class="res-item '+(ok?'ri-ok':'ri-bad')+'"><div class="ri-row"><i class="fa-solid '+(ok?'fa-circle-check':'fa-circle-xmark')+'" style="font-size:18px;color:'+(ok?'#34a853':'#ea4335')+';margin-top:2px;"></i><div style="flex:1;"><div class="ri-name">'+esc(name)+'</div><div class="ri-addr">'+esc(item.sender_email||item.num||'')+'</div></div><span class="ri-badge '+(ok?'ok':'bad')+'">'+(ok?'Correct':'Incorrect')+'</span></div><div class="ri-expl">'+(item.explication||'')+'</div></div>';
+    const addr=item.sender_email||item.num||'';
+    html+=`<div class="res-item ${ok?'ri-ok':'ri-bad'}">
+      <div class="ri-row">
+        <i class="fa-solid ${ok?'fa-circle-check':'fa-circle-xmark'}" style="font-size:18px;color:${ok?'#34a853':'#ea4335'};flex-shrink:0;margin-top:2px;"></i>
+        <div style="flex:1;"><div class="ri-name">${esc(name)}</div>${addr?`<div class="ri-addr">${esc(addr)}</div>`:''}</div>
+        <span class="ri-badge ${ok?'ok':'bad'}">${ok?'Correct':'Incorrect'}</span>
+      </div>
+      <div class="ri-expl">${item.explication||''}</div>
+    </div>`;
   });
-  html+='<form method="post" action="'+FORM_URL+'"><input type="hidden" name="resultat_json" value=\''+jsonData+'\'><button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Enregistrer et terminer</button></form><button class="btn-retry" onclick="resetSim()"><i class="fa-solid fa-arrows-rotate"></i> Recommencer</button><a class="btn-home" href="{{ path('employe_dashboard') }}"><i class="fa-solid fa-arrow-left"></i> Tableau de bord</a></div></div>';
 
-  if(SIM_TYPE==='GMAIL'){const gr=document.getElementById('gmResults');gr.innerHTML=html;gr.classList.add('open');document.getElementById('gmList').style.display='none';document.getElementById('gmPanel').classList.remove('open');}
-  else if(SIM_TYPE==='SMS'){let rs=document.getElementById('smsResults');if(!rs){rs=document.createElement('div');rs.id='smsResults';rs.style.cssText='position:absolute;inset:0;background:#1c1c1e;z-index:60;overflow-y:auto;padding:16px;';document.querySelector('.phone-wrap').appendChild(rs);}rs.innerHTML=html;document.getElementById('smsList').style.display='none';document.getElementById('smsPanel').classList.remove('open');}
-  else {const wr=document.getElementById('waResults');wr.innerHTML=html;wr.classList.add('open');}
+  html+=`
+    <form method="post" action="${FORM_URL}">
+      <input type="hidden" name="resultat_json" value='${jsonSafe}'>
+      <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> Enregistrer et terminer</button>
+    </form>
+    <button class="btn-retry" onclick="resetSim()"><i class="fa-solid fa-arrows-rotate"></i> Recommencer</button>
+    <a class="btn-home" href="{{ path('employe_formations') }}"><i class="fa-solid fa-arrow-left"></i> Mes formations</a>
+  </div></div>`;
+
+  if(SIM_TYPE==='GMAIL'){
+    const gr=document.getElementById('gmResults');
+    gr.innerHTML=html;gr.classList.add('open');
+    document.getElementById('gmList').style.display='none';
+    document.getElementById('gmPanel').classList.remove('open');
+  } else if(SIM_TYPE==='SMS'){
+    let rs=document.getElementById('smsResults');
+    if(!rs){rs=document.createElement('div');rs.id='smsResults';rs.style.cssText='position:absolute;inset:0;background:#1c1c1e;z-index:60;overflow-y:auto;padding:16px;';document.querySelector('.phone-wrap').appendChild(rs);}
+    rs.innerHTML=html;
+    document.getElementById('smsList').style.display='none';
+    document.getElementById('smsPanel').classList.remove('open');
+  } else {
+    const wr=document.getElementById('waResults');
+    wr.innerHTML=html;wr.classList.add('open');
+  }
 }
 
-function resetSim(){answers={};curIdx=null;startTs=Date.now();ITEMS.forEach((_,i)=>{const pfx=SIM_TYPE==='WHATSAPP'?'conv':'row';const el=document.getElementById(pfx+i);if(el){el.classList.remove('ok-ans','bad-ans');if(SIM_TYPE==='GMAIL'){el.classList.remove('read');el.classList.add('unread');}}});document.getElementById('simFill').style.width='0%';document.getElementById('simTxt').textContent='0/'+N;if(SIM_TYPE==='GMAIL'){document.getElementById('gmList').style.display='';document.getElementById('gmPanel').classList.remove('open');document.getElementById('gmResults').classList.remove('open');document.getElementById('gmUnread').textContent=N;}else if(SIM_TYPE==='SMS'){const rs=document.getElementById('smsResults');if(rs)rs.remove();document.getElementById('smsList').style.display='';document.getElementById('smsPanel').classList.remove('open');}else{document.getElementById('waResults').classList.remove('open');document.getElementById('waMessages').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation</div>';document.getElementById('waActions').innerHTML='';if(window.innerWidth<=768){document.getElementById('waSidebar').classList.remove('hidden-mobile');document.getElementById('waChat').classList.remove('open-mobile');document.getElementById('waBackBtn').style.display='none';}}}
+/* ── Reset ── */
+function resetSim(){
+  answers={};curIdx=null;startTs=Date.now();
+  ITEMS.forEach((_,i)=>{
+    const pfx=SIM_TYPE==='WHATSAPP'?'conv':'row';
+    const el=document.getElementById(pfx+i);
+    if(el){el.classList.remove('ok-ans','bad-ans');if(SIM_TYPE==='GMAIL'){el.classList.remove('read');el.classList.add('unread');}}
+  });
+  document.getElementById('simFill').style.width='0%';
+  document.getElementById('simTxt').textContent='0/'+N;
+  if(SIM_TYPE==='GMAIL'){
+    document.getElementById('gmList').style.display='';
+    document.getElementById('gmPanel').classList.remove('open');
+    document.getElementById('gmResults').classList.remove('open');
+    const ub=document.getElementById('gmUnread');if(ub)ub.textContent=N;
+  } else if(SIM_TYPE==='SMS'){
+    const rs=document.getElementById('smsResults');if(rs)rs.remove();
+    document.getElementById('smsList').style.display='';
+    document.getElementById('smsPanel').classList.remove('open');
+  } else {
+    document.getElementById('waResults').classList.remove('open');
+    document.getElementById('waMessages').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#8696a0;font-size:14px;">Cliquez sur une conversation</div>';
+    document.getElementById('waActions').innerHTML='';
+  }
+}
+
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+
+// Heure en temps réel pour iOS
 function updateTime(){const n=new Date();const t=document.getElementById('iosTime');if(t)t.textContent=n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes();}
 updateTime();setInterval(updateTime,30000);
-{% if type == 'WHATSAPP' %}if(ITEMS.length>0 && window.innerWidth>768) openItem(0);{% endif %}
+
+{% if type == 'WHATSAPP' %}
+if(ITEMS.length>0) openItem(0);
+{% endif %}
 </script>
-</body>
-</html>
 {% endblock %}

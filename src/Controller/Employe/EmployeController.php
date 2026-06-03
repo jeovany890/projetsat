@@ -464,22 +464,24 @@ class EmployeController extends AbstractController
             throw $this->createNotFoundException();
         }
 
-        if ($request->isMethod('POST')) {
-            $data          = json_decode($request->request->get('resultat_json', '{}'), true);
-            $correctes     = (int)($data['correctes'] ?? 0);
-            $reponses      = $data['reponses'] ?? [];
-            $tempsSecondes = (int)($data['temps_secondes'] ?? 0);
-            $totalQ        = count($module->getSimulationContenu()[$module->getSimulationType() === 'GMAIL' ? 'emails' : ($module->getSimulationType() === 'SMS' ? 'sms' : 'conversations')] ?? []);
-            $aReussi       = $totalQ > 0 && ($correctes / $totalQ * 100) >= 75;
+       if ($request->isMethod('POST')) {
+    $data          = json_decode($request->request->get('resultat_json', '{}'), true);
+    $correctes     = (int)($data['correctes'] ?? 0);
+    $reponses      = $data['reponses'] ?? [];
+    $tempsSecondes = (int)($data['temps_secondes'] ?? 0);
+    
+    // Utilise le vrai nombre de questions répondues (nb_a_tirer)
+    $totalQ = count($reponses);  // ← Changement ici
+    $aReussi = $totalQ > 0 && ($correctes / $totalQ * 100) >= 75;
 
-            $resultat = new ResultatSimulation();
-            $resultat->setReponsesCorrectes($correctes)
-                ->setReponses($reponses)
-                ->setTempsPasseSecondes($tempsSecondes)
-                ->setDateDebut(new \DateTime('-' . $tempsSecondes . ' seconds'))
-                ->setDateTermine(new \DateTime())
-                ->setEmploye($employe)
-                ->setModule($module);
+    $resultat = new ResultatSimulation();
+    $resultat->setReponsesCorrectes($correctes)
+        ->setReponses($reponses)
+        ->setTempsPasseSecondes($tempsSecondes)
+        ->setDateDebut(new \DateTime('-' . $tempsSecondes . ' seconds'))
+        ->setDateTermine(new \DateTime())
+        ->setEmploye($employe)
+        ->setModule($module);
 
             $em->persist($resultat);
 

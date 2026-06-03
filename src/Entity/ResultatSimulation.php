@@ -75,11 +75,11 @@ class ResultatSimulation
     // ========================================
     // Méthodes calculées (pas de stockage)
     // ========================================
-
-    public function getTotalQuestions(): int
-    {
-        return $this->module?->getNombreQuestionsSimulation() ?? 0;
-    }
+public function getTotalQuestions(): int
+{
+    // Utilise le nombre réel de réponses données
+    return count($this->reponses);
+}
 
     public function getScore(): float
     {

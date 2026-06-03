@@ -166,11 +166,22 @@ public function getTotalPointsQuiz(): int
     /**
      * Nombre total de questions du quiz (utile pour l'affichage)
      */
-    public function getNombreQuestionsSimulation(): int
-    {
-        return count($this->simulationContenu ?? []);
+   public function getNombreQuestionsSimulation(): int
+{
+    if (empty($this->simulationContenu)) {
+        return 0;
     }
 
+    $type = $this->simulationType ?? 'GMAIL';
+    $cle = match($type) {
+        'GMAIL'    => 'emails',
+        'SMS'      => 'sms',
+        'WHATSAPP' => 'conversations',
+        default    => 'emails',
+    };
+
+    return count($this->simulationContenu[$cle] ?? []);
+}
     public function __toString(): string { return $this->titre ?? ''; }
     
 }

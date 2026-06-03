@@ -551,20 +551,20 @@
         </div>
 
         {# ----- Simulations ----- #}
-        <div class="pf-card pf-section">
+        <div class="pf-card pf-section" id="all-simulations">
             <div class="pf-section-head">
                 <h3><span class="dot" style="background:#3B82F6;"></span> Dernières simulations</h3>
                 {% if resultatsSimu is not empty %}
-                    <a href="{{ path('employe_simulations') }}" class="pf-link">Tout voir →</a>
+                    <a href="#all-simulations" class="pf-link">Tout voir →</a>
                 {% endif %}
             </div>
             {% if resultatsSimu is empty %}
                 <p class="pf-empty">Aucune simulation effectuée.</p>
             {% else %}
-                {% for r in resultatsSimu|slice(0,5) %}
+                {% for r in resultatsSimu %}
                     <div class="pf-row">
                         <div class="pf-row-main">
-                            <div class="pf-row-title">{{ r.simulation.titre }}</div>
+                            <div class="pf-row-title">{{ r.module ? r.module.titre : r.simulation.titre }}</div>
                             <div class="pf-row-sub">{{ r.dateTermine|date('d/m/Y') }}</div>
                         </div>
                         <span class="pf-score-num" style="color:{% if r.aReussi %}#059669{% else %}#DC2626{% endif %};">{{ r.score }}%</span>
@@ -582,18 +582,18 @@
             <div class="pf-section-head">
                 <h3><span class="dot" style="background:#F59E0B;"></span> Quiz récents</h3>
             </div>
-            {% for t in tentatives|slice(0,4) %}
-                <div class="pf-row">
-                    <div class="pf-row-main">
-                        <div class="pf-row-title">{{ t.quiz.titre }}</div>
-                        <div class="pf-row-sub">{{ t.dateTermine|date('d/m/Y') }}</div>
-                    </div>
-                    <span class="pf-score-num" style="color:{% if t.aReussi %}#059669{% else %}#DC2626{% endif %};">{{ t.score }}/{{ t.totalQuestions }}</span>
-                    <span class="pf-badge {% if t.aReussi %}ok{% else %}fail{% endif %}">
-                        {% if t.aReussi %}Réussi{% else %}Échoué{% endif %}
-                    </span>
-                </div>
-            {% endfor %}
+           {% for t in tentatives %}
+    <div class="pf-row">
+        <div class="pf-row-main">
+            <div class="pf-row-title">{{ t.chapitre.titre }}</div>
+            <div class="pf-row-sub">{{ t.dateTermine|date('d/m/Y') }}</div>
+        </div>
+        <span class="pf-score-num" style="color:{% if t.aReussi %}#059669{% else %}#DC2626{% endif %};">{{ t.reponsesCorrectes }}/{{ t.totalQuestions }}</span>
+        <span class="pf-badge {% if t.aReussi %}ok{% else %}fail{% endif %}">
+            {% if t.aReussi %}Réussi{% else %}Échoué{% endif %}
+        </span>
+    </div>
+{% endfor %}
         </div>
         {% endif %}
 

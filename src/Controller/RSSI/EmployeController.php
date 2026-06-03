@@ -295,12 +295,7 @@ class EmployeController extends AbstractController
         $simulations = $em->getRepository(ResultatSimulation::class)
             ->findBy(['employe' => $employe], ['dateTermine' => 'DESC']);
 
-        // 5. Signalements manuels
-        $signalements = $em->getRepository(SignalementPhishing::class)
-            ->findBy(['employe' => $employe], ['dateSignalement' => 'DESC']);
-
-        $nbSignalements = count($signalements);
-
+       
         // 6. Score global
         $scoreVigilance = $employe->getScoreVigilance();
 
@@ -326,11 +321,7 @@ class EmployeController extends AbstractController
             $analyses[] = "Aucun clic sur un lien de phishing détecté — bon signe de vigilance passive.";
         }
 
-        if ($nbSignalements === 0) {
-            $analyses[] = "Aucune tentative de signalement observée. L'employé ne signale pas activement les menaces.";
-        } else {
-            $analyses[] = "L'employé a effectué {$nbSignalements} signalement(s) — comportement proactif face aux menaces.";
-        }
+      
 
         if ($modulesTermines >= 3) {
             $analyses[] = "Bonne assiduité en formation : {$modulesTermines} module(s) complété(s).";
@@ -344,9 +335,7 @@ class EmployeController extends AbstractController
             $recommandations[] = "Suivre une formation spécifique sur la détection du phishing par email.";
             $recommandations[] = "Sensibilisation aux techniques d'ingénierie sociale (urgence, autorité, imitation de marques).";
         }
-        if ($nbSignalements === 0) {
-            $recommandations[] = "Encourager l'utilisation de l'outil de signalement pour toute menace suspecte.";
-        }
+        
         if ($modulesTermines < 2) {
             $recommandations[] = "Compléter au moins 2 modules de formation sur la cybersécurité.";
             $recommandations[] = "Prioriser les modules : Phishing, Mots de passe et Ingénierie sociale.";
@@ -376,7 +365,6 @@ class EmployeController extends AbstractController
             'niveauLabel'       => $niveauLabel,
             'nbCampagnes'       => count($resultatsPhishing),
             'nbClics'           => $nbClics,
-            'nbSignalements'    => $nbSignalements,
             'resultatsPhishing' => $resultatsPhishing,
             'progressions'      => $progressions,
             'modulesTermines'   => $modulesTermines,
