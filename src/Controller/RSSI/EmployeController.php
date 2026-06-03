@@ -431,7 +431,7 @@ class EmployeController extends AbstractController
                 EmailTemplateService::bienvenueEmploye(
                     $prenom, $nom, $email, $tempPassword,
                     $entreprise, $dept,
-                    'http://localhost:8000/login'
+                    'http://satplatform.alwaysdata.net/login'
                 )
             );
         } catch (\Exception $e) {
