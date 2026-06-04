@@ -4,40 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SAT Platform{% endblock %}</title>
-    
+
     {# Favicon #}
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo.jpeg') }}">
-    
-    {# Google Fonts - Inter Variable #}
+
+    {# Google Fonts #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-    
-    {# Iconify - Remplace Bootstrap Icons ET Font Awesome (une seule librairie pour tout) #}
+
+    {#
+        Iconify — UNE SEULE fois ici dans le <head>.
+        Ne JAMAIS le recharger dans les layouts enfants
+        (admin/layout, rssi/layout, employe/layout).
+    #}
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-    
-    {# Design System Premium #}
+
+    {#
+        Bootstrap Icons CSS — nécessaire pour toutes les icônes <i class="bi bi-*">
+        utilisées dans les templates rssi/ et employe/.
+        La CSP autorise cdn.jsdelivr.net dans style-src.
+    #}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    {# Design System #}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
-    
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
-    
-    {# Bootstrap CSS pour les modals Symfony uniquement #}
+
+    {# Bootstrap CSS (modals Symfony) #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
     {% block body %}{% endblock %}
-    
-    {# Alpine.js pour interactions #}
+
+    {# Alpine.js #}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    {# Bootstrap JS pour les modals Symfony #}
+
+    {# Bootstrap JS (modals Symfony) #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    // Rend tous les tableaux scrollables sur mobile sans casser leur structure
-    document.addEventListener('DOMContentLoaded', function() {
+    /**
+     * Tableaux scrollables sur mobile.
+     * turbo:load en plus de DOMContentLoaded pour Symfony UX Turbo Drive.
+     */
+    function initTableScroll() {
         document.querySelectorAll('.a-content table, .r-content table, .card table').forEach(function(table) {
             if (table.closest('.table-scroll-wrap')) return;
             var wrap = document.createElement('div');
@@ -45,9 +58,394 @@
             table.parentNode.insertBefore(wrap, table);
             wrap.appendChild(table);
         });
-    });
+    }
+    document.addEventListener('DOMContentLoaded', initTableScroll);
+    document.addEventListener('turbo:load', initTableScroll);
     </script>
 
+    {# ══════════════════════════════════════════════════════════════
+       MODAL DE CONFIRMATION GLOBAL - VERSION CORRIGÉE
+       Usage :
+         Option A — attribut data-confirm sur un bouton submit :
+           <button type="submit" data-confirm="Supprimer ce module ?">Supprimer</button>
+         Option B — attribut data-confirm + data-form sur un bouton quelconque :
+           <button data-confirm="Supprimer ?" data-form="form-id">Supprimer</button>
+         Option C — attribut data-confirm + data-href sur un lien :
+           <a data-confirm="Confirmer ?" data-href="/chemin">Action</a>
+    ══════════════════════════════════════════════════════════════ #}
+    
+    <div id="satConfirmModal" aria-modal="true" role="dialog" aria-labelledby="satConfirmTitle"
+         style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;">
+        <div id="satConfirmBackdrop"
+             style="position:absolute;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);"></div>
+        <div style="position:relative;background:#fff;border-radius:16px;padding:28px 28px 24px;
+                    max-width:420px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,0.18);
+                    animation:satModalIn .18s ease;">
+            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
+                <div id="satConfirmIcon"
+                     style="width:42px;height:42px;border-radius:12px;background:#FEE2E2;
+                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <iconify-icon id="satConfirmIconify" icon="mdi:alert-decagram" style="font-size: 24px; color: #DC2626;"></iconify-icon>
+                </div>
+                <div>
+                    <h3 id="satConfirmTitle"
+                        style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">
+                        Confirmer l'action
+                    </h3>
+                    <p id="satConfirmMessage"
+                       style="margin:0;font-size:14px;color:#475569;line-height:1.5;">
+                        Êtes-vous sûr de vouloir effectuer cette action ?
+                    </p>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button id="satConfirmCancel"
+                        style="padding:9px 18px;border-radius:8px;border:1px solid #e2e8f0;
+                               background:#f8fafc;color:#475569;font-weight:600;font-size:13px;cursor:pointer;">
+                    Annuler
+                </button>
+                <button id="satConfirmOk"
+                        style="padding:9px 18px;border-radius:8px;border:none;
+                               background:#DC2626;color:#fff;font-weight:600;font-size:13px;cursor:pointer;">
+                    Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+    @keyframes satModalIn {
+        from { opacity:0; transform:scale(.95) translateY(6px); }
+        to   { opacity:1; transform:scale(1)  translateY(0);    }
+    }
+    html.dark #satConfirmModal > div:last-child {
+        background: #1e293b;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    html.dark #satConfirmTitle  { color: #f1f5f9; }
+    html.dark #satConfirmMessage{ color: #94a3b8; }
+    html.dark #satConfirmCancel {
+        background:#334155; border-color:#475569; color:#e2e8f0;
+    }
+    </style>
+
     {% block javascripts %}{% endblock %}
+
+    <script>
+    /**
+     * Modal de confirmation global SAT Platform - VERSION CORRIGÉE
+     * 
+     * Corrige les problèmes suivants :
+     * 1. Gestion correcte des clics sur les boutons
+     * 2. Soumission des formulaires fonctionnelle
+     * 3. Support des liens et actions AJAX
+     * 4. Gestion des erreurs d'icônes manquantes
+     */
+    (function () {
+        // Éléments du DOM
+        var modal   = document.getElementById('satConfirmModal');
+        var backdrop= document.getElementById('satConfirmBackdrop');
+        var msgEl   = document.getElementById('satConfirmMessage');
+        var okBtn   = document.getElementById('satConfirmOk');
+        var cancelBtn = document.getElementById('satConfirmCancel');
+        var titleEl = document.getElementById('satConfirmTitle');
+        var iconDiv = document.getElementById('satConfirmIcon');
+        var iconifyIcon = document.getElementById('satConfirmIconify');
+        
+        // Variables internes
+        var _resolve = null;
+        var _pendingElement = null;
+        var _pendingForm = null;
+        var _pendingHref = null;
+        
+        // Vérifier que tous les éléments existent
+        if (!modal || !okBtn || !cancelBtn) {
+            console.error('Modal elements missing!');
+            return;
+        }
+        
+        /**
+         * Ouvre le modal de confirmation
+         */
+        function openModal(message, type, element, form, href) {
+            // Définir le message
+            if (msgEl) {
+                msgEl.textContent = message || 'Êtes-vous sûr de vouloir effectuer cette action ?';
+            }
+            
+            // Définir le titre
+            if (titleEl) {
+                var isDanger = !type || type === 'danger';
+                titleEl.textContent = isDanger ? 'Confirmer la suppression' : 'Confirmation';
+            }
+            
+            // Configurer l'icône
+            if (iconifyIcon) {
+                var isDanger = !type || type === 'danger';
+                iconifyIcon.setAttribute('icon', isDanger ? 'mdi:alert-decagram' : 'mdi:help-circle');
+                iconifyIcon.setAttribute('style', 'font-size: 24px; color: ' + (isDanger ? '#DC2626' : '#D97706'));
+                
+                if (iconDiv) {
+                    iconDiv.style.background = isDanger ? '#FEE2E2' : '#FEF3C7';
+                }
+            }
+            
+            // Changer la couleur du bouton OK
+            if (okBtn) {
+                var isDanger = !type || type === 'danger';
+                okBtn.style.background = isDanger ? '#DC2626' : '#D97706';
+            }
+            
+            // Stocker les éléments en attente
+            _pendingElement = element;
+            _pendingForm = form;
+            _pendingHref = href;
+            
+            // Afficher le modal
+            if (modal) {
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Retourner une promesse
+            return new Promise(function (res) { 
+                _resolve = res; 
+            });
+        }
+        
+        /**
+         * Ferme le modal et retourne le résultat
+         */
+        function closeModal(result) {
+            if (modal) {
+                modal.style.display = 'none';
+            }
+            document.body.style.overflow = '';
+            
+            if (_resolve) { 
+                _resolve(result); 
+                _resolve = null; 
+            }
+            
+            // Exécuter l'action si confirmé
+            if (result) {
+                if (_pendingForm && _pendingForm.submit) {
+                    // Soumettre le formulaire
+                    setTimeout(function() {
+                        _pendingForm.submit();
+                    }, 50);
+                } else if (_pendingHref) {
+                    // Naviguer vers le lien
+                    setTimeout(function() {
+                        window.location.href = _pendingHref;
+                    }, 50);
+                } else if (_pendingElement && _pendingElement.tagName === 'A' && _pendingElement.getAttribute('href')) {
+                    // C'est un lien
+                    setTimeout(function() {
+                        window.location.href = _pendingElement.getAttribute('href');
+                    }, 50);
+                } else if (_pendingElement && (_pendingElement.type === 'submit' || _pendingElement.tagName === 'BUTTON')) {
+                    // C'est un bouton submit, trouver son formulaire
+                    var form = _pendingElement.closest('form');
+                    if (form) {
+                        setTimeout(function() {
+                            form.submit();
+                        }, 50);
+                    }
+                }
+            }
+            
+            _pendingElement = null;
+            _pendingForm = null;
+            _pendingHref = null;
+        }
+        
+        // Écouteurs d'événements
+        if (okBtn) {
+            okBtn.addEventListener('click', function () { 
+                closeModal(true); 
+            });
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function () { 
+                closeModal(false); 
+            });
+        }
+        
+        if (backdrop) {
+            backdrop.addEventListener('click', function () { 
+                closeModal(false); 
+            });
+        }
+        
+        // Fermer avec Echap
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+                closeModal(false);
+            }
+        });
+        
+        /**
+         * Initialise tous les éléments avec data-confirm
+         */
+        function initConfirm() {
+            var elements = document.querySelectorAll('[data-confirm]:not([data-sat-bound])');
+            
+            elements.forEach(function (el) {
+                el.setAttribute('data-sat-bound', '1');
+                
+                el.addEventListener('click', function (e) {
+                    var msg = el.getAttribute('data-confirm');
+                    var type = el.getAttribute('data-confirm-type') || 'danger';
+                    var formId = el.getAttribute('data-form');
+                    var href = el.getAttribute('data-href');
+                    var form = null;
+                    
+                    // Trouver le formulaire si spécifié
+                    if (formId) {
+                        form = document.getElementById(formId);
+                        if (!form) {
+                            console.error('Formulaire non trouvé:', formId);
+                            return;
+                        }
+                    } else {
+                        form = el.closest('form');
+                    }
+                    
+                    // Empêcher l'action par défaut
+                    if (el.tagName === 'A' || (el.tagName === 'BUTTON' && el.type !== 'button')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }
+                    
+                    // Ouvrir le modal
+                    openModal(msg, type, el, form, href);
+                });
+            });
+        }
+        
+        /**
+         * Gère les formulaires legacy avec onsubmit="return confirm(...)"
+         */
+        function handleLegacyForms() {
+            var forms = document.querySelectorAll('form[onsubmit]');
+            
+            forms.forEach(function(form) {
+                if (form.hasAttribute('data-sat-form-bound')) return;
+                form.setAttribute('data-sat-form-bound', '1');
+                
+                var originalOnsubmit = form.onsubmit;
+                
+                form.addEventListener('submit', function(e) {
+                    // Vérifier si le formulaire a déjà été traité
+                    if (form.hasAttribute('data-sat-processing')) return;
+                    
+                    // Extraire le message de confirmation
+                    var src = originalOnsubmit.toString();
+                    var match = src.match(/confirm\(['"]([^'"]+)['"]\)/);
+                    
+                    if (match) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        form.setAttribute('data-sat-processing', '1');
+                        
+                        openModal(match[1], 'danger', null, form, null).then(function(confirmed) {
+                            if (confirmed) {
+                                form.submit();
+                            }
+                            form.removeAttribute('data-sat-processing');
+                        });
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Gère les liens legacy avec onclick="return confirm(...)"
+         */
+        function handleLegacyLinks() {
+            var links = document.querySelectorAll('a[onclick]');
+            
+            links.forEach(function(link) {
+                if (link.hasAttribute('data-sat-link-bound')) return;
+                link.setAttribute('data-sat-link-bound', '1');
+                
+                var originalOnclick = link.onclick;
+                
+                link.addEventListener('click', function(e) {
+                    var src = originalOnclick.toString();
+                    var match = src.match(/confirm\(['"]([^'"]+)['"]\)/);
+                    
+                    if (match && !link.hasAttribute('data-confirm')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        
+                        openModal(match[1], 'danger', link, null, link.getAttribute('href')).then(function(confirmed) {
+                            if (confirmed) {
+                                window.location.href = link.getAttribute('href');
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Initialisation
+        function initialize() {
+            initConfirm();
+            handleLegacyForms();
+            handleLegacyLinks();
+        }
+        
+        // Écouter les événements de chargement
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initialize);
+        } else {
+            initialize();
+        }
+        
+        // Support pour Turbo Drive (Symfony UX)
+        document.addEventListener('turbo:load', function() {
+            // Réinitialiser les éléments liés
+            document.querySelectorAll('[data-sat-bound]').forEach(function(el) {
+                el.removeAttribute('data-sat-bound');
+            });
+            document.querySelectorAll('[data-sat-form-bound]').forEach(function(el) {
+                el.removeAttribute('data-sat-form-bound');
+            });
+            document.querySelectorAll('[data-sat-link-bound]').forEach(function(el) {
+                el.removeAttribute('data-sat-link-bound');
+            });
+            
+            // Réinitialiser
+            initialize();
+            
+            // Fermer le modal si ouvert
+            if (modal && modal.style.display === 'flex') {
+                closeModal(false);
+            }
+        });
+        
+        // Support pour les chargements AJAX classiques
+        if (typeof MutationObserver !== 'undefined') {
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length) {
+                        initialize();
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        }
+        
+        console.log('Modal de confirmation initialisé avec succès');
+    })();
+    </script>
 </body>
 </html>
