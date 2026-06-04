@@ -441,7 +441,7 @@ body {
                     <div class="score-bar-lbl-r">{{ formationsTerminees }} module(s)</div>
                 </div>
                 <div class="bar-bg">
-                    <div class="bar-low" style="width:{{ [formationsTerminees * 20, 100]|min }}%;height:7px;border-radius:4px;"></div>
+                    <div class="bar-low" style="width:{{ formationsTerminees * 20 > 100 ? 100 : formationsTerminees * 20 }}%;height:7px;border-radius:4px;"></div>
                 </div>
 
                 <div style="margin-top:9px;font-size:8px;color:#4B5563;line-height:1.55;">
