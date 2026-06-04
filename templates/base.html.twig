@@ -4,53 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SAT Platform{% endblock %}</title>
-
+    
     {# Favicon #}
     <link rel="icon" type="image/jpeg" href="{{ asset('images/logo.jpeg') }}">
-
-    {# Google Fonts #}
+    
+    {# Google Fonts - Inter Variable #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
-
-    {#
-        Iconify — UNE SEULE fois ici dans le <head>.
-        Ne JAMAIS le recharger dans les layouts enfants
-        (admin/layout, rssi/layout, employe/layout).
-    #}
+    
+    {# Iconify - Remplace Bootstrap Icons ET Font Awesome (une seule librairie pour tout) #}
     <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
-
-    {#
-        Bootstrap Icons CSS — nécessaire pour toutes les icônes <i class="bi bi-*">
-        utilisées dans les templates rssi/ et employe/.
-        La CSP autorise cdn.jsdelivr.net dans style-src.
-    #}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
-    {# Design System #}
+    
+    {# Design System Premium #}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
+    
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
-
-    {# Bootstrap CSS (modals Symfony) #}
+    
+    {# Bootstrap CSS pour les modals Symfony uniquement #}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    
     {% block stylesheets %}{% endblock %}
 </head>
 <body>
     {% block body %}{% endblock %}
-
-    {# Alpine.js #}
+    
+    {# Alpine.js pour interactions #}
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
-    {# Bootstrap JS (modals Symfony) #}
+    
+    {# Bootstrap JS pour les modals Symfony #}
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-    /**
-     * Tableaux scrollables sur mobile.
-     * turbo:load en plus de DOMContentLoaded pour Symfony UX Turbo Drive.
-     */
-    function initTableScroll() {
+    // Rend tous les tableaux scrollables sur mobile sans casser leur structure
+    document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.a-content table, .r-content table, .card table').forEach(function(table) {
             if (table.closest('.table-scroll-wrap')) return;
             var wrap = document.createElement('div');
@@ -58,203 +45,9 @@
             table.parentNode.insertBefore(wrap, table);
             wrap.appendChild(table);
         });
-    }
-    document.addEventListener('DOMContentLoaded', initTableScroll);
-    document.addEventListener('turbo:load', initTableScroll);
+    });
     </script>
-
-
-    {# ══════════════════════════════════════════════════════════════
-       MODAL DE CONFIRMATION GLOBAL
-       Usage :
-         Option A — attribut data-confirm sur un bouton submit :
-           <button type="submit" data-confirm="Supprimer ce module ?">Supprimer</button>
-         Option B — attribut data-confirm + data-form sur un bouton quelconque :
-           <button data-confirm="Supprimer ?" data-form="form-id">Supprimer</button>
-         Option C — attribut data-confirm + data-href sur un lien :
-           <a data-confirm="Confirmer ?" data-href="/chemin">Action</a>
-    ══════════════════════════════════════════════════════════════ #}
-    <div id="satConfirmModal" aria-modal="true" role="dialog" aria-labelledby="satConfirmTitle"
-         style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;">
-        <div id="satConfirmBackdrop"
-             style="position:absolute;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(3px);"></div>
-        <div style="position:relative;background:#fff;border-radius:16px;padding:28px 28px 24px;
-                    max-width:420px;width:calc(100% - 32px);box-shadow:0 20px 60px rgba(0,0,0,0.18);
-                    animation:satModalIn .18s ease;">
-            <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:16px;">
-                <div id="satConfirmIcon"
-                     style="width:42px;height:42px;border-radius:12px;background:#FEE2E2;
-                            display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                </div>
-                <div>
-                    <h3 id="satConfirmTitle"
-                        style="margin:0 0 6px;font-size:16px;font-weight:700;color:#0f172a;">
-                        Confirmer l'action
-                    </h3>
-                    <p id="satConfirmMessage"
-                       style="margin:0;font-size:14px;color:#475569;line-height:1.5;">
-                        Êtes-vous sûr de vouloir effectuer cette action ?
-                    </p>
-                </div>
-            </div>
-            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
-                <button id="satConfirmCancel"
-                        style="padding:9px 18px;border-radius:8px;border:1px solid #e2e8f0;
-                               background:#f8fafc;color:#475569;font-weight:600;font-size:13px;cursor:pointer;">
-                    Annuler
-                </button>
-                <button id="satConfirmOk"
-                        style="padding:9px 18px;border-radius:8px;border:none;
-                               background:#DC2626;color:#fff;font-weight:600;font-size:13px;cursor:pointer;">
-                    Confirmer
-                </button>
-            </div>
-        </div>
-    </div>
-    <style>
-    @keyframes satModalIn {
-        from { opacity:0; transform:scale(.95) translateY(6px); }
-        to   { opacity:1; transform:scale(1)  translateY(0);    }
-    }
-    html.dark #satConfirmModal > div:last-child {
-        background: #1e293b;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    }
-    html.dark #satConfirmTitle  { color: #f1f5f9; }
-    html.dark #satConfirmMessage{ color: #94a3b8; }
-    html.dark #satConfirmCancel {
-        background:#334155; border-color:#475569; color:#e2e8f0;
-    }
-    </style>
 
     {% block javascripts %}{% endblock %}
-
-    <script>
-    /**
-     * Modal de confirmation global SAT Platform.
-     *
-     * Intercepte TOUS les déclencheurs de confirmation :
-     *   1. Boutons avec [data-confirm]  (option recommandée)
-     *   2. Formulaires avec onsubmit="return confirm(...)"  (legacy — intercepté proprement)
-     *   3. Liens/boutons avec onclick="return confirm(...)"  (legacy)
-     *
-     * Le modal s'affiche à la place du dialogue natif du navigateur.
-     */
-    (function () {
-        var modal   = document.getElementById('satConfirmModal');
-        var backdrop= document.getElementById('satConfirmBackdrop');
-        var msgEl   = document.getElementById('satConfirmMessage');
-        var okBtn   = document.getElementById('satConfirmOk');
-        var cancelBtn = document.getElementById('satConfirmCancel');
-        var _resolve = null;
-
-        function openModal(message, type) {
-            msgEl.textContent = message || 'Êtes-vous sûr de vouloir effectuer cette action ?';
-            var icon  = document.getElementById('satConfirmIcon');
-            var isDanger = !type || type === 'danger';
-            icon.style.background  = isDanger ? '#FEE2E2' : '#FEF3C7';
-            icon.querySelector('iconify-icon').setAttribute('style',
-                'color:' + (isDanger ? '#DC2626' : '#D97706'));
-            okBtn.style.background = isDanger ? '#DC2626' : '#D97706';
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-            return new Promise(function (res) { _resolve = res; });
-        }
-
-        function closeModal(result) {
-            modal.style.display = 'none';
-            document.body.style.overflow = '';
-            if (_resolve) { _resolve(result); _resolve = null; }
-        }
-
-        okBtn.addEventListener('click',     function () { closeModal(true);  });
-        cancelBtn.addEventListener('click', function () { closeModal(false); });
-        backdrop.addEventListener('click',  function () { closeModal(false); });
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && modal.style.display === 'flex') closeModal(false);
-        });
-
-        // ── Surcharge globale de window.confirm ──────────────────────────
-        // Permet de capturer les confirm() natifs existants (legacy templates)
-        // SANS modifier chaque template.
-        window.confirm = function (message) {
-            // confirm() natif est synchrone mais notre modal est async.
-            // On utilise une astuce : lancer le modal et bloquer via un événement custom.
-            var result = false;
-            var done   = false;
-            openModal(message, 'danger').then(function (r) {
-                result = r;
-                done   = true;
-                // Redéclencher le submit ou le clic si confirmé
-                document.dispatchEvent(new CustomEvent('sat:confirmDone', { detail: { result: r } }));
-            });
-            // Retourner false immédiatement pour bloquer le submit natif
-            // L'action sera relancée manuellement via sat:confirmDone
-            return false;
-        };
-
-        // ── Gestion des data-confirm ──────────────────────────────────────
-        function initConfirm() {
-            document.querySelectorAll('[data-confirm]:not([data-sat-bound])').forEach(function (el) {
-                el.setAttribute('data-sat-bound', '1');
-                el.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    var msg  = el.getAttribute('data-confirm');
-                    var type = el.getAttribute('data-confirm-type') || 'danger';
-                    openModal(msg, type).then(function (confirmed) {
-                        if (!confirmed) return;
-                        // Trouver le formulaire à soumettre
-                        var formId = el.getAttribute('data-form');
-                        var form   = formId ? document.getElementById(formId) : el.closest('form');
-                        if (form) {
-                            // Désactiver temporairement la surcharge confirm() pour ce submit
-                            var orig = window.confirm;
-                            window.confirm = function () { return true; };
-                            form.submit();
-                            window.confirm = orig;
-                        } else {
-                            // Cas lien href ou data-href
-                            var href = el.getAttribute('data-href') || el.getAttribute('href');
-                            if (href && href !== '#') window.location.href = href;
-                        }
-                    });
-                });
-            });
-        }
-
-        // ── Gestion legacy : onsubmit="return confirm(...)" ───────────────
-        // Pour les formulaires dont le onsubmit appelle confirm() on intercepte
-        // le submit et on relance après confirmation.
-        document.addEventListener('submit', function (e) {
-            var form = e.target;
-            if (!form || !form.onsubmit) return;
-            var src = form.onsubmit.toString();
-            if (src.indexOf('confirm(') === -1) return;
-
-            // Extraire le message
-            var match = src.match(/confirm\(['"]([^'"]+)['"]\)/);
-            var msg   = match ? match[1] : 'Confirmer cette action ?';
-
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            openModal(msg, 'danger').then(function (confirmed) {
-                if (!confirmed) return;
-                // Soumettre sans onsubmit
-                var orig = form.onsubmit;
-                form.onsubmit = null;
-                var origConfirm = window.confirm;
-                window.confirm = function () { return true; };
-                form.submit();
-                window.confirm = origConfirm;
-                form.onsubmit = orig;
-            });
-        }, true); // capture = true pour intercepter avant le onsubmit
-
-        document.addEventListener('DOMContentLoaded', initConfirm);
-        document.addEventListener('turbo:load',        initConfirm);
-    })();
-    </script>
 </body>
 </html>
